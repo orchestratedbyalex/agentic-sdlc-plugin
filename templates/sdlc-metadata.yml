@@ -1,0 +1,65 @@
+sdlc:
+  project: "PROJECT_NAME"
+  version: "VERSION"
+  mode: "MODE" # greenfield | existing
+  methodology: "agentic-sdlc"
+  phases:
+    prepare:
+      status: "pending"
+      agents:
+        explorer: { status: "pending" }
+        claude_md: { status: "pending" }
+    define:
+      status: "pending"
+      agents:
+        source_analyst: { status: "pending" }
+        test_analyst: { status: "pending" }
+        nfr_analyst: { status: "pending" }
+        fr_author: { status: "pending" }
+        nfr_author: { status: "pending" }
+        us_author: { status: "pending" }
+        requirement_reviewer: { status: "pending" }
+    design:
+      status: "pending"
+      agents:
+        architecture_explorer: { status: "pending" }
+        decisions_explorer: { status: "pending" }
+        architecture_author: { status: "pending" }
+        component_spec_author: { status: "pending" }
+        adr_traceability_author: { status: "pending" }
+        design_reviewer: { status: "pending" }
+    develop:
+      status: "pending"
+      agents:
+        architect_planner: { status: "pending" }
+        code_author: { status: "pending" }
+        test_author: { status: "pending" }
+        architect_clarifier: { status: "pending" }
+        code_reviewer: { status: "pending" }
+        reqs_sync: { status: "pending" }
+    verify:
+      status: "pending"
+      agents:
+        coverage_analyst: { status: "pending" }
+        independent_code_reviewer: { status: "pending" }
+        static_dynamic_analyzer: { status: "pending" }
+        regression_tester: { status: "pending" }
+        validation_reviewer: { status: "pending" }
+    release:
+      status: "pending"
+      agents:
+        release_planner: { status: "pending" }
+        release_author: { status: "pending" }
+        release_reviewer: { status: "pending" }
+    operate:
+      status: "pending"
+      agents:
+        issue_triager: { status: "pending" }
+        dependency_monitor: { status: "pending" }
+        telemetry_monitor: { status: "pending" }
+        incident_responder: { status: "pending" }
+        feedback_loop: { status: "pending" }
+  requirement_counts:
+    functional: 0
+    nonfunctional: 0
+    user_stories: 0
