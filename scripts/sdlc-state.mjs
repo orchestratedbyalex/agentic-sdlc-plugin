@@ -83,6 +83,27 @@ export function computeState({ hasMetadata, metadataContent, hasCode }) {
       setupComplete: false,
     }
   }
-  // resume handled in the next task
-  return { mode: 'resume', valid: true, project: null, version: null, board: [], phase: null, agent: null, setupComplete: false }
+  const md = parseMetadata(metadataContent)
+  if (!md.valid) {
+    return { mode: 'resume', valid: false, project: null, version: null, board: [], phase: null, agent: null, setupComplete: false }
+  }
+  const board = PHASES.map((key, i) => ({
+    num: i + 1,
+    key,
+    status: (md.phases[key] && md.phases[key].status) || 'pending',
+  }))
+  const firstPending = board.find(p => p.status !== 'completed')
+  const phase = firstPending ? firstPending.num : null
+  let agent = null
+  if (firstPending) {
+    const ph = md.phases[firstPending.key]
+    if (ph && ph.agents && ph.agents.length) {
+      const a = ph.agents.find(x => x.status !== 'completed')
+      agent = a ? a.name : null
+    }
+  }
+  const setupComplete = SETUP_PHASES.every(
+    k => md.phases[k] && md.phases[k].status === 'completed'
+  )
+  return { mode: 'resume', valid: true, project: md.project, version: md.version, board, phase, agent, setupComplete }
 }

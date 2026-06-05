@@ -58,3 +58,53 @@ test('computeState: no metadata + code = existing', () => {
   assert.equal(s.mode, 'existing')
   assert.equal(s.phase, 1)
 })
+
+const MIDWAY = `sdlc:
+  project: "midway"
+  version: "0.2.0"
+  phases:
+    prepare:
+      status: "completed"
+    define:
+      status: "completed"
+    design:
+      status: "completed"
+    develop:
+      status: "in_progress"
+      agents:
+        architect_planner:
+          status: "completed"
+        code_author:
+          status: "completed"
+        test_author:
+          status: "pending"
+    verify:
+      status: "pending"
+`
+
+test('computeState: resume finds first non-completed phase', () => {
+  const s = computeState({ hasMetadata: true, metadataContent: MIDWAY, hasCode: true })
+  assert.equal(s.mode, 'resume')
+  assert.equal(s.phase, 4) // develop
+})
+
+test('computeState: resume finds first non-completed agent (fine-grained)', () => {
+  const s = computeState({ hasMetadata: true, metadataContent: MIDWAY, hasCode: true })
+  assert.equal(s.agent, 'test_author')
+})
+
+test('computeState: setupComplete true when prepare+define+design done', () => {
+  const s = computeState({ hasMetadata: true, metadataContent: MIDWAY, hasCode: true })
+  assert.equal(s.setupComplete, true)
+})
+
+test('computeState: reads project/version on resume', () => {
+  const s = computeState({ hasMetadata: true, metadataContent: MIDWAY, hasCode: true })
+  assert.equal(s.project, 'midway')
+  assert.equal(s.version, '0.2.0')
+})
+
+test('computeState: corrupt metadata = valid false', () => {
+  const s = computeState({ hasMetadata: true, metadataContent: '', hasCode: true })
+  assert.equal(s.valid, false)
+})
