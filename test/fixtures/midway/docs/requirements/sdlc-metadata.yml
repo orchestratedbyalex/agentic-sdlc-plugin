@@ -1,0 +1,33 @@
+sdlc:
+  project: "fixture-midway"
+  version: "0.2.0"
+  mode: "existing"
+  methodology: "agentic-sdlc"
+  phases:
+    prepare:
+      status: "completed"
+    define:
+      status: "completed"
+    design:
+      status: "completed"
+    develop:
+      status: "in_progress"
+      agents:
+        architect_planner:
+          status: "completed"
+        code_author:
+          status: "completed"
+        test_author:
+          status: "pending"
+        architect_clarifier:
+          status: "pending"
+        code_reviewer:
+          status: "pending"
+        reqs_sync:
+          status: "pending"
+    verify:
+      status: "pending"
+    release:
+      status: "pending"
+    operate:
+      status: "pending"
