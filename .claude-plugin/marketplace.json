@@ -1,0 +1,15 @@
+{
+  "name": "agentic-sdlc-marketplace",
+  "owner": {
+    "name": "orchestratedbyalex",
+    "url": "https://github.com/orchestratedbyalex"
+  },
+  "description": "Marketplace hosting the Agentic SDLC plugin.",
+  "plugins": [
+    {
+      "name": "agentic-sdlc",
+      "source": "./",
+      "description": "Agent-driven SDLC wizard for Claude Code."
+    }
+  ]
+}
