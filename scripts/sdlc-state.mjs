@@ -107,3 +107,27 @@ export function computeState({ hasMetadata, metadataContent, hasCode }) {
   )
   return { mode: 'resume', valid: true, project: md.project, version: md.version, board, phase, agent, setupComplete }
 }
+
+const CODE_MANIFESTS = ['package.json', 'Cargo.toml', 'pyproject.toml', 'go.mod', 'pom.xml', 'build.gradle', 'Gemfile', 'composer.json']
+const CODE_EXTS = ['.js', '.ts', '.jsx', '.tsx', '.py', '.rs', '.go', '.rb', '.java', '.php', '.c', '.cpp', '.cs']
+
+// entries is optional (for testing); falls back to readdir(dir).
+export function detectCode(dir, entries) {
+  const names = entries || (existsSync(dir) ? readdirSync(dir) : [])
+  if (names.some(n => CODE_MANIFESTS.includes(n))) return true
+  if (names.some(n => CODE_EXTS.some(ext => n.endsWith(ext)))) return true
+  return false
+}
+
+// ── CLI entry ───────────────────────────────────────────────────
+function main() {
+  const cwd = process.cwd()
+  const metaPath = join(cwd, 'docs/requirements/sdlc-metadata.yml')
+  const hasMetadata = existsSync(metaPath)
+  const metadataContent = hasMetadata ? readFileSync(metaPath, 'utf8') : ''
+  const hasCode = detectCode(cwd)
+  const state = computeState({ hasMetadata, metadataContent, hasCode })
+  process.stdout.write(JSON.stringify(state, null, 2) + '\n')
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) main()

@@ -108,3 +108,17 @@ test('computeState: corrupt metadata = valid false', () => {
   const s = computeState({ hasMetadata: true, metadataContent: '', hasCode: true })
   assert.equal(s.valid, false)
 })
+
+import { detectCode } from '../scripts/sdlc-state.mjs'
+
+test('detectCode: manifest present', () => {
+  assert.equal(detectCode('/x', ['README.md', 'package.json']), true)
+})
+
+test('detectCode: source extension present', () => {
+  assert.equal(detectCode('/x', ['main.py']), true)
+})
+
+test('detectCode: docs only = no code', () => {
+  assert.equal(detectCode('/x', ['README.md', 'notes.txt']), false)
+})
