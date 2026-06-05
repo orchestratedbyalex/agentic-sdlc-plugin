@@ -41,3 +41,20 @@ test('parseMetadata reads per-agent status in order', () => {
 test('parseMetadata marks empty content invalid', () => {
   assert.equal(parseMetadata('').valid, false)
 })
+
+import { computeState } from '../scripts/sdlc-state.mjs'
+
+test('computeState: no metadata + no code = greenfield', () => {
+  const s = computeState({ hasMetadata: false, metadataContent: '', hasCode: false })
+  assert.equal(s.mode, 'greenfield')
+  assert.equal(s.phase, 1)
+  assert.equal(s.setupComplete, false)
+  assert.equal(s.board.length, 7)
+  assert.ok(s.board.every(p => p.status === 'pending'))
+})
+
+test('computeState: no metadata + code = existing', () => {
+  const s = computeState({ hasMetadata: false, metadataContent: '', hasCode: true })
+  assert.equal(s.mode, 'existing')
+  assert.equal(s.phase, 1)
+})

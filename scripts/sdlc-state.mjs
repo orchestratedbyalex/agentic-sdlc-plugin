@@ -68,3 +68,21 @@ export function parseMetadata(content) {
   }
   return out
 }
+
+// Pure core: compute the routing state from raw inputs.
+export function computeState({ hasMetadata, metadataContent, hasCode }) {
+  if (!hasMetadata) {
+    return {
+      mode: hasCode ? 'existing' : 'greenfield',
+      valid: true,
+      project: null,
+      version: null,
+      board: PHASES.map((key, i) => ({ num: i + 1, key, status: 'pending' })),
+      phase: 1,
+      agent: null,
+      setupComplete: false,
+    }
+  }
+  // resume handled in the next task
+  return { mode: 'resume', valid: true, project: null, version: null, board: [], phase: null, agent: null, setupComplete: false }
+}
