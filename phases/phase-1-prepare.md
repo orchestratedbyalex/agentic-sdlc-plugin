@@ -10,6 +10,11 @@ post_phase: "set prepare.status and both agents' status to completed in sdlc-met
 
 # Phase 1 — Prepare
 
+> **Greenfield note:** for `mode: greenfield`, the `/sdlc` wizard scaffolds a minimal
+> project skeleton (manifest, config, `src/`, `test/`, README) from the brief *before*
+> this phase runs, so the read-only explorer has real structure to analyze. For
+> `mode: existing` the repo already has code and this phase runs directly.
+
 Dispatch in order (sequential; the author depends on the explorer):
 
 1. **sdlc-prepare-explorer** — pass the user's project context. It returns codebase facts.

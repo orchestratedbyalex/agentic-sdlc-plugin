@@ -36,13 +36,25 @@ non-completed phase (next), `·` pending. Show `project` and `version` if presen
   a short brief by asking, one at a time: (1) what the project does, (2) language/stack,
   (3) key features, (4) target users. Then create
   `docs/requirements/sdlc-metadata.yml` from `${CLAUDE_PLUGIN_ROOT}/templates/sdlc-metadata.yml`,
-  substituting `PROJECT_NAME`, `VERSION` (default `0.1.0`), and `MODE: greenfield`, and
+  substituting `PROJECT_NAME`, `VERSION` (default `0.1.0`), and `MODE: greenfield`,
   EXPANDING each agent entry to block form:
   ```yaml
         explorer:
           status: "pending"
   ```
-  Then proceed to Phase 1.
+  and recording the brief under an `sdlc.brief:` block (purpose, stack, users, key_features).
+
+  **Then SCAFFOLD a minimal skeleton from the brief — BEFORE Phase 1.** The Prepare agents
+  *analyze existing code*, so an empty repo gives the read-only explorer nothing to work
+  with and the phase stalls. Create just enough real structure, matched to the stated stack:
+    - a manifest — `package.json` (Node/TS), `pyproject.toml` (Python), `Cargo.toml`
+      (Rust), `go.mod` (Go), etc.;
+    - the language/build config (e.g. `tsconfig.json` for TypeScript);
+    - `src/` and `test/` directories, each with one minimal stub (e.g. `src/index.ts`
+      with a placeholder export, and a placeholder test in `test/`);
+    - a short `README.md` derived from the brief (purpose, stack, planned features).
+  Keep it minimal — a seed, not the product. Then proceed to Phase 1, where the explorer
+  analyzes this skeleton and the CLAUDE.md author documents it.
 
 - **`existing`** (code, no metadata): Tell the user you'll set up the SDLC on their
   codebase. Create `docs/requirements/sdlc-metadata.yml` from the template (ask for
