@@ -122,3 +122,55 @@ test('detectCode: source extension present', () => {
 test('detectCode: docs only = no code', () => {
   assert.equal(detectCode('/x', ['README.md', 'notes.txt']), false)
 })
+
+import { initMetadata } from '../scripts/sdlc-state.mjs'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+
+const TEMPLATE = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '../templates/sdlc-metadata.yml'),
+  'utf8'
+)
+
+const FLOW = `sdlc:
+  project: "flowdemo"
+  version: "0.9.0"
+  phases:
+    prepare:
+      status: "completed"
+    develop:
+      status: "in_progress"
+      agents:
+        architect_planner: { status: "completed" }
+        code_author: { status: "pending" }
+`
+
+test('parseMetadata reads flow-style agent entries', () => {
+  const md = parseMetadata(FLOW)
+  assert.equal(md.valid, true)
+  assert.deepEqual(
+    md.phases.develop.agents.map(a => [a.name, a.status]),
+    [['architect_planner', 'completed'], ['code_author', 'pending']]
+  )
+})
+
+test('initMetadata substitutes name, version, and mode', () => {
+  const out = initMetadata(TEMPLATE, { name: 'wordAnalyzer', version: '0.1.0', mode: 'existing' })
+  assert.match(out, /project:\s*"wordAnalyzer"/)
+  assert.match(out, /version:\s*"0\.1\.0"/)
+  assert.match(out, /mode:\s*"existing"/)
+  assert.ok(!out.includes('PROJECT_NAME'), 'PROJECT_NAME not substituted')
+  assert.ok(!out.includes('"VERSION"'), 'VERSION not substituted')
+  assert.ok(!out.includes('"MODE"'), 'MODE not substituted')
+})
+
+test('initMetadata output round-trips through parseMetadata with full 34-agent roster', () => {
+  const out = initMetadata(TEMPLATE, { name: 'rt', version: '2.0.0', mode: 'greenfield' })
+  const md = parseMetadata(out)
+  assert.equal(md.valid, true)
+  assert.equal(md.project, 'rt')
+  assert.equal(md.version, '2.0.0')
+  const total = Object.values(md.phases).reduce((n, p) => n + p.agents.length, 0)
+  assert.equal(total, 34, `expected 34 agents parsed, got ${total}`)
+})

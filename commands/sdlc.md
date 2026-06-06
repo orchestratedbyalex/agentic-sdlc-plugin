@@ -34,15 +34,14 @@ non-completed phase (next), `·` pending. Show `project` and `version` if presen
 
 - **`greenfield`** (empty folder): Tell the user you'll help build from scratch. Collect
   a short brief by asking, one at a time: (1) what the project does, (2) language/stack,
-  (3) key features, (4) target users. Then create
-  `docs/requirements/sdlc-metadata.yml` from `${CLAUDE_PLUGIN_ROOT}/templates/sdlc-metadata.yml`,
-  substituting `PROJECT_NAME`, `VERSION` (default `0.1.0`), and `MODE: greenfield`,
-  EXPANDING each agent entry to block form:
-  ```yaml
-        explorer:
-          status: "pending"
-  ```
-  and recording the brief under an `sdlc.brief:` block (purpose, stack, users, key_features).
+  (3) key features, (4) target users. Then create the metadata file **deterministically**
+  with the state script — do NOT hand-write or hand-expand it:
+
+      node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" init --name "<project>" --version "0.1.0" --mode greenfield
+
+  **Verify** the output has `"ok": true` and `state.valid: true` before continuing (retry if
+  the write didn't land — e.g. it needed approval). Then record the brief: with Edit, append
+  an `sdlc.brief:` block (purpose, stack, users, key_features) under the `sdlc:` key.
 
   **Then SCAFFOLD a minimal skeleton from the brief — BEFORE Phase 1.** The Prepare agents
   *analyze existing code*, so an empty repo gives the read-only explorer nothing to work
@@ -57,9 +56,16 @@ non-completed phase (next), `·` pending. Show `project` and `version` if presen
   analyzes this skeleton and the CLAUDE.md author documents it.
 
 - **`existing`** (code, no metadata): Tell the user you'll set up the SDLC on their
-  codebase. Create `docs/requirements/sdlc-metadata.yml` from the template (ask for
-  project name — default the folder name — and version; `MODE: existing`), expanded to
-  block form as above. Then proceed to Phase 1.
+  codebase. Ask for the project name (default: the folder name) and a version (default
+  `0.1.0`). Then create the metadata file **deterministically** with the state script —
+  do NOT hand-write it:
+
+      node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" init --name "<project>" --version "<version>" --mode existing
+
+  The command writes `docs/requirements/sdlc-metadata.yml` and prints `{ ok, state }`.
+  **Verify before proceeding:** confirm `"ok": true` and `state.mode: "resume"` with
+  `"valid": true`. If `ok` is false or the write needs approval, surface it and retry — do
+  NOT continue to Phase 1 until the file is confirmed written. Then proceed to Phase 1.
 
 - **`resume`** with `valid: false`: The metadata file could not be parsed. Show the user
   the problem and offer to repair it (re-create from the template, preserving any phase

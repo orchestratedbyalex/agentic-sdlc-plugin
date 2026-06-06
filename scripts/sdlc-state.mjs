@@ -2,8 +2,8 @@
 // sdlc-state.mjs — deterministic SDLC state detector for the /sdlc wizard.
 // Zero dependencies. Pure core (parseMetadata/computeState/detectCode) + CLI.
 
-import { readFileSync, existsSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync, existsSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs'
+import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 export const PHASES = ['prepare', 'define', 'design', 'develop', 'verify', 'release', 'operate']
@@ -50,6 +50,13 @@ export function parseMetadata(content) {
       const stM = line.match(/^\s{6}status:\s*"?([^"]*)"?\s*$/)
       if (stM) { out.phases[curPhase].status = stM[1].trim(); continue }
     } else {
+      // flow style on one line: `        explorer: { status: "pending" }`
+      const agFlowM = line.match(/^\s{8}(\w+):\s*\{\s*status:\s*"?([^"}]*?)"?\s*\}\s*$/)
+      if (agFlowM) {
+        out.phases[curPhase].agents.push({ name: agFlowM[1], status: agFlowM[2].trim() })
+        curAgent = null
+        continue
+      }
       const agM = line.match(/^\s{8}(\w+):\s*$/)
       if (agM) {
         curAgent = { name: agM[1], status: 'pending' }
@@ -119,8 +126,16 @@ export function detectCode(dir, entries) {
   return false
 }
 
+// Create metadata file content from the template by substituting the 3 placeholders.
+export function initMetadata(template, { name, version, mode }) {
+  return template
+    .replace('PROJECT_NAME', name)
+    .replace('VERSION', version)
+    .replace('MODE', mode)
+}
+
 // ── CLI entry ───────────────────────────────────────────────────
-function main() {
+function detectCmd() {
   const cwd = process.cwd()
   const metaPath = join(cwd, 'docs/requirements/sdlc-metadata.yml')
   const hasMetadata = existsSync(metaPath)
@@ -128,6 +143,41 @@ function main() {
   const hasCode = detectCode(cwd)
   const state = computeState({ hasMetadata, metadataContent, hasCode })
   process.stdout.write(JSON.stringify(state, null, 2) + '\n')
+}
+
+// `init --name X --version Y --mode existing|greenfield [--force]`
+// Writes docs/requirements/sdlc-metadata.yml deterministically, then re-reads and
+// reports the resulting state so the wizard can verify it persisted before proceeding.
+function initCmd(argv) {
+  const opts = {}
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--name') opts.name = argv[++i]
+    else if (argv[i] === '--version') opts.version = argv[++i]
+    else if (argv[i] === '--mode') opts.mode = argv[++i]
+    else if (argv[i] === '--force') opts.force = true
+  }
+  const cwd = process.cwd()
+  const metaPath = join(cwd, 'docs/requirements/sdlc-metadata.yml')
+  if (existsSync(metaPath) && !opts.force) {
+    process.stdout.write(JSON.stringify({ ok: false, error: 'metadata already exists; use --force to overwrite', path: metaPath }, null, 2) + '\n')
+    process.exitCode = 1
+    return
+  }
+  const name = opts.name || 'project'
+  const version = opts.version || '0.1.0'
+  const mode = opts.mode || (detectCode(cwd) ? 'existing' : 'greenfield')
+  const here = dirname(fileURLToPath(import.meta.url))
+  const template = readFileSync(join(here, '../templates/sdlc-metadata.yml'), 'utf8')
+  mkdirSync(dirname(metaPath), { recursive: true })
+  writeFileSync(metaPath, initMetadata(template, { name, version, mode }))
+  // Verify by re-reading what we just wrote.
+  const state = computeState({ hasMetadata: true, metadataContent: readFileSync(metaPath, 'utf8'), hasCode: detectCode(cwd) })
+  process.stdout.write(JSON.stringify({ ok: true, path: metaPath, state }, null, 2) + '\n')
+}
+
+function main() {
+  if (process.argv[2] === 'init') initCmd(process.argv.slice(3))
+  else detectCmd()
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) main()
