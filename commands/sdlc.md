@@ -5,15 +5,24 @@ argument-hint: "[optional: phase name or change request]"
 
 # Agentic SDLC Wizard
 
-## Detected state
+## Step 0 — Detect project state
 
-!`node ${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs`
+Your FIRST action: run the state detector with the Bash tool and read its JSON output. It
+prints `{ mode, board, phase, agent, setupComplete, valid }` for the current working
+directory:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs"
+```
+
+`${CLAUDE_PLUGIN_ROOT}` is this plugin's install directory; if your shell does not have it
+set, substitute the absolute path of the folder that contains `scripts/sdlc-state.mjs`.
 
 ## Your job
 
-You are the SDLC orchestrator. The JSON above (from the state script, run in the user's
-project directory) tells you the `mode`, the phase `board`, the resume `phase`, the
-resume `agent`, and `setupComplete`. Use it — do not re-derive state by hand.
+You are the SDLC orchestrator. The JSON from Step 0 tells you the `mode`, the phase
+`board`, the resume `phase`, the resume `agent`, and `setupComplete`. Use it — do not
+re-derive state by hand.
 
 User argument (may be empty): `$ARGUMENTS`
 
