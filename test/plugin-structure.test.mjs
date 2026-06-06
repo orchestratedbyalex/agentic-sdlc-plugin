@@ -49,8 +49,14 @@ test('every agent referenced in a phase playbook exists', () => {
   }
 })
 
-test('Phases 1-4 playbooks exist', () => {
-  for (const n of ['phase-1-prepare', 'phase-2-define', 'phase-3-design', 'phase-4-develop']) {
+test('all 7 phase playbooks exist', () => {
+  for (const n of ['phase-1-prepare', 'phase-2-define', 'phase-3-design', 'phase-4-develop',
+                   'phase-5-verify', 'phase-6-release', 'phase-7-operate']) {
     assert.ok(existsSync(join(ROOT, 'phases', `${n}.md`)), `missing ${n}.md`)
   }
+})
+
+test('the full 34-agent roster is present', () => {
+  const n = readdirSync(join(ROOT, 'agents')).filter(f => f.endsWith('.md')).length
+  assert.equal(n, 34, `expected 34 agent files, found ${n}`)
 })
