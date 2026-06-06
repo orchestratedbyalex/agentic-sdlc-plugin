@@ -48,3 +48,18 @@ the work under review (Microsoft SDL).
 ## Requirements sync
 Every new behavior added in Develop becomes a new FR + US wired into
 `docs/requirements/traceability-matrix.md`. No orphan features.
+
+## Exploring the target repo (read hygiene)
+When inventorying or searching the codebase, respect what the project already ignores —
+this keeps explore/analysis agents fast on real-world repos:
+
+- **Enumerate with `git ls-files`.** It lists only tracked files, so everything in
+  `.gitignore` (dependencies, build output, caches) is excluded automatically. For
+  untracked-but-wanted files add `git ls-files --others --exclude-standard`.
+- **Never read or traverse dependency / build / vendor directories:** `node_modules/`,
+  `vendor/`, `target/`, `dist/`, `build/`, `out/`, `.next/`, `.venv/`, `venv/`,
+  `__pycache__/`, `coverage/`, `.git/` (and anything else `.gitignore` lists).
+- **Scope `Glob`/`Grep` to source directories** (e.g. `src/`) rather than repo-root `**`
+  globs that descend into the directories above.
+- If the project is **not** a git repo, fall back to `find`/`Glob` with those directories
+  explicitly excluded.
