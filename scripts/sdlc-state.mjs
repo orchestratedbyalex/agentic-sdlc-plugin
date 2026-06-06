@@ -134,6 +134,38 @@ export function initMetadata(template, { name, version, mode }) {
     .replace('MODE', mode)
 }
 
+// Deterministically flip statuses in the metadata text (no YAML dependency).
+// With `agent`: set just that agent. Without: set the phase status + every agent in it.
+export function updateStatus(content, { phase, agent, status = 'completed' }) {
+  const lines = content.split('\n')
+  let inPhases = false, curPhase = null, inAgents = false
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (/^\s{2}phases:\s*$/.test(line)) { inPhases = true; continue }
+    if (inPhases && /^\s{2}\S/.test(line) && !/^\s{2}phases:/.test(line)) {
+      inPhases = false; curPhase = null; inAgents = false
+    }
+    if (!inPhases) continue
+    const pm = line.match(/^\s{4}(\w+):\s*$/)
+    if (pm) { curPhase = pm[1]; inAgents = false; continue }
+    if (curPhase !== phase) continue
+    if (/^\s{6}agents:\s*$/.test(line)) { inAgents = true; continue }
+    if (!inAgents) {
+      // phase-level status — only when completing the whole phase (no specific agent)
+      if (!agent && /^\s{6}status:/.test(line)) {
+        lines[i] = line.replace(/status:\s*"?[^"]*"?\s*$/, `status: "${status}"`)
+      }
+    } else {
+      // flow-style agent line: `        key: { status: "..." }`
+      const fm = line.match(/^(\s{8})(\w+):\s*\{\s*status:\s*"?[^"}]*"?\s*\}\s*$/)
+      if (fm && (!agent || fm[2] === agent)) {
+        lines[i] = `${fm[1]}${fm[2]}: { status: "${status}" }`
+      }
+    }
+  }
+  return lines.join('\n')
+}
+
 // ── CLI entry ───────────────────────────────────────────────────
 function detectCmd() {
   const cwd = process.cwd()
@@ -175,8 +207,36 @@ function initCmd(argv) {
   process.stdout.write(JSON.stringify({ ok: true, path: metaPath, state }, null, 2) + '\n')
 }
 
+// `complete --phase P [--agent A] [--status completed]`
+// Deterministically marks a phase (and all its agents) or one agent completed, then reports state.
+function completeCmd(argv) {
+  const opts = { status: 'completed' }
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--phase') opts.phase = argv[++i]
+    else if (argv[i] === '--agent') opts.agent = argv[++i]
+    else if (argv[i] === '--status') opts.status = argv[++i]
+  }
+  const cwd = process.cwd()
+  const metaPath = join(cwd, 'docs/requirements/sdlc-metadata.yml')
+  if (!opts.phase || !PHASES.includes(opts.phase)) {
+    process.stdout.write(JSON.stringify({ ok: false, error: `--phase must be one of: ${PHASES.join(', ')}` }, null, 2) + '\n')
+    process.exitCode = 1
+    return
+  }
+  if (!existsSync(metaPath)) {
+    process.stdout.write(JSON.stringify({ ok: false, error: 'no metadata file; run init first', path: metaPath }, null, 2) + '\n')
+    process.exitCode = 1
+    return
+  }
+  writeFileSync(metaPath, updateStatus(readFileSync(metaPath, 'utf8'), opts))
+  const state = computeState({ hasMetadata: true, metadataContent: readFileSync(metaPath, 'utf8'), hasCode: detectCode(cwd) })
+  process.stdout.write(JSON.stringify({ ok: true, path: metaPath, state }, null, 2) + '\n')
+}
+
 function main() {
-  if (process.argv[2] === 'init') initCmd(process.argv.slice(3))
+  const cmd = process.argv[2]
+  if (cmd === 'init') initCmd(process.argv.slice(3))
+  else if (cmd === 'complete') completeCmd(process.argv.slice(3))
   else detectCmd()
 }
 

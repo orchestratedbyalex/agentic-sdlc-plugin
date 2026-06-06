@@ -174,3 +174,32 @@ test('initMetadata output round-trips through parseMetadata with full 34-agent r
   const total = Object.values(md.phases).reduce((n, p) => n + p.agents.length, 0)
   assert.equal(total, 34, `expected 34 agents parsed, got ${total}`)
 })
+
+import { updateStatus } from '../scripts/sdlc-state.mjs'
+
+test('updateStatus completes a whole phase (status + every agent)', () => {
+  const base = initMetadata(TEMPLATE, { name: 'x', version: '0.1.0', mode: 'existing' })
+  const md = parseMetadata(updateStatus(base, { phase: 'prepare', status: 'completed' }))
+  assert.equal(md.phases.prepare.status, 'completed')
+  assert.ok(md.phases.prepare.agents.every(a => a.status === 'completed'))
+  // adjacent phases untouched
+  assert.equal(md.phases.define.status, 'pending')
+  assert.ok(md.phases.define.agents.every(a => a.status === 'pending'))
+})
+
+test('updateStatus completes a single agent without touching the phase or siblings', () => {
+  const base = initMetadata(TEMPLATE, { name: 'x', version: '0.1.0', mode: 'existing' })
+  const md = parseMetadata(updateStatus(base, { phase: 'define', agent: 'source_analyst', status: 'completed' }))
+  assert.equal(md.phases.define.status, 'pending')
+  const byName = Object.fromEntries(md.phases.define.agents.map(a => [a.name, a.status]))
+  assert.equal(byName.source_analyst, 'completed')
+  assert.equal(byName.test_analyst, 'pending')
+})
+
+test('updateStatus then computeState advances to the next phase', () => {
+  const base = initMetadata(TEMPLATE, { name: 'x', version: '0.1.0', mode: 'existing' })
+  const out = updateStatus(base, { phase: 'prepare', status: 'completed' })
+  const s = computeState({ hasMetadata: true, metadataContent: out, hasCode: true })
+  assert.equal(s.phase, 2)
+  assert.equal(s.agent, 'source_analyst')
+})

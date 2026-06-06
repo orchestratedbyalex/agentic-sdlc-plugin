@@ -91,8 +91,15 @@ If the phase playbook file does not exist yet, tell the user that phase is not a
 in this build (the phase playbooks and subagents are delivered in a later plan) and stop
 gracefully — do not invent agents.
 
-### Step 5 — Update state
-After each agent or group passes its gate, update
-`docs/requirements/sdlc-metadata.yml`: set the agent's `status: "completed"`, and when all
-of a phase's agents are done set the phase `status: "completed"`. Re-run `/sdlc` semantics
-by re-reading the board for the next decision.
+### Step 5 — Update state (deterministic — never hand-edit the YAML)
+After each agent or group passes its gate, mark progress with the state script — do NOT edit
+`docs/requirements/sdlc-metadata.yml` by hand (that is slow and error-prone):
+
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" complete --phase <phase> --agent <agent>
+
+When a phase finishes (all its agents done, or it completes as a unit), mark the whole phase:
+
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" complete --phase <phase>
+
+Each call rewrites the statuses deterministically and prints `{ ok, state }`. Use the returned
+`state` (board, phase, agent) as the re-read of `/sdlc` semantics for the next decision.
