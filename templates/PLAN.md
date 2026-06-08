@@ -3,6 +3,7 @@ id: "PLAN-NNN"
 title: "<short title>"
 type: "implementation-plan"
 status: "approved"             # proposed | approved | superseded
+tier: "standard"               # trivial | standard | complex — confirmed at feature-intake
 version: "1.0"                 # string — the Architect Clarifier bumps "1.0" → "1.1"
 created: "YYYY-MM-DD"
 author: "architect-planner-agent"
