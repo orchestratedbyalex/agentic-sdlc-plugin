@@ -203,3 +203,11 @@ test('updateStatus then computeState advances to the next phase', () => {
   assert.equal(s.phase, 2)
   assert.equal(s.agent, 'source_analyst')
 })
+
+test('develop.plans key does not disrupt agent parsing', () => {
+  const md = parseMetadata(initMetadata(TEMPLATE, { name: 'x', version: '0.1.0', mode: 'existing' }))
+  assert.equal(md.valid, true)
+  // the new `plans: []` sibling under develop must not swallow or drop agents
+  assert.equal(md.phases.develop.agents.length, 6)
+  assert.equal(md.phases.develop.agents[0].name, 'architect_planner')
+})

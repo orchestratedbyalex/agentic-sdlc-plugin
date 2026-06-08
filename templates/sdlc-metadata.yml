@@ -37,6 +37,7 @@ sdlc:
         architect_clarifier: { status: "pending" }
         code_reviewer: { status: "pending" }
         reqs_sync: { status: "pending" }
+      plans: []
     verify:
       status: "pending"
       agents:

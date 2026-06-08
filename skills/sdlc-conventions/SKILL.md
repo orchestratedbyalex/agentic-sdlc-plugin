@@ -36,6 +36,12 @@ Cross-cutting concerns tagged on NFRs (and optionally ADRs):
 | `eco` | Green IT | carbon, resource/energy efficiency |
 | `ai` | Responsible AI | model governance, AI-driven productivity |
 
+When the `security` track applies to a change, the Develop planner records **Security
+Considerations** in the PLAN (proportionate to the change), the code author follows the security
+guardrails, and the reviewer's SECURITY check verifies them — secrets, injection, input
+validation, and new dependencies are checked on every change, with an explicit "none → proceed"
+for changes that aren't security-relevant.
+
 ## Five practice categories
 RP (Required Practice — comply or document an exception), GP (Good Practice),
 G (Guideline), Tooling, Evidence. Validation agents enforce RPs; author agents produce

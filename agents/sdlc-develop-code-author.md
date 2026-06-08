@@ -78,11 +78,31 @@ IMPLEMENTATION RULES:
    documents. Do not introduce sync I/O in async paths, bypass caches, or
    create unbounded data structures.
 
-STEP 4 — BUILD VERIFICATION
+5. MINIMAL DIFF — Change ONLY what the plan's "Source File Changes" specifies.
+   Do not refactor, rename, reorder, reformat, or "clean up" code outside the
+   stated change, and do not touch files the plan does not list. If an
+   out-of-plan change is genuinely required, STOP and raise it as an AMBIGUITY —
+   do not make it unilaterally.
 
-Run the build command from CLAUDE.md.
-It must complete with exit code 0.
-If it fails, read the error output and fix the compilation issue.
+6. SECURITY GUARDRAILS — Never hardcode secrets, keys, tokens, passwords, or
+   connection strings; read them from env/config. Never build shell commands,
+   SQL, file paths, or markup by concatenating untrusted/variable input — use
+   parameterized/escaped APIs. Validate external input at the boundary; never
+   weaken existing validation. Do not add a runtime dependency the plan did not
+   call for. If the plan asks for any of these, raise an AMBIGUITY.
+
+STEP 4 — BUILD + REGRESSION VERIFICATION
+
+Run the build command from CLAUDE.md. It must complete with exit code 0; if it
+fails, read the error output and fix the compilation issue.
+
+Then run the FULL test command from CLAUDE.md. Every previously-passing test MUST
+still pass — if your change broke one, you introduced a regression: fix your code
+(do NOT edit the test to make it pass). New tests authored in parallel by the Test
+Author may not yet be in your view; you are confirming that EXISTING behavior still
+works.
+
+Then run the lint command from CLAUDE.md and resolve issues in code you touched.
 
 STEP 5 — REPORT
 
@@ -91,9 +111,10 @@ STEP 5 — REPORT
 - Line XX-YY: <what was changed and why>
 - New function/method: <name and signature>
 
-### Compilation
-- Build command: <command from CLAUDE.md>
-- Result: PASS/FAIL
+### Build, Tests & Lint
+- Build: <command from CLAUDE.md> — PASS/FAIL
+- Existing test suite: <command> — PASS/FAIL (still green? regressions fixed: <list>)
+- Lint: <command> — clean / issues fixed
 - Errors fixed: <list any compilation errors encountered and resolved>
 
 ### ADR Compliance

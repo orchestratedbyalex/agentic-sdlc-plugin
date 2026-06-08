@@ -72,27 +72,57 @@ Test authoring rules:
 5. FIXTURE SETUP — Follow the existing fixture pattern (look for setup files
    or beforeAll/beforeEach blocks).
 
+6. COVER THREE CLASSES PER AC — for each AC write (a) a happy-path assertion on
+   the observable outcome, (b) at least one boundary/edge case (empty, null/
+   undefined, zero, max, off-by-one, unicode/long input where relevant), and (c)
+   at least one failure path (invalid input, thrown error / rejected promise,
+   resource-limit hit). If a class is genuinely N/A for an AC, say so in the
+   Step 5 report with a one-line reason.
+
+7. ASSERT THE RIGHT THING (no tautologies) — every test must assert an observable
+   outcome (return value, emitted event, thrown error, state/file change). Banned:
+   empty-body tests, assert(true), asserting only that a mock was called, snapshots
+   with no behavioural assertion. Derive expected values from the FR/spec, NOT by
+   copying current code output.
+
+8. INDEPENDENT & DETERMINISTIC — each test must pass in isolation and in any order.
+   Reset shared/global state in teardown; never rely on another test's side effects;
+   use unique temp dirs/files, not a shared mutable path. No real network, no
+   wall-clock sleep, no unseeded randomness — fake timers / inject seeds. Use the
+   project's existing isolation/teardown helpers.
+
+9. SECURITY / ABUSE CASES — for any AC or plan Security Consideration involving
+   untrusted input, secrets, or access control, add a negative test: malicious/
+   malformed input is rejected (not executed or reflected), a secret never appears
+   in output or logs, an unauthorized caller is denied. If it can't be unit-tested,
+   list it under Unmapped ACs flagged SECURITY for Phase 5.
+
 STEP 4 — RUN TESTS
 
-Run the test command from CLAUDE.md. All tests must pass with exit code 0.
-
-If tests fail because of test issues (not source code issues), fix them.
-If tests fail because of source code issues, do NOT fix the source — flag
-back to Code Author.
+Run the test command from CLAUDE.md. Because you author from the spec in PARALLEL
+with the Code Author, tests for the new behaviour MAY legitimately fail until that
+code lands — that is expected, not a defect. Classify every failure:
+  (a) EXPECTED-RED — asserts new behaviour not yet implemented → list under
+      "Expected-failing (awaiting code)".
+  (b) TEST DEFECT — wrong setup/assertion on your side → fix it.
+  (c) REGRESSION — a previously-passing test for EXISTING behaviour now fails →
+      flag to Code Author; do NOT edit the source.
+Pre-existing tests MUST stay green. NEVER weaken or delete an assertion to turn a
+red test green.
 
 STEP 5 — REPORT
 
 ## Tests Written
 ### <test file path>
-| AC Reference | Test Description        | Assertion Type |
-|-------------|-------------------------|----------------|
+| AC Reference | Class (happy/boundary/failure) | Asserts (observable outcome) |
+|-------------|--------------------------------|------------------------------|
 
 ### Test Run Results
 - Test command: <from CLAUDE.md>
-- Total tests: XX
-- Passed: XX
-- Failed: XX
+- Total / Passed / Failed: XX / XX / XX
 - New tests added: XX
+- Expected-failing (awaiting parallel code): <list, or none>
+- Coverage of changed files (if the suite reports it): <new-line / branch %>
 
 ### Unmapped ACs
 ACs that could not be covered by a unit test (require manual verification,

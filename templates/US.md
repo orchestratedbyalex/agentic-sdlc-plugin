@@ -13,5 +13,6 @@ focus_track: "" # optional
 **so that** <value>.
 
 ## Acceptance Criteria
-- <criterion 1>
-- <criterion 2>
+<!-- Stable, numbered ids — tests, the reviewer, and traceability all reference AC-N. -->
+- **AC-1:** <criterion 1>
+- **AC-2:** <criterion 2>

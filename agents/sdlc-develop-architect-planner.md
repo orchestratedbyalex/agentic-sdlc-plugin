@@ -33,8 +33,11 @@ Read package.json (or the equivalent project manifest) to learn:
 
 STEP 1 — READ THE GUARDRAILS (ADRs)
 
-List all files in docs/design/adrs/ and read each ADR with status "accepted".
-These are architectural rules your plan MUST respect.
+If docs/design/adrs/ has a README/index, read it first to scan all ADR titles + decisions,
+then full-read the accepted ADRs relevant to this change plus any with clearly cross-cutting
+decisions — don't slurp every ADR on a large repo. (Inventory with `git ls-files`; never read
+under node_modules/dist/build — see the sdlc-conventions read-hygiene rule.) Accepted ADRs are
+architectural rules your plan MUST respect.
 
 For each ADR, note:
   - The decision (what was chosen)
@@ -47,6 +50,23 @@ flag this in a "ADR Conflicts" section. Either:
   - Propose a NEW ADR that supersedes the conflicting one (the new ADR will
     be authored alongside the implementation; mark the old ADR for
     `status: superseded` after Phase 4 completes).
+
+STEP 1.5 — SECURITY IMPACT (proportionate)
+
+Classify whether this change is security-relevant. Does it touch any of: (a) secrets/
+credentials/keys/tokens, (b) authentication or authorization, (c) untrusted or external
+input / output encoding, (d) shell or process execution, file paths, SQL, or deserialization,
+(e) sensitive/PII data, or (f) adding/upgrading a runtime dependency?
+
+Also re-surface OPEN security items this change touches: search docs/design/adrs/ for ADRs
+whose status is NOT "accepted" (e.g. a Proposed "use env var for the API key" decision) and
+NFRs tagged `focus_track: security`.
+
+If ALL answers are "no" and no open item applies, set the plan's Security Considerations to
+"none — rationale: <why>" and proceed. Otherwise add one row per concern to the `## Security
+Considerations` section: the concern, the control the plan will use (secret → read from env/
+config, never a literal; untrusted input → validate + encode at the boundary; new dep → DI doc
++ provenance), and the file/function where the control lands. Do not hand-wave.
 
 STEP 2 — IDENTIFY RELEVANT REQUIREMENTS
 
@@ -101,7 +121,8 @@ describing the change.
 
 Create file: docs/design/implementation-plans/PLAN-NNN-<slug>.md
 
-Use this exact format:
+Use this exact format — it MUST stay identical to `${CLAUDE_PLUGIN_ROOT}/templates/PLAN.md`,
+the canonical PLAN schema (read it if unsure):
 
 ---
 id: "PLAN-NNN"
@@ -116,8 +137,10 @@ addresses_fr: [<FR IDs>]
 addresses_nfr: [<NFR IDs>]
 addresses_us: [<US IDs>]
 constrained_by_adrs: [<ADR IDs>]
-proposes_new_adrs: [<ADR IDs the developer will author>]
-proposes_new_requirements: [<placeholder IDs for Requirements Sync>]
+proposes_new_adrs: [<ADR IDs the developer will author>]              # list; [] = none
+proposes_new_requirements: [<placeholder IDs for Requirements Sync>]  # list; [] = none
+supersedes: ""                   # set by the Architect Clarifier on a structural rewrite
+superseded_by: ""
 ---
 
 # PLAN-NNN: <Title>
@@ -136,6 +159,11 @@ One-sentence description of what this change does and why.
 ## ADR Conflicts (if any)
 - Existing ADR-XXX says <decision>, but this change requires <opposite>.
 - Resolution: adjust plan / propose superseding ADR-YYY.
+
+## Security Considerations
+(From STEP 1.5. Write "none — rationale: <why>" if not security-relevant; else one row per concern.)
+| Concern | Control (how the plan mitigates it) | Where it lands |
+|---------|-------------------------------------|----------------|
 
 ## Source File Changes
 ### <file path>

@@ -20,6 +20,15 @@ STEP 0 — DISCOVER PROJECT CONVENTIONS
 
 Read CLAUDE.md.
 
+STEP 0.5 — IDENTIFY WHAT ACTUALLY CHANGED
+
+Before reviewing, establish the real diff — do not trust the plan narrative alone.
+Run `git status` and `git diff` (and `git diff --stat`) to list every file touched
+this run. Cross-check against the PLAN's "Source File Changes" and "New Test
+Scenarios": ANY file changed that the plan does not list is an out-of-scope change —
+raise it as a BLOCKER unless it is a trivial, plan-implied consequence. If this is
+not a git repo, diff against the plan's enumerated files only.
+
 REVIEW CHECKLIST:
 
 1. PLAN ADHERENCE
@@ -47,22 +56,41 @@ REVIEW CHECKLIST:
    Read performance NFRs. Verify no sync I/O in async paths, no cache
    bypasses, no unbounded data structures.
 
-6. SECURITY
-   Read security NFRs. Verify no resource limit bypasses, no shell
-   execution, no weakened input validation.
+6. SECURITY (proportionate to the change; check every modified file)
+   - Read the security NFRs AND the plan's "Security Considerations"; verify each
+     declared control is actually implemented.
+   - SECRETS: no hardcoded API keys, tokens, passwords, private keys, or connection
+     strings in source or tests — grep the diff for high-entropy literals and known
+     key formats; credentials must come from env/config. Cross-check any OPEN
+     security finding (e.g. an unmet "use env var" decision): a change touching that
+     path must comply or be explicitly deferred as a tracked item.
+   - INJECTION: no shell/SQL/path/markup built from untrusted input by
+     concatenation; no eval / dynamic require of untrusted data; no unsafe
+     deserialization.
+   - INPUT VALIDATION: external input validated at the boundary, output encoded for
+     its sink; no validation weakened vs. prior behaviour.
+   - DEPENDENCIES: any new/upgraded runtime dependency is named in the plan and a DI doc.
+   Any security defect is a BLOCKER, not a warning.
 
 7. BACKWARD COMPATIBILITY
    No exported signatures changed unless plan explicitly says so.
 
-8. TEST QUALITY
-   - Every test references an AC ID
-   - All variants tested
-   - Negative cases tested
-   - No test depends on execution order
-   - No hardcoded absolute paths
+8. TEST QUALITY (procedure, not a rubber stamp)
+   - Enumerate every AC in the plan; for each, confirm a test exists that asserts
+     (a) the happy-path outcome, (b) a boundary/edge case, and (c) a failure path —
+     or that the author justified an N/A.
+   - Confirm each test asserts an OBSERVABLE outcome (reject tautologies, mock-only
+     assertions, empty bodies).
+   - Spot-check that expected values come from the FR/spec, not copied from current
+     code output (guards against tests-written-to-implementation).
+   - Confirm tests pass in isolation / any order; no real network, wall-clock sleep,
+     unseeded randomness, or hardcoded absolute paths.
+   - Confirm every test cites an AC id.
 
-9. FULL TEST SUITE RUN
-   Run the test command from CLAUDE.md. ALL tests must pass.
+9. FULL TEST SUITE RUN + STATIC ANALYSIS
+   Run the test command from CLAUDE.md. ALL tests must pass. Also run the lint/
+   static-analysis command from CLAUDE.md (e.g. oxlint); treat security-relevant
+   lint findings as blockers and populate "Lint issues" in the report.
 
 10. ADR INTEGRITY
     If the plan declared `proposes_new_adrs`, verify the new ADR was
