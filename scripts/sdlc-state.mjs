@@ -230,7 +230,10 @@ function completeCmd(argv) {
   }
   writeFileSync(metaPath, updateStatus(readFileSync(metaPath, 'utf8'), opts))
   const state = computeState({ hasMetadata: true, metadataContent: readFileSync(metaPath, 'utf8'), hasCode: detectCode(cwd) })
-  process.stdout.write(JSON.stringify({ ok: true, path: metaPath, state }, null, 2) + '\n')
+  // Terse output — the wizard renders the board from the detector (Step 0), not from here.
+  // Printing the full state on every (often chained) complete call floods the main context.
+  const terse = { ok: true, updated: opts.agent ? `${opts.phase}/${opts.agent}` : opts.phase, mode: state.mode, phase: state.phase, agent: state.agent, setupComplete: state.setupComplete }
+  process.stdout.write(JSON.stringify(terse, null, 2) + '\n')
 }
 
 function main() {

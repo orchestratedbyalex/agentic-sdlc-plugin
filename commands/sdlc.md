@@ -101,5 +101,7 @@ When a phase finishes (all its agents done, or it completes as a unit), mark the
 
     node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" complete --phase <phase>
 
-Each call rewrites the statuses deterministically and prints `{ ok, state }`. Use the returned
-`state` (board, phase, agent) as the re-read of `/sdlc` semantics for the next decision.
+Each call rewrites the statuses deterministically and prints a terse `{ ok, phase, agent }`.
+Prefer ONE `complete --phase <phase>` at the END of a phase — it marks the phase AND all its
+agents; use `--agent` only to checkpoint mid-phase. Don't chain many per-agent calls at once.
+Re-read the detector (Step 0) for the board / next decision.
