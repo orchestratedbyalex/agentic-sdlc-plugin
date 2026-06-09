@@ -95,10 +95,17 @@ REVIEW CHECKLIST:
      unseeded randomness, or hardcoded absolute paths.
    - Confirm every test cites an AC id.
 
-9. FULL TEST SUITE RUN + STATIC ANALYSIS
-   Run the test command from CLAUDE.md. ALL tests must pass. Also run the lint/
-   static-analysis command from CLAUDE.md (e.g. oxlint); treat security-relevant
-   lint findings as blockers and populate "Lint issues" in the report.
+9. FULL TEST SUITE RUN + RELEASE BUILD + STATIC ANALYSIS
+   Run the test command from CLAUDE.md. ALL tests must pass AND the runner must
+   actually have executed them: treat ANY of these as a FAIL even with zero failing
+   assertions — a non-zero exit from the test command, a "failed to run" /
+   module-resolution / config error, or **0 test suites / 0 tests collected** when the
+   plan added tests. Record suites-collected and tests-executed counts, not just
+   pass/fail. Also run the project's **production build** command if it differs from the
+   test command (e.g. CRA tests via babel but ships via webpack — a green suite does NOT
+   prove the build works); a non-zero build exit is a BLOCKER. Then run the lint/
+   static-analysis command from CLAUDE.md (e.g. oxlint); treat security-relevant lint
+   findings as blockers and populate "Lint issues" in the report.
 
 10. ADR INTEGRITY
     If the plan declared `proposes_new_adrs`, verify the new ADR was

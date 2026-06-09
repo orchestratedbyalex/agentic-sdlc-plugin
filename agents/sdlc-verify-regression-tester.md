@@ -21,9 +21,14 @@ Read CLAUDE.md for build, test, lint commands.
 
 STEP 1 — FIRST FULL RUN
 
-Run build (if separate) then test command.
-Record: build result, test files executed, individual assertion counts,
-pass/fail per file, lint warnings (if part of pipeline), formatter changes.
+Run build (if separate) then test command. If the build command differs from the test
+command, run BOTH — a green test suite does not prove the build works (e.g. CRA tests via
+babel but ships via webpack). A non-zero build exit is a FAIL.
+Record: build result, test **suites collected**, test files executed, individual
+assertion counts, pass/fail per file, lint warnings (if part of pipeline), formatter
+changes. CRITICAL: "passes" means the runner actually **executed** the tests — a runner
+that errored out (module-resolution / config crash) or collected **0 suites / 0 tests**
+is a FAIL, never a pass, even with zero failing assertions.
 
 STEP 2 — SECOND FULL RUN (FLAKY DETECTION)
 
@@ -38,6 +43,8 @@ STEP 3 — REPORT
 ## Regression Test Report
 
 ### Run 1
+- Build (if separate): exit 0 / non-zero
+- Suites collected: XX (0 = FAIL)
 - Test files: XX / YY
 - Passed: XX, Failed: XX
 - Duration: XX seconds

@@ -39,11 +39,19 @@ Run: npm audit (or pip-audit, cargo audit, equivalent).
 For each advisory: severity, affected package, available fix.
 Cross-reference with security NFR document if present.
 
-STEP 3 — INTEGRATION / SMOKE TESTS
+STEP 3 — BUILD THE RELEASE ARTIFACT (mandatory; non-negotiable gate)
 
-If the project has integration tests (separate from unit tests authored in
-Phase 4), run them. Otherwise, exercise the public API once with a
-representative call to confirm the build is not broken.
+Run the project's **production build** command from CLAUDE.md (e.g. `npm run build`,
+`yarn build`, `cargo build --release`, `vite build`, `tsc -p tsconfig.build.json`).
+This MUST be the command that produces the *deployable artifact* — NOT the unit-test
+command, which may use a different toolchain (e.g. CRA runs jest via babel but ships
+via webpack, so a green test suite does NOT prove the build works). A non-zero exit is
+a **BLOCKER**, not a warning. Record the exact command, exit code, and the artifact
+path/size produced. If the project genuinely has no build step (interpreted, no
+bundling), say so explicitly and run the documented start/smoke command instead.
+
+Then, if the project has integration tests (separate from unit tests authored in
+Phase 4), run them; otherwise exercise the public API once with a representative call.
 
 STEP 4 — REPORT
 
@@ -63,6 +71,12 @@ STEP 4 — REPORT
 
 ### Security Advisories
 | Severity | Package | Vuln | Fix Available |
+
+### Release Build
+- Command: <production build command from CLAUDE.md>
+- Exit code: 0 / non-zero
+- Artifact: <path + size, or "none — interpreted project">
+- Result: PASS / BLOCKER
 
 ### Integration / Smoke
 - Result: PASS / FAIL / N/A

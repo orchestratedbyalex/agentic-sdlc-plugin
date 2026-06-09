@@ -52,7 +52,12 @@ The project is READY FOR RELEASE if ALL of the following are true:
   b. Independent Reviewer: PASS (no blockers)
   c. Static & Dynamic Analyzer: PASS (lint clean, no critical security
      advisories)
-  d. Regression Tester: all tests pass on both runs, no flaky tests
+  c2. Release build: the production build command (Static Analyzer STEP 3)
+     exited 0 and produced the deployable artifact. A failing build is a
+     BLOCKER even when types + unit tests are green — they exercise a
+     different toolchain than the shipped artifact.
+  d. Regression Tester: all tests pass on both runs, no flaky tests; the
+     runner actually executed the suite (0 suites/0 tests collected = FAIL)
   e. Every user story has validation evidence (Step 1)
   f. Every NFR is PASS (Step 2)
   g. No accepted ADR is violated by the current code
@@ -89,7 +94,8 @@ VERIFICATION & VALIDATION REPORT
 | a | All FRs 100% AC coverage | PASS | |
 | b | Independent review PASS | PASS | |
 | c | Static & dynamic clean | PASS | |
-| d | Regression stable, no flakes | PASS | |
+| c2 | Release build exits 0, artifact produced | PASS | |
+| d | Regression stable, no flakes, suite executed | PASS | |
 | e | All US validated | PASS | |
 | f | All NFRs PASS | PASS | |
 | g | No ADR violations | PASS | |
