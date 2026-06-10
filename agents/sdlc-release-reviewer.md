@@ -23,18 +23,23 @@ Read CLAUDE.md to learn:
   - Expected build artifacts
   - Module system (CJS, ESM, dual, etc.)
 
-CHECK 1 — VERSION CONSISTENCY:
+CHECK 1 — VERSION CONSISTENCY (release is STAGED, not committed):
 
-  Read the manifest file (package.json or equivalent) and extract the version.
-  Run: git describe --tags --exact-match HEAD
-  Confirm the git tag matches the manifest version (v prefix on tag).
-  Run: git log -1 --format=%s
-  Confirm the commit message is "v<VERSION>".
+  The Release Author stages the change and SUGGESTS the commit + tag; it does NOT commit
+  or tag (git is human-gated). So verify the staged state, not an existing tag:
+  - Read the manifest file (package.json or equivalent) and extract the version; confirm
+    it equals the Release Plan's new version.
+  - Run: git diff --cached --name-only — confirm the changelog, manifest (and lock file /
+    build output if applicable) are staged, and nothing unexpected is staged.
+  - Confirm the Author's SUGGESTED commit message is "v<VERSION>" and the SUGGESTED tag is
+    "v<VERSION>" (matching the manifest). A real tag/commit existing is NOT required — and
+    if the Author committed or tagged on its own, that is a FAIL (discipline breach).
 
 CHECK 2 — CHANGELOG ACCURACY:
 
   Read the changelog file and find the entry for the new version.
-  Run: git log $(git describe --tags --abbrev=0 HEAD~1)..HEAD~1 --oneline
+  Run: git log $(git describe --tags --abbrev=0)..HEAD --oneline
+  (commits since the last release tag — the new release is not yet committed).
   Compare the changelog entry against the actual commits. Verify:
   - Every significant change is mentioned
   - No fabricated changes are listed
