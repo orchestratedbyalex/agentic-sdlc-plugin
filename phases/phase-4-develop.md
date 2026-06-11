@@ -4,7 +4,8 @@ phase_number: 4
 setup: "ensure docs/design/implementation-plans/ exists"
 groups:
   - { mode: sequential, agents: [sdlc-develop-architect-planner] }
-  - { mode: parallel, agents: [sdlc-develop-code-author, sdlc-develop-test-author] }
+  - { mode: parallel, tier: standard_complex, agents: [sdlc-develop-code-author, sdlc-develop-test-author] }
+  - { mode: sequential, tier: trivial, agents: [sdlc-develop-implementer] }
   - { mode: conditional, agents: [sdlc-develop-architect-clarifier] }
   - { mode: sequential, agents: [sdlc-develop-code-reviewer] }
   - { mode: sequential, agents: [sdlc-develop-reqs-sync] }
@@ -29,11 +30,18 @@ Dispatch (steps marked ⊘ are skipped for 🟢 trivial):
    - 🟢 **trivial:** lite plan — target file(s) + the ACs to satisfy + the Security-Impact
      line; read only an ADR/CS the change clearly touches (skip the full sweep).
    - 🟡/🔴 **standard/complex:** the full plan (complex MUST assess ADR impact).
-2. **Code + Test Author (parallel):** pass PLAN_PATH. Each scans the plan for ambiguities first.
-   The Test Author writes from the spec while the Code Author writes the code, so new tests are
-   expected to fail red until the code lands — a final green suite is the **Code Reviewer's**
-   gate, not the Test Author's.
-   - **If either returns an AMBIGUITIES block:** dispatch **sdlc-develop-architect-clarifier**
+2. **Authors (tier selects the group — exactly ONE of the two runs):** pass PLAN_PATH; each
+   author scans the plan for ambiguities first.
+   - 🟢 **trivial:** dispatch **sdlc-develop-implementer** alone — it writes the code AND its
+     tests in one pass (the parallel split exists for throughput on bigger changes, not for
+     independence — both halves are authors). Because code and tests land together, the suite
+     MUST end green; there is no expected-red state. Reviewer ≠ author still holds: the Code
+     Reviewer gates the result.
+   - 🟡/🔴 **standard/complex:** dispatch **Code Author + Test Author in parallel.** The Test
+     Author writes from the spec while the Code Author writes the code, so new tests are
+     expected to fail red until the code lands — a final green suite is the **Code Reviewer's**
+     gate, not the Test Author's.
+   - **If any author returns an AMBIGUITIES block:** dispatch **sdlc-develop-architect-clarifier**
      with the block; it updates the PLAN (version bump + Clarifications). Then re-dispatch the
      blocked author(s). If the same author still reports AMBIGUITIES after **3** clarifier
      rounds, STOP and emit `HUMAN_REVIEW_REQUIRED` to the user.

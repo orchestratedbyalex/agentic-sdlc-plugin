@@ -9,7 +9,7 @@ this first, then `REVIEW-BRIEF.md`.
 A **Claude Code plugin** that runs a standards-anchored, agent-driven Software Development
 Lifecycle. One command — `/agentic-sdlc:sdlc` (short `/sdlc`) — launches a wizard that detects
 project state and drives **seven phases** (Prepare → Define → Design → Develop → Verify →
-Release → Operate) using a roster of **34 specialized subagents**.
+Release → Operate) using a roster of **35 specialized subagents**.
 
 This is the plugin itself (the "how"). It is applied *to* a target repository, which receives
 the "evidence" (requirements, design docs, `sdlc-metadata.yml`). That separation is the
@@ -21,7 +21,7 @@ the "evidence" (requirements, design docs, `sdlc-metadata.yml`). That separation
 |------|------|
 | `.claude-plugin/` | Plugin manifest + marketplace entry |
 | `commands/sdlc.md` | The `/sdlc` wizard (orchestrator entry point) |
-| `agents/` | The 34 subagents (one `.md` each), grouped by phase: `sdlc-<phase>-<role>.md` |
+| `agents/` | The 35 subagents (one `.md` each), grouped by phase: `sdlc-<phase>-<role>.md` |
 | `phases/` | 7 machine-readable phase playbooks (groups, modes, gates, post_phase) |
 | `skills/` | `sdlc-conventions` (read hygiene, shared rules) + `sdlc-feature-intake` (change tiering) |
 | `templates/` | Artifact templates (FR, NFR, US, PLAN, ADR, CS, metadata) |
@@ -72,7 +72,7 @@ them as constraints, not suggestions. Rationale lives in `docs/hardening-*.md`.
   (role, phase, what to read first, "FINAL MESSAGE is your return value") + `--- TASK ---` +
   the working prompt.
 - After any change, run `node --test` — `test/plugin-structure.test.mjs` asserts all 7
-  playbooks exist and the **34-agent** roster count. Don't let that drift silently.
+  playbooks exist and the **35-agent** roster count. Don't let that drift silently.
 
 ## Status
 

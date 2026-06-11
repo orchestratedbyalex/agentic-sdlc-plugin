@@ -56,7 +56,7 @@ test('all 7 phase playbooks exist', () => {
   }
 })
 
-test('the full 34-agent roster is present', () => {
+test('the full 35-agent roster is present', () => {
   const n = readdirSync(join(ROOT, 'agents')).filter(f => f.endsWith('.md')).length
-  assert.equal(n, 34, `expected 34 agent files, found ${n}`)
+  assert.equal(n, 35, `expected 35 agent files, found ${n}`)
 })

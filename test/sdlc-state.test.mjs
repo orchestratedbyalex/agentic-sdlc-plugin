@@ -165,14 +165,14 @@ test('initMetadata substitutes name, version, and mode', () => {
   assert.ok(!out.includes('"MODE"'), 'MODE not substituted')
 })
 
-test('initMetadata output round-trips through parseMetadata with full 34-agent roster', () => {
+test('initMetadata output round-trips through parseMetadata with full 35-agent roster', () => {
   const out = initMetadata(TEMPLATE, { name: 'rt', version: '2.0.0', mode: 'greenfield' })
   const md = parseMetadata(out)
   assert.equal(md.valid, true)
   assert.equal(md.project, 'rt')
   assert.equal(md.version, '2.0.0')
   const total = Object.values(md.phases).reduce((n, p) => n + p.agents.length, 0)
-  assert.equal(total, 34, `expected 34 agents parsed, got ${total}`)
+  assert.equal(total, 35, `expected 35 agents parsed, got ${total}`)
 })
 
 import { updateStatus } from '../scripts/sdlc-state.mjs'
@@ -208,6 +208,6 @@ test('develop.plans key does not disrupt agent parsing', () => {
   const md = parseMetadata(initMetadata(TEMPLATE, { name: 'x', version: '0.1.0', mode: 'existing' }))
   assert.equal(md.valid, true)
   // the new `plans: []` sibling under develop must not swallow or drop agents
-  assert.equal(md.phases.develop.agents.length, 6)
+  assert.equal(md.phases.develop.agents.length, 7)
   assert.equal(md.phases.develop.agents[0].name, 'architect_planner')
 })

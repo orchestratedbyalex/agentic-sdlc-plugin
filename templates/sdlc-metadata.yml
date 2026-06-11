@@ -34,6 +34,7 @@ sdlc:
         architect_planner: { status: "pending" }
         code_author: { status: "pending" }
         test_author: { status: "pending" }
+        implementer: { status: "pending" }
         architect_clarifier: { status: "pending" }
         code_reviewer: { status: "pending" }
         reqs_sync: { status: "pending" }
