@@ -17,9 +17,15 @@ Create one US document per distinct user workflow or use case discovered by the
 explore agents. Number them sequentially starting from US-001. Name each file
 US-NNN-<descriptive-slug>.md.
 
-Each user story SHOULD map to one or more FRs and optionally to NFRs. Derive
-the persona from the project's target audience (read README.md to determine
-who the users are).
+Each user story SHOULD map to one or more FRs and optionally to NFRs. The FR
+and NFR authors are writing their docs IN PARALLEL with you, so for
+`implements_fr` / `implements_nfr` use ONLY the IDs in the orchestrator's
+REQUIREMENT ID ALLOCATION block — never invent, guess, or renumber an FR/NFR
+ID, and do not read the functional/nonfunctional directories expecting them to
+be complete. If a story exercises behavior with no allocated requirement, leave
+the reference out and list it under `UNMAPPED` in your final message so the
+orchestrator can route it. Derive the persona from the project's target
+audience (read README.md to determine who the users are).
 
 Format:
 

@@ -22,7 +22,9 @@ Run setup. Then dispatch:
 3. **ADR consolidation (sequential):** adr-traceability-author — writes the ADRs (Nygard),
    the ADR index, and design-traceability.md.
 4. **Validation (sequential):** design-reviewer — 9-point gate.
-   - **Gate FAIL:** route issues to the relevant author, re-run, re-review until PASS.
+   - **Gate FAIL:** route issues to the relevant author, re-run, re-review. If the gate FAILs
+     **3** times (or a previously-cleared issue reappears), STOP and emit
+     `HUMAN_REVIEW_REQUIRED` — do not keep looping.
 
 **On completion:** set every `design.agents.*.status` and `design.status` to `"completed"`;
 set `design.adrs_count` to the number of ADRs written. `implementation-plans/` stays empty

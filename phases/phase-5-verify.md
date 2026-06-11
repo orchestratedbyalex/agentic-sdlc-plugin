@@ -27,4 +27,16 @@ Prerequisite: the Develop phase has completed the change(s) under verification.
    artifact (condition c2).
    - **READY FOR RELEASE:** set every `verify.agents.*.status` and `verify.status` to `"completed"`.
    - **REWORK REQUIRED:** do NOT update status; route the blockers back to Phase 4 (Develop)
-     and re-run Verify after they're fixed.
+     and re-run Verify after they're fixed, per the bounded protocol below.
+3. **Re-verification after REWORK (bounded — track the cycle count; cycle 1 = the initial run):**
+   - **Cycle 2** (first re-run after the Phase 4 fixes): re-run **static-dynamic-analyzer +
+     regression-tester IN FULL** (the mechanical safety net — a fix can break anything), and
+     re-dispatch **coverage-analyst + independent-code-reviewer in RE-VERIFY mode**: pass each a
+     `REVERIFY_SCOPE` block containing the rework diff (files changed since the failed verdict)
+     and the prior blocker list, so they verify the fix and its blast radius rather than the
+     whole change-set from scratch. The validation-reviewer always re-runs over the four fresh
+     reports and must confirm every prior blocker is explicitly FIXED.
+   - **Cycle 3:** FULL re-verification — all four agents from scratch, no scoping (repeated
+     rework means the blast radius is not well understood; do not scope twice in a row).
+   - **Still REWORK REQUIRED after cycle 3:** STOP and emit `HUMAN_REVIEW_REQUIRED` to the
+     user — do not keep looping.

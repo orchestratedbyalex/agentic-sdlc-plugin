@@ -28,7 +28,9 @@ production build — see Phase 5).
 3. **release-reviewer** — 7-point gate (version consistency of the STAGED release, changelog
    accuracy, semver, build artifacts, package exports, sensitive-file exclusion, dependency
    audit). An author that committed/tagged on its own is a discipline FAIL.
-   - **Gate FAIL:** route issues to release-author, re-run, re-review until PASS.
+   - **Gate FAIL:** route issues to release-author, re-run, re-review. If the gate FAILs
+     **3** times (or a previously-cleared issue reappears), STOP and emit
+     `HUMAN_REVIEW_REQUIRED` — do not keep looping.
 
 **On completion:** set every `release.agents.*.status` and `release.status` to `"completed"`.
 The release is **staged** with a suggested commit message + tag command. **Creating the commit
