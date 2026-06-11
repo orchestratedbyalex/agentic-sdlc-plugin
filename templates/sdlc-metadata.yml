@@ -3,6 +3,7 @@ sdlc:
   version: "VERSION"
   mode: "MODE" # greenfield | existing
   methodology: "agentic-sdlc"
+  model_profile: "balanced" # quality | balanced | economy
   phases:
     prepare:
       status: "pending"

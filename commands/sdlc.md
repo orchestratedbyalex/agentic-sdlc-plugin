@@ -8,8 +8,8 @@ argument-hint: "[optional: phase name or change request]"
 ## Step 0 — Detect project state
 
 Your FIRST action: run the state detector with the Bash tool and read its JSON output. It
-prints `{ mode, board, phase, agent, setupComplete, valid }` for the current working
-directory:
+prints `{ mode, board, phase, agent, setupComplete, valid, modelProfile }` for the current
+working directory:
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs"
@@ -86,6 +86,23 @@ Read the phase playbook at `${CLAUDE_PLUGIN_ROOT}/phases/phase-<n>-<name>.md` an
 it: dispatch its subagents via the Task tool (sequential across "Depends on", concurrent
 within a parallel group), run the validation gate after each group, and on a gate FAIL
 re-dispatch the relevant author agent per the playbook's "On failure".
+
+#### Model routing (apply on every dispatch)
+`modelProfile` from Step 0 selects how much model to spend per agent. Each agent belongs to
+one tier; pass the tier's model alias as the Task tool's `model` parameter ("inherit" =
+omit the parameter, i.e. the session model). **No profile ever downgrades the full tier** —
+gates and code-writing keep the strongest model.
+
+| Tier | Agents | quality | balanced (default) | economy |
+|------|--------|---------|--------------------|---------|
+| **full** — judgment & gates | every `*-reviewer` (requirement, design, code, independent, validation, release), architect-planner, architect-clarifier, code-author, test-author, implementer, feedback-loop | inherit | inherit | inherit |
+| **standard** — analysis & doc authoring | prepare-explorer, claude-md, the 3 define analysts, the 3 define authors, the 2 design explorers, the 3 design authors, reqs-sync, coverage-analyst, release-planner, release-author, issue-triager, incident-responder | inherit | sonnet | haiku |
+| **fast** — mechanical tool-running | static-dynamic-analyzer, regression-tester, dependency-monitor, telemetry-monitor | inherit | haiku | haiku |
+
+If a dispatch fails because the alias is unavailable on the user's plan, re-dispatch that
+one agent with inherit. To change the profile (persisted deterministically — never hand-edit):
+
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" config --model-profile <quality|balanced|economy>
 
 If the phase playbook file does not exist yet, tell the user that phase is not available
 in this build (the phase playbooks and subagents are delivered in a later plan) and stop

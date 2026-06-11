@@ -32,7 +32,7 @@ the "evidence" (requirements, design docs, `sdlc-metadata.yml`). That separation
 ## Build / test / run
 
 ```bash
-node --test            # run all tests (currently 26, must stay green)
+node --test            # run all tests (currently 31, must stay green)
 claude --plugin-dir .  # load the plugin into a Claude Code session for live use
 /reload-plugins        # (inside the session, after edits)
 /agentic-sdlc:sdlc     # run the wizard
@@ -49,7 +49,7 @@ them as constraints, not suggestions. Rationale lives in `docs/hardening-*.md`.
 1. **Reviewer ≠ author.** Review agents have read-only tools (`Read Grep Glob Bash`); only
    authors get `Write Edit`. Never give a reviewer write tools.
 2. **Deterministic state.** Every `sdlc-metadata.yml` mutation goes through
-   `scripts/sdlc-state.mjs` (`init` / `complete`) — never an LLM hand-edit of YAML.
+   `scripts/sdlc-state.mjs` (`init` / `complete` / `config`) — never an LLM hand-edit of YAML.
 3. **Exercise the real artifact, not a proxy.** Gates must run the *actual* production build
    and confirm tests truly executed (0 suites collected = FAIL), not just "types pass / no
    failing assertions." (Verify + Release + Develop reviewer.)
@@ -65,6 +65,10 @@ them as constraints, not suggestions. Rationale lives in `docs/hardening-*.md`.
    1012/1016, Microsoft SDL, ITIL 4, ISO 25010/27001, Nygard ADRs). Keep the citations honest.
 8. **Subagents return only their final message.** They run in isolated contexts; their final
    message IS the return value to the orchestrator. Keep orchestrator output terse.
+9. **Model profiles never downgrade the gates.** Model routing (`quality`/`balanced`/`economy`,
+   see `commands/sdlc.md`) may run mechanical/analysis agents on smaller models, but full-tier
+   agents (every reviewer/validator, the planner, the clarifier, the code/test/implementer
+   authors, the feedback-loop) always inherit the session model — in every profile.
 
 ## When editing agents
 

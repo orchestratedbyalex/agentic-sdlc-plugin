@@ -211,3 +211,40 @@ test('develop.plans key does not disrupt agent parsing', () => {
   assert.equal(md.phases.develop.agents.length, 7)
   assert.equal(md.phases.develop.agents[0].name, 'architect_planner')
 })
+
+import { setModelProfile, MODEL_PROFILES } from '../scripts/sdlc-state.mjs'
+
+test('parseMetadata reads model_profile from the template (comment ignored)', () => {
+  const md = parseMetadata(initMetadata(TEMPLATE, { name: 'x', version: '0.1.0', mode: 'existing' }))
+  assert.equal(md.modelProfile, 'balanced')
+})
+
+test('computeState defaults modelProfile to balanced when the key is absent (legacy metadata)', () => {
+  const s = computeState({ hasMetadata: true, metadataContent: MIDWAY, hasCode: true })
+  assert.equal(s.modelProfile, 'balanced')
+})
+
+test('computeState surfaces the configured modelProfile', () => {
+  const out = setModelProfile(initMetadata(TEMPLATE, { name: 'x', version: '0.1.0', mode: 'existing' }), 'economy')
+  const s = computeState({ hasMetadata: true, metadataContent: out, hasCode: true })
+  assert.equal(s.modelProfile, 'economy')
+})
+
+test('setModelProfile replaces an existing value in place', () => {
+  const base = initMetadata(TEMPLATE, { name: 'x', version: '0.1.0', mode: 'existing' })
+  const out = setModelProfile(base, 'quality')
+  assert.equal(parseMetadata(out).modelProfile, 'quality')
+  // exactly one model_profile line, and the phases block is untouched
+  assert.equal(out.split('\n').filter(l => /^\s{2}model_profile:/.test(l)).length, 1)
+  assert.equal(parseMetadata(out).phases.develop.agents.length, 7)
+})
+
+test('setModelProfile inserts the key into legacy metadata without one', () => {
+  const out = setModelProfile(MIDWAY, 'quality')
+  const md = parseMetadata(out)
+  assert.equal(md.modelProfile, 'quality')
+  // existing content still parses
+  assert.equal(md.phases.prepare.status, 'completed')
+  assert.equal(md.project, 'midway')
+  assert.ok(MODEL_PROFILES.includes('quality'))
+})

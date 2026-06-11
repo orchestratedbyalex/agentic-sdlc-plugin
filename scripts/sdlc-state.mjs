@@ -8,14 +8,15 @@ import { fileURLToPath } from 'node:url'
 
 export const PHASES = ['prepare', 'define', 'design', 'develop', 'verify', 'release', 'operate']
 export const SETUP_PHASES = ['prepare', 'define', 'design']
+export const MODEL_PROFILES = ['quality', 'balanced', 'economy']
 
 // Parse the known-shape metadata YAML without a YAML dependency.
 // Returns { valid, project, version, phases: { key: { status, agents: [{name,status}] } } }
 export function parseMetadata(content) {
   if (typeof content !== 'string' || content.trim() === '') {
-    return { valid: false, project: null, version: null, phases: {} }
+    return { valid: false, project: null, version: null, modelProfile: null, phases: {} }
   }
-  const out = { valid: true, project: null, version: null, phases: {} }
+  const out = { valid: true, project: null, version: null, modelProfile: null, phases: {} }
   let inPhases = false
   let curPhase = null
   let inAgents = false
@@ -28,6 +29,8 @@ export function parseMetadata(content) {
     if (projM) out.project = projM[1].trim() || null
     const verM = line.match(/^\s{2}version:\s*"?([^"]*)"?\s*$/)
     if (verM) out.version = verM[1].trim() || null
+    const mpM = line.match(/^\s{2}model_profile:\s*"?([^"#]*)"?\s*(#.*)?$/)
+    if (mpM) out.modelProfile = mpM[1].trim() || null
 
     if (/^\s{2}phases:\s*$/.test(line)) { inPhases = true; continue }
     if (inPhases && /^\s{2}\S/.test(line) && !/^\s{2}phases:/.test(line)) {
@@ -88,11 +91,12 @@ export function computeState({ hasMetadata, metadataContent, hasCode }) {
       phase: 1,
       agent: null,
       setupComplete: false,
+      modelProfile: 'balanced',
     }
   }
   const md = parseMetadata(metadataContent)
   if (!md.valid) {
-    return { mode: 'resume', valid: false, project: null, version: null, board: [], phase: null, agent: null, setupComplete: false }
+    return { mode: 'resume', valid: false, project: null, version: null, board: [], phase: null, agent: null, setupComplete: false, modelProfile: 'balanced' }
   }
   const board = PHASES.map((key, i) => ({
     num: i + 1,
@@ -112,7 +116,8 @@ export function computeState({ hasMetadata, metadataContent, hasCode }) {
   const setupComplete = SETUP_PHASES.every(
     k => md.phases[k] && md.phases[k].status === 'completed'
   )
-  return { mode: 'resume', valid: true, project: md.project, version: md.version, board, phase, agent, setupComplete }
+  const modelProfile = MODEL_PROFILES.includes(md.modelProfile) ? md.modelProfile : 'balanced'
+  return { mode: 'resume', valid: true, project: md.project, version: md.version, board, phase, agent, setupComplete, modelProfile }
 }
 
 const CODE_MANIFESTS = ['package.json', 'Cargo.toml', 'pyproject.toml', 'go.mod', 'pom.xml', 'build.gradle', 'Gemfile', 'composer.json']
@@ -163,6 +168,20 @@ export function updateStatus(content, { phase, agent, status = 'completed' }) {
       }
     }
   }
+  return lines.join('\n')
+}
+
+// Deterministically set sdlc.model_profile in the metadata text (no YAML dependency).
+// Replaces an existing line, or inserts one after methodology/version for legacy files.
+export function setModelProfile(content, profile) {
+  const lines = content.split('\n')
+  const newLine = `  model_profile: "${profile}"`
+  const idx = lines.findIndex(l => /^\s{2}model_profile:/.test(l))
+  if (idx !== -1) { lines[idx] = newLine; return lines.join('\n') }
+  let anchor = lines.findIndex(l => /^\s{2}methodology:/.test(l))
+  if (anchor === -1) anchor = lines.findIndex(l => /^\s{2}version:/.test(l))
+  if (anchor === -1) anchor = lines.findIndex(l => /^sdlc:\s*$/.test(l))
+  lines.splice(anchor + 1, 0, newLine)
   return lines.join('\n')
 }
 
@@ -236,10 +255,34 @@ function completeCmd(argv) {
   process.stdout.write(JSON.stringify(terse, null, 2) + '\n')
 }
 
+// `config --model-profile quality|balanced|economy`
+// Deterministically persists the model-routing profile the wizard applies at dispatch time.
+function configCmd(argv) {
+  const opts = {}
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--model-profile') opts.modelProfile = argv[++i]
+  }
+  const cwd = process.cwd()
+  const metaPath = join(cwd, 'docs/requirements/sdlc-metadata.yml')
+  if (!opts.modelProfile || !MODEL_PROFILES.includes(opts.modelProfile)) {
+    process.stdout.write(JSON.stringify({ ok: false, error: `--model-profile must be one of: ${MODEL_PROFILES.join(', ')}` }, null, 2) + '\n')
+    process.exitCode = 1
+    return
+  }
+  if (!existsSync(metaPath)) {
+    process.stdout.write(JSON.stringify({ ok: false, error: 'no metadata file; run init first', path: metaPath }, null, 2) + '\n')
+    process.exitCode = 1
+    return
+  }
+  writeFileSync(metaPath, setModelProfile(readFileSync(metaPath, 'utf8'), opts.modelProfile))
+  process.stdout.write(JSON.stringify({ ok: true, model_profile: opts.modelProfile }, null, 2) + '\n')
+}
+
 function main() {
   const cmd = process.argv[2]
   if (cmd === 'init') initCmd(process.argv.slice(3))
   else if (cmd === 'complete') completeCmd(process.argv.slice(3))
+  else if (cmd === 'config') configCmd(process.argv.slice(3))
   else detectCmd()
 }
 
