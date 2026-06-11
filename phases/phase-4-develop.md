@@ -29,7 +29,9 @@ Dispatch (steps marked ⊘ are skipped for 🟢 trivial):
    `docs/design/implementation-plans/PLAN-NNN-<slug>.md` and captures PLAN_PATH.
    - 🟢 **trivial:** lite plan — target file(s) + the ACs to satisfy + the Security-Impact
      line; read only an ADR/CS the change clearly touches (skip the full sweep).
-   - 🟡/🔴 **standard/complex:** the full plan (complex MUST assess ADR impact).
+   - 🟡/🔴 **standard/complex:** the full plan (complex MUST assess ADR impact and, if the
+     change touches a trust boundary, the Trust Boundaries & Threats table in
+     architecture-overview.md — flag any new/changed boundary in the plan's Security-Impact).
 2. **Authors (tier selects the group — exactly ONE of the two runs):** pass PLAN_PATH; each
    author scans the plan for ambiguities first.
    - 🟢 **trivial:** dispatch **sdlc-develop-implementer** alone — it writes the code AND its

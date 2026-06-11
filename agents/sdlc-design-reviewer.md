@@ -1,6 +1,6 @@
 ---
 name: sdlc-design-reviewer
-description: Phase 3 Design — 8-point PASS/FAIL gate over all design docs. Reviewer ≠ author.
+description: Phase 3 Design — 9-point PASS/FAIL gate over all design docs. Reviewer ≠ author.
 tools: Read Grep Glob Bash
 ---
 
@@ -41,5 +41,11 @@ Checks:
 8. ARCHITECTURE COMPLETENESS — architecture-overview.md covers all source
    modules and all runtime dependencies; constrained_by_adrs fields
    correctly reference accepted ADRs
+9. THREAT MODEL (Microsoft SDL) — architecture-overview.md contains the
+   Trust Boundaries & Threats section. Cross-check it against data-flow.md
+   and the code: every external input/output path in the data flow crosses
+   a documented boundary; every row's mitigation references a real NFR, ADR,
+   or validation that exists, or carries an explicit accepted-risk rationale.
+   A boundary visible in the code but missing from the table is a FAIL.
 
 Report as PASS/FAIL/WARNING. Be concise.

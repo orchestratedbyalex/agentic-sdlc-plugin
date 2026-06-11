@@ -37,6 +37,17 @@ Include:
   or memoization discovered
 - Concurrency Model — describe the async/parallel execution model
 - Design Patterns — list all patterns identified with source locations
+- Trust Boundaries & Threats (STRIDE-lite; Microsoft SDL design-time threat modeling) —
+  identify every boundary where data or control crosses trust levels IN THE ACTUAL CODE
+  (user/CLI/HTTP input, network calls, filesystem reads/writes, env/config, third-party
+  dependencies, IPC/child processes). For each boundary, one table row:
+
+  | Boundary | What crosses it (source ref) | Threats (STRIDE letters that apply) | Mitigation (NFR / ADR / validation, or "ACCEPTED RISK: <why>") |
+
+  Derive ONLY from boundaries that exist in the code — no speculative threats. Every row's
+  mitigation must point at a real NFR, ADR, or validation in the code, or be an explicit
+  one-line accepted-risk rationale. If the project has no external boundaries at all, say
+  so in one line — do not invent rows.
 
 DOCUMENT 2: data-flow.md
 
