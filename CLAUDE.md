@@ -1,8 +1,8 @@
 # CLAUDE.md
 
 Guidance for Claude Code (and any reviewer model) working in **this** repository — the
-**Agentic SDLC** Claude Code plugin. If you are here to evaluate or extend the plugin, read
-this first, then `REVIEW-BRIEF.md`.
+**Agentic SDLC** Claude Code plugin. If you are here to extend the plugin, read this first,
+then `CONTRIBUTING.md`.
 
 ## What this repository is
 
@@ -13,7 +13,8 @@ Release → Operate) using a roster of **35 specialized subagents**.
 
 This is the plugin itself (the "how"). It is applied *to* a target repository, which receives
 the "evidence" (requirements, design docs, `sdlc-metadata.yml`). That separation is the
-**two-zone model** and is load-bearing — see `REVIEW-BRIEF.md`.
+**two-zone model** and is load-bearing: the plugin carries the process; the target repo
+accumulates the evidence.
 
 ## Layout
 
@@ -27,7 +28,6 @@ the "evidence" (requirements, design docs, `sdlc-metadata.yml`). That separation
 | `templates/` | Artifact templates (FR, NFR, US, PLAN, ADR, CS, metadata) |
 | `scripts/sdlc-state.mjs` | **The only real code.** Zero-dep Node ESM that owns ALL metadata state |
 | `test/` | `node:test` suites (state logic + plugin structure) |
-| `docs/` | Design spec, build plans, hardening docs, project history (co-located for review) |
 
 ## Build / test / run
 
@@ -44,7 +44,7 @@ There is no build/transpile step — agents and playbooks are markdown; the only
 ## Design invariants — DO NOT regress these
 
 These were established deliberately (several via live runs + multi-specialist review). Treat
-them as constraints, not suggestions. Rationale lives in `docs/hardening-*.md`.
+them as constraints, not suggestions; the rationale is recorded in the git history.
 
 1. **Reviewer ≠ author.** Review agents have read-only tools (`Read Grep Glob Bash`); only
    authors get `Write Edit`. Never give a reviewer write tools.
@@ -81,5 +81,5 @@ them as constraints, not suggestions. Rationale lives in `docs/hardening-*.md`.
 ## Status
 
 Feature-complete and **live-proven end-to-end** (all 7 phases run on a real external repo).
-`git main`, **no remote** (intentionally local). See `REVIEW-BRIEF.md` for what to evaluate and
-`docs/project-history.md` for how it got here.
+See `README.md` for install + usage, `CONTRIBUTING.md` for the contributor workflow, and
+`CHANGELOG.md` for the release history.

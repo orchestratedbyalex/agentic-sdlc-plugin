@@ -2,3 +2,7 @@ node_modules/
 .DS_Store
 *.log
 .sdlc-prompt.tmp
+
+# Build/review provenance — kept locally, excluded from the public repo
+docs/
+REVIEW-BRIEF.md
