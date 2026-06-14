@@ -22,11 +22,6 @@ The agent playbooks were authored with AI assistance (Claude Code) under direct 
 
 ## License
 
-This framework is licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0) — see [LICENSE.md](LICENSE.md) for the full terms.
-
-**Plain-language summary** (not a substitute for the license text):
-
-- ✅ **Free for personal, educational, and research use** — students, hobbyists, researchers, charities, schools, public-safety/health organizations, and government institutions can use it freely.
-- ✅ **You can study, modify, and share** the framework.
-- ❌ **Commercial use is not permitted.** You may not use the framework for any commercial purpose, including but not limited to selling it, embedding it in a product you sell, or using it to deliver paid services.
-- 📩 **Need a commercial license?** Reach out via [github.com/orchestratedbyalex](https://github.com/orchestratedbyalex) to discuss terms.
+This framework is released under the [MIT License](LICENSE.md) — free to use, modify,
+and distribute (including commercially), provided the copyright notice and license text
+are retained. The software is provided "as is", without warranty of any kind.

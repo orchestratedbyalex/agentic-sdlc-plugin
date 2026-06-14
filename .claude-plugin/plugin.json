@@ -9,6 +9,6 @@
   },
   "homepage": "https://github.com/orchestratedbyalex/agentic-sdlc-plugin",
   "repository": "https://github.com/orchestratedbyalex/agentic-sdlc-plugin",
-  "license": "PolyForm-Noncommercial-1.0.0",
-  "keywords": ["sdlc", "agents", "requirements", "adr", "lifecycle", "workflow"]
+  "license": "MIT",
+  "keywords": ["sdlc", "agents", "requirements", "adr", "lifecycle", "workflow", "phases", "verification", "design", "release", "testing"]
 }
