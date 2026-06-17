@@ -46,6 +46,25 @@ Run `/sdlc` in any repository. The wizard:
 State is deterministic and resumable: every status change goes through `sdlc-state.mjs`, never
 an ad-hoc edit, so you can stop and resume any time.
 
+## Model routing
+
+Each subagent runs under a model **profile**, so you can trade cost against wall-clock without
+touching the gates. Switch any time (persisted deterministically in `sdlc-metadata.yml`):
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" config --model-profile <quality|balanced|economy>
+```
+
+- **quality** — every agent runs on the session model. Most thorough, most expensive.
+- **balanced** (default) — mechanical agents (build/lint analysis, the regression run, the
+  dependency/telemetry monitors) drop to a small fast model and analysis/authoring agents to a
+  mid model. Cheaper and faster, same gates.
+- **economy** — pushes the non-critical tiers to the smallest models for the lowest cost.
+
+Whatever the profile, the **full tier always inherits the session model** — every reviewer and
+validator, the planner, the clarifier, the code/test/implementer authors, and the feedback-loop.
+Model routing never downgrades a gate.
+
 ## The seven phases
 
 | Phase | Purpose | Anchored in |
@@ -76,7 +95,7 @@ the plugin stays generic, your repo accumulates the lifecycle record.
 ## Test
 
 ```bash
-node --test          # 31 tests, all green (state logic + plugin structure)
+node --test          # 39 tests, all green (state logic + plugin structure)
 ```
 
 ## Contributing
