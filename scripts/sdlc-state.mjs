@@ -54,13 +54,13 @@ export function parseMetadata(content) {
       if (stM) { out.phases[curPhase].status = stM[1].trim(); continue }
     } else {
       // flow style on one line: `        explorer: { status: "pending" }`
-      const agFlowM = line.match(/^\s{8}(\w+):\s*\{\s*status:\s*"?([^"}]*?)"?\s*\}\s*$/)
+      const agFlowM = line.match(/^\s{8}([\w-]+):\s*\{\s*status:\s*"?([^"}]*?)"?\s*\}\s*$/)
       if (agFlowM) {
         out.phases[curPhase].agents.push({ name: agFlowM[1], status: agFlowM[2].trim() })
         curAgent = null
         continue
       }
-      const agM = line.match(/^\s{8}(\w+):\s*$/)
+      const agM = line.match(/^\s{8}([\w-]+):\s*$/)
       if (agM) {
         curAgent = { name: agM[1], status: 'pending' }
         out.phases[curPhase].agents.push(curAgent)
@@ -113,9 +113,16 @@ export function computeState({ hasMetadata, metadataContent, hasCode }) {
       agent = a ? a.name : null
     }
   }
-  const setupComplete = SETUP_PHASES.every(
-    k => md.phases[k] && md.phases[k].status === 'completed'
-  )
+  // A setup phase counts as complete only when its status says so AND it has a non-empty
+  // agent roster with every agent completed. This stops a corrupt / partial / hand-edited
+  // file from unlocking the build phases on a summary field alone — the gate must verify
+  // the underlying agent evidence, not trust phase.status in isolation.
+  const setupComplete = SETUP_PHASES.every(k => {
+    const ph = md.phases[k]
+    return !!ph && ph.status === 'completed' &&
+      Array.isArray(ph.agents) && ph.agents.length > 0 &&
+      ph.agents.every(a => a.status === 'completed')
+  })
   const modelProfile = MODEL_PROFILES.includes(md.modelProfile) ? md.modelProfile : 'balanced'
   return { mode: 'resume', valid: true, project: md.project, version: md.version, board, phase, agent, setupComplete, modelProfile }
 }
@@ -162,7 +169,7 @@ export function updateStatus(content, { phase, agent, status = 'completed' }) {
       }
     } else {
       // flow-style agent line: `        key: { status: "..." }`
-      const fm = line.match(/^(\s{8})(\w+):\s*\{\s*status:\s*"?[^"}]*"?\s*\}\s*$/)
+      const fm = line.match(/^(\s{8})([\w-]+):\s*\{\s*status:\s*"?[^"}]*"?\s*\}\s*$/)
       if (fm && (!agent || fm[2] === agent)) {
         lines[i] = `${fm[1]}${fm[2]}: { status: "${status}" }`
       }
@@ -174,14 +181,17 @@ export function updateStatus(content, { phase, agent, status = 'completed' }) {
 // Deterministically set sdlc.model_profile in the metadata text (no YAML dependency).
 // Replaces an existing line, or inserts one after methodology/version for legacy files.
 export function setModelProfile(content, profile) {
-  const lines = content.split('\n')
   const newLine = `  model_profile: "${profile}"`
-  const idx = lines.findIndex(l => /^\s{2}model_profile:/.test(l))
-  if (idx !== -1) { lines[idx] = newLine; return lines.join('\n') }
+  // Strip EVERY existing model_profile line first, so a duplicate key can't survive and the
+  // operation is idempotent. Then insert exactly one line after the anchor.
+  const lines = content.split('\n').filter(l => !/^\s{2}model_profile:/.test(l))
   let anchor = lines.findIndex(l => /^\s{2}methodology:/.test(l))
   if (anchor === -1) anchor = lines.findIndex(l => /^\s{2}version:/.test(l))
   if (anchor === -1) anchor = lines.findIndex(l => /^sdlc:\s*$/.test(l))
-  lines.splice(anchor + 1, 0, newLine)
+  // No recognizable anchor (malformed file): append rather than splice at index -1, which
+  // would insert the key as line 0 — above the root key — and produce invalid YAML.
+  if (anchor === -1) lines.push(newLine)
+  else lines.splice(anchor + 1, 0, newLine)
   return lines.join('\n')
 }
 
@@ -247,7 +257,18 @@ function completeCmd(argv) {
     process.exitCode = 1
     return
   }
-  writeFileSync(metaPath, updateStatus(readFileSync(metaPath, 'utf8'), opts))
+  const content = readFileSync(metaPath, 'utf8')
+  // Fail loudly on an agent that doesn't exist in this phase, instead of silently writing
+  // nothing and reporting success — a typo'd --agent must not look like a completed update.
+  if (opts.agent) {
+    const ph = parseMetadata(content).phases[opts.phase]
+    if (!ph || !ph.agents.some(a => a.name === opts.agent)) {
+      process.stdout.write(JSON.stringify({ ok: false, error: `unknown agent '${opts.agent}' in phase '${opts.phase}' — nothing updated`, path: metaPath }, null, 2) + '\n')
+      process.exitCode = 1
+      return
+    }
+  }
+  writeFileSync(metaPath, updateStatus(content, opts))
   const state = computeState({ hasMetadata: true, metadataContent: readFileSync(metaPath, 'utf8'), hasCode: detectCode(cwd) })
   // Terse output — the wizard renders the board from the detector (Step 0), not from here.
   // Printing the full state on every (often chained) complete call floods the main context.

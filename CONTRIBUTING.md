@@ -11,7 +11,7 @@ templates) except one zero-dependency Node ESM file, `scripts/sdlc-state.mjs`, w
 state. Tests use the built-in `node:test` runner.
 
 ```bash
-node --test            # must stay green (31 tests: state logic + plugin structure)
+node --test            # must stay green (39 tests: state logic + plugin structure)
 claude --plugin-dir .  # load the plugin into a Claude Code session
 /reload-plugins        # after edits, inside the session
 ```

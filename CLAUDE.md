@@ -32,7 +32,7 @@ accumulates the evidence.
 ## Build / test / run
 
 ```bash
-node --test            # run all tests (currently 31, must stay green)
+node --test            # run all tests (currently 39, must stay green)
 claude --plugin-dir .  # load the plugin into a Claude Code session for live use
 /reload-plugins        # (inside the session, after edits)
 /agentic-sdlc:sdlc     # run the wizard

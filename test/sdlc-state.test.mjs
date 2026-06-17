@@ -65,10 +65,19 @@ const MIDWAY = `sdlc:
   phases:
     prepare:
       status: "completed"
+      agents:
+        explorer: { status: "completed" }
+        claude_md: { status: "completed" }
     define:
       status: "completed"
+      agents:
+        source_analyst: { status: "completed" }
+        requirement_reviewer: { status: "completed" }
     design:
       status: "completed"
+      agents:
+        architecture_explorer: { status: "completed" }
+        design_reviewer: { status: "completed" }
     develop:
       status: "in_progress"
       agents:
@@ -247,4 +256,121 @@ test('setModelProfile inserts the key into legacy metadata without one', () => {
   assert.equal(md.phases.prepare.status, 'completed')
   assert.equal(md.project, 'midway')
   assert.ok(MODEL_PROFILES.includes('quality'))
+})
+
+// ── setupComplete must verify agent evidence, not trust phase.status alone ──
+
+test('computeState: a completed setup phase with a PENDING agent is NOT setup-complete', () => {
+  const md = `sdlc:
+  project: "x"
+  version: "0.1.0"
+  phases:
+    prepare:
+      status: "completed"
+      agents:
+        explorer: { status: "pending" }
+        claude_md: { status: "completed" }
+    define:
+      status: "completed"
+      agents:
+        source_analyst: { status: "completed" }
+    design:
+      status: "completed"
+      agents:
+        design_reviewer: { status: "completed" }
+`
+  assert.equal(computeState({ hasMetadata: true, metadataContent: md, hasCode: true }).setupComplete, false)
+})
+
+test('computeState: a completed setup phase with NO agents listed is NOT setup-complete', () => {
+  const md = `sdlc:
+  project: "x"
+  version: "0.1.0"
+  phases:
+    prepare:
+      status: "completed"
+    define:
+      status: "completed"
+    design:
+      status: "completed"
+`
+  assert.equal(computeState({ hasMetadata: true, metadataContent: md, hasCode: true }).setupComplete, false)
+})
+
+// ── setModelProfile robustness ──
+
+test('setModelProfile removes duplicate model_profile lines (idempotent, no stale survivor)', () => {
+  const dup = `sdlc:
+  project: "x"
+  version: "0.1.0"
+  model_profile: "quality"
+  model_profile: "quality"
+  phases:
+    prepare:
+      status: "pending"
+`
+  const out = setModelProfile(dup, 'economy')
+  assert.equal(out.split('\n').filter(l => /^\s{2}model_profile:/.test(l)).length, 1)
+  assert.equal(parseMetadata(out).modelProfile, 'economy')
+})
+
+test('setModelProfile on an anchorless file appends, never inserting above the root', () => {
+  const out = setModelProfile('foo: bar\nbaz: qux\n', 'economy')
+  assert.doesNotMatch(out.split('\n')[0], /model_profile/) // not forced to line 0
+  assert.equal(out.split('\n').filter(l => /model_profile:/.test(l)).length, 1)
+})
+
+// ── hyphen tolerance in agent names ──
+
+const HYPHEN_AGENT = `sdlc:
+  project: "x"
+  version: "0.1.0"
+  phases:
+    prepare:
+      status: "pending"
+      agents:
+        my-agent: { status: "pending" }
+`
+
+test('parseMetadata tolerates hyphens in agent names', () => {
+  assert.deepEqual(parseMetadata(HYPHEN_AGENT).phases.prepare.agents.map(a => a.name), ['my-agent'])
+})
+
+test('updateStatus tolerates hyphens in agent names', () => {
+  const out = updateStatus(HYPHEN_AGENT, { phase: 'prepare', agent: 'my-agent', status: 'completed' })
+  assert.equal(parseMetadata(out).phases.prepare.agents[0].status, 'completed')
+})
+
+// ── CLI integration: the `complete` command's guards (run the real script) ──
+
+import { execFileSync } from 'node:child_process'
+import { mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+
+const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), '../scripts/sdlc-state.mjs')
+function runCLI(cwd, args) {
+  try {
+    return { code: 0, json: JSON.parse(execFileSync('node', [SCRIPT, ...args], { cwd, encoding: 'utf8' })) }
+  } catch (e) {
+    return { code: e.status ?? 1, json: JSON.parse(e.stdout) } // non-zero exit still prints our JSON
+  }
+}
+
+test('CLI: complete --agent with an unknown agent fails loudly (no silent no-op)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'sdlc-cli-'))
+  assert.equal(runCLI(dir, ['init', '--name', 'x', '--version', '0.1.0', '--mode', 'existing']).json.ok, true)
+  const bad = runCLI(dir, ['complete', '--phase', 'prepare', '--agent', 'does_not_exist'])
+  assert.equal(bad.json.ok, false)
+  assert.match(bad.json.error, /unknown agent/)
+  assert.equal(runCLI(dir, ['complete', '--phase', 'prepare', '--agent', 'explorer']).json.ok, true)
+})
+
+test('CLI: setupComplete only after every setup phase AND its agents complete', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'sdlc-cli-'))
+  runCLI(dir, ['init', '--name', 'x', '--version', '0.1.0', '--mode', 'existing'])
+  // completing one agent of prepare must NOT unlock setup
+  assert.equal(runCLI(dir, ['complete', '--phase', 'prepare', '--agent', 'explorer']).json.setupComplete, false)
+  runCLI(dir, ['complete', '--phase', 'prepare'])
+  runCLI(dir, ['complete', '--phase', 'define'])
+  assert.equal(runCLI(dir, ['complete', '--phase', 'design']).json.setupComplete, true)
 })
