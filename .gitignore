@@ -6,3 +6,4 @@ node_modules/
 # Build/review provenance — kept locally, excluded from the public repo
 docs/
 REVIEW-BRIEF.md
+SESSION-HANDOFF.md
