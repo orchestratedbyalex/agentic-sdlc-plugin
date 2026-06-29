@@ -9,7 +9,7 @@
     {
       "name": "agentic-sdlc",
       "source": "./",
-      "description": "Agent-driven SDLC wizard for Claude Code."
+      "description": "A standards-anchored, agent-driven SDLC for Claude Code: one /sdlc wizard drives seven phases (Prepare to Operate) with a roster of specialized subagents."
     }
   ]
 }

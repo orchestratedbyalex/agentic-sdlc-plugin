@@ -5,6 +5,9 @@ Run one command — `/agentic-sdlc:sdlc` (short: `/sdlc`) — and the wizard det
 project state and drives seven phases (Prepare → Define → Design → Develop → Verify →
 Release → Operate) with a roster of **35 specialized subagents**.
 
+📖 **[How it works — visual guide](https://orchestratedbyalex.github.io/agentic-sdlc-plugin/)** —
+the seven phases, install, and model routing on one page.
+
 ## Requirements
 
 - **Claude Code** (CLI, desktop, web, or IDE extension).
