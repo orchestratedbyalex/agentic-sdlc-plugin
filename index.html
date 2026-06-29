@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic SDLC — How it works</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============ THEME — Blueprint (light-first) ============ */
+  :root {
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'Fira Code', 'SF Mono', Consolas, monospace;
+
+    --bg: #eaf0f7;
+    --surface: #ffffff;
+    --surface-2: #f4f7fb;
+    --border: rgba(22, 38, 61, 0.12);
+    --border-bright: rgba(22, 38, 61, 0.22);
+    --grid: rgba(30, 95, 168, 0.06);
+    --text: #14253c;
+    --text-dim: #5a6b82;
+
+    --blue: #1e5fa8;
+    --blue-dim: rgba(30, 95, 168, 0.10);
+    --gold: #b07d12;
+    --gold-dim: rgba(176, 125, 18, 0.12);
+    --green: #2c7a57;
+    --green-dim: rgba(44, 122, 87, 0.12);
+    --amber: #c05a2a;
+    --amber-dim: rgba(192, 90, 42, 0.12);
+
+    /* phase accents — a blue → teal → green → gold → terracotta progression */
+    --p1: #2f74c0;
+    --p2: #1f8fab;
+    --p3: #199183;
+    --p4: #2f9a64;
+    --p5: #6f9a36;
+    --p6: #b3851f;
+    --p7: #bd5f34;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b131e;
+      --surface: #121e2d;
+      --surface-2: #16243600;
+      --surface-2: #15212f;
+      --border: rgba(255, 255, 255, 0.09);
+      --border-bright: rgba(255, 255, 255, 0.17);
+      --grid: rgba(120, 170, 230, 0.06);
+      --text: #e4ecf5;
+      --text-dim: #94a6bc;
+
+      --blue: #5b9bd5;
+      --blue-dim: rgba(91, 155, 213, 0.14);
+      --gold: #d4a73a;
+      --gold-dim: rgba(212, 167, 58, 0.15);
+      --green: #5fae7e;
+      --green-dim: rgba(95, 174, 126, 0.15);
+      --amber: #e08a5a;
+      --amber-dim: rgba(224, 138, 90, 0.15);
+
+      --p1: #5b9bd5;
+      --p2: #3fb0c9;
+      --p3: #34b6a4;
+      --p4: #50b985;
+      --p5: #94c054;
+      --p6: #d4a73a;
+      --p7: #e08a5a;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  .grid > *, .flex > * { min-width: 0; }
+
+  body {
+    background-color: var(--bg);
+    /* faint blueprint grid */
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 28px 28px;
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    padding: 48px 32px 72px;
+    overflow-wrap: break-word;
+    min-height: 100vh;
+  }
+
+  /* ============ ANIMATION ============ */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeScale { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+  .animate { animation: fadeUp 0.5s ease-out both; animation-delay: calc(var(--i, 0) * 0.06s); }
+  .pop { animation: fadeScale 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.06s); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* ============ LAYOUT ============ */
+  .container { max-width: 1060px; margin: 0 auto; }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .eyebrow::before { content: ''; width: 26px; height: 1px; background: var(--blue); opacity: 0.6; }
+
+  h1 {
+    font-size: clamp(34px, 6vw, 56px);
+    font-weight: 700; letter-spacing: -1.5px; line-height: 1.05;
+    margin-bottom: 18px; text-wrap: balance;
+  }
+  h1 .accent { color: var(--blue); }
+
+  .lead {
+    font-size: clamp(17px, 1.4vw, 20px);
+    color: var(--text-dim); max-width: 760px; line-height: 1.6;
+    margin-bottom: 26px;
+  }
+  .lead strong { color: var(--text); font-weight: 600; }
+
+  .cmd-badge {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--font-mono); font-size: 15px;
+    background: var(--surface); border: 1px solid var(--border-bright);
+    border-radius: 10px; padding: 10px 16px; color: var(--text);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .cmd-badge .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px var(--green-dim); }
+  .cmd-badge b { color: var(--blue); font-weight: 600; }
+
+  section { margin-top: 56px; }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1.8px;
+    color: var(--text-dim);
+    display: flex; align-items: center; gap: 9px;
+    margin-bottom: 6px;
+  }
+  .section-label::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--blue); }
+  h2 { font-size: clamp(22px, 3vw, 30px); font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
+  .section-intro { color: var(--text-dim); max-width: 720px; margin-bottom: 26px; }
+
+  /* ============ KPI ROW ============ */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 34px; }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 22px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    border-top: 3px solid var(--accent, var(--blue));
+  }
+  .kpi__value { font-size: 38px; font-weight: 700; letter-spacing: -1.5px; line-height: 1; color: var(--accent, var(--blue)); font-variant-numeric: tabular-nums; }
+  .kpi__label { font-size: 14px; color: var(--text); font-weight: 600; margin-top: 10px; }
+  .kpi__sub { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+
+  /* ============ VALUE CARDS ============ */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+  .vcard {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 22px 24px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .vcard:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,0,0,0.08); }
+  .vcard__icon {
+    width: 38px; height: 38px; border-radius: 9px;
+    background: var(--blue-dim); color: var(--blue);
+    display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
+  }
+  .vcard__icon svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .vcard h3 { font-size: 16px; font-weight: 600; margin-bottom: 7px; }
+  .vcard p { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+
+  /* ============ MERMAID ============ */
+  .diagram-shell { position: relative; margin-top: 8px; }
+  .diagram-shell__hint { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); margin-bottom: 8px; opacity: 0.75; }
+  .mermaid-wrap {
+    position: relative; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 14px;
+    padding: 28px 22px; overflow: auto;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 460px; cursor: grab;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.05);
+  }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+  .zoom-controls {
+    position: absolute; top: 10px; right: 10px; display: flex; gap: 2px; z-index: 10;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 3px;
+  }
+  .zoom-controls button {
+    width: 28px; height: 28px; border: none; background: transparent; color: var(--text-dim);
+    font-family: var(--font-mono); font-size: 14px; cursor: pointer; border-radius: 5px;
+    display: flex; align-items: center; justify-content: center; transition: background 0.15s ease, color 0.15s ease;
+  }
+  .zoom-controls button:hover { background: var(--border); color: var(--text); }
+  .mermaid-viewport { position: relative; overflow: hidden; width: 100%; height: 100%; min-height: 340px; }
+  .mermaid-canvas { position: absolute; top: 0; left: 0; }
+  .zoom-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); padding: 0 6px; white-space: nowrap; align-self: center; }
+
+  .mermaid .nodeLabel { font-family: var(--font-body) !important; font-size: 15px !important; color: var(--text) !important; }
+  .mermaid .edgeLabel { font-family: var(--font-mono) !important; font-size: 12px !important; color: var(--text-dim) !important; background-color: var(--surface) !important; }
+  .mermaid .edgeLabel rect { fill: var(--surface) !important; }
+  .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon { stroke-width: 1.6px !important; }
+  .mermaid .edge-pattern-solid, .mermaid .edge-pattern-dotted { stroke-width: 1.6px !important; }
+
+  .legend { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 16px; }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; }
+
+  /* ============ PHASE CARDS ============ */
+  .phase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 26px; }
+  .phase {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 12px; padding: 20px 22px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .phase:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,0,0,0.08); }
+  .phase__head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .phase__num {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    width: 30px; height: 30px; flex-shrink: 0; border-radius: 8px;
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .phase__name { font-size: 17px; font-weight: 700; }
+  .phase__std { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); margin-top: 1px; }
+  .phase p { font-size: 13.5px; color: var(--text-dim); line-height: 1.6; }
+  .phase__get {
+    margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-bright);
+    font-size: 12.5px; color: var(--text);
+  }
+  .phase__get b { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); display: block; margin-bottom: 3px; }
+
+  /* ============ QUALITY LOOP STRIP ============ */
+  .loop { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0; margin-top: 24px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); }
+  .loop__step { padding: 20px 22px; position: relative; }
+  .loop__step:not(:last-child) { border-right: 1px solid var(--border); }
+  .loop__n { font-family: var(--font-mono); font-size: 11px; color: var(--blue); font-weight: 600; letter-spacing: 1px; }
+  .loop__step h4 { font-size: 15px; font-weight: 600; margin: 6px 0; }
+  .loop__step p { font-size: 13px; color: var(--text-dim); }
+  @media (max-width: 760px) { .loop__step:not(:last-child) { border-right: none; border-bottom: 1px solid var(--border); } }
+
+  /* ============ STEPS (install) ============ */
+  .steps { counter-reset: step; display: flex; flex-direction: column; gap: 14px; margin-top: 24px; }
+  .step {
+    display: grid; grid-template-columns: 44px 1fr; gap: 16px; align-items: start;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px;
+  }
+  .step__num {
+    counter-increment: step; width: 36px; height: 36px; border-radius: 9px;
+    background: var(--blue); color: #fff; font-family: var(--font-mono); font-weight: 600; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step__num::before { content: counter(step); }
+  .step__body h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .step__body p { font-size: 13.5px; color: var(--text-dim); margin-bottom: 8px; }
+
+  .code-block {
+    font-family: var(--font-mono); font-size: 13px; line-height: 1.7;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px; overflow-x: auto;
+    white-space: pre; color: var(--text);
+  }
+  .code-block .c { color: var(--text-dim); }
+  .code-block .k { color: var(--blue); font-weight: 500; }
+  :is(.lead, .section-intro, .phase p, .vcard p, .loop__step p, .step__body p) code,
+  .inline-code {
+    font-family: var(--font-mono); font-size: 0.85em;
+    background: var(--blue-dim); color: var(--blue); padding: 1px 6px; border-radius: 4px;
+  }
+
+  /* ============ TABLE ============ */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-top: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+  .table-scroll { overflow-x: auto; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .data-table th {
+    background: var(--surface-2); font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim);
+    text-align: left; padding: 14px 18px; border-bottom: 2px solid var(--border-bright); white-space: nowrap;
+  }
+  .data-table td { padding: 14px 18px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table tbody tr { transition: background 0.15s ease; }
+  .data-table tbody tr:hover { background: var(--blue-dim); }
+  .data-table .profile { font-family: var(--font-mono); font-weight: 600; color: var(--text); white-space: nowrap; }
+  .badge-default { font-family: var(--font-mono); font-size: 10px; font-weight: 600; background: var(--green-dim); color: var(--green); padding: 2px 7px; border-radius: 5px; margin-left: 6px; letter-spacing: 0.5px; }
+  .data-table small { display: block; color: var(--text-dim); font-size: 12px; margin-top: 3px; }
+  .gate-note { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: var(--gold-dim); border-top: 1px solid var(--border); font-size: 13px; color: var(--text); }
+  .gate-note svg { width: 18px; height: 18px; flex-shrink: 0; stroke: var(--gold); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ============ TWO-ZONE ============ */
+  .zones { display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px; align-items: stretch; margin-top: 24px; }
+  .zone { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; }
+  .zone--plugin { border-top: 3px solid var(--blue); }
+  .zone--repo { border-top: 3px solid var(--green); }
+  .zone__tag { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); margin-bottom: 8px; }
+  .zone h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .zone p { font-size: 13.5px; color: var(--text-dim); }
+  .zone ul { list-style: none; margin-top: 12px; }
+  .zone li { font-size: 13px; padding-left: 18px; position: relative; margin-bottom: 7px; color: var(--text); }
+  .zone li::before { content: '›'; position: absolute; left: 0; color: var(--green); font-weight: 700; }
+  .zone li code { font-family: var(--font-mono); font-size: 11px; background: var(--green-dim); color: var(--green); padding: 1px 5px; border-radius: 3px; }
+  .zone__arrow { display: flex; align-items: center; justify-content: center; color: var(--text-dim); font-size: 28px; }
+  @media (max-width: 760px) { .zones { grid-template-columns: 1fr; } .zone__arrow { transform: rotate(90deg); } }
+
+  /* ============ CALLOUT ============ */
+  .callout {
+    margin-top: 28px; padding: 20px 24px; border-radius: 12px;
+    border-left: 4px solid var(--green); background: var(--green-dim);
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .callout svg { width: 26px; height: 26px; flex-shrink: 0; stroke: var(--green); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; margin-top: 2px; }
+  .callout h3 { font-size: 16px; font-weight: 700; margin-bottom: 5px; }
+  .callout p { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+  .callout strong { color: var(--text); }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .tag { font-family: var(--font-mono); font-size: 11px; background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); padding: 5px 11px; border-radius: 20px; }
+
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+
+  @media (max-width: 760px) {
+    body { padding: 28px 16px 56px; }
+    .mermaid-wrap { padding: 16px 10px; min-height: 380px; }
+    .step { grid-template-columns: 36px 1fr; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ============ HERO ============ -->
+  <header>
+    <div class="eyebrow animate" style="--i:0">Claude Code plugin · how it works</div>
+    <h1 class="animate" style="--i:1">Agentic <span class="accent">SDLC</span><br>one command, a whole engineering team.</h1>
+    <p class="lead animate" style="--i:2">
+      It turns an idea into <strong>reviewed, tested, documented software</strong> by walking your
+      project through seven proven phases — with a roster of specialist AI agents doing the work and
+      independent reviewers checking it at every step. You run one command; it handles the process and
+      leaves a paper trail in your own repo. You can stop and pick up exactly where you left off, any time.
+    </p>
+    <div class="cmd-badge animate" style="--i:3"><span class="dot"></span> Run <b>/sdlc</b> in any project to begin</div>
+  </header>
+
+  <!-- ============ KPIs ============ -->
+  <div class="kpi-row">
+    <div class="kpi pop" style="--i:0; --accent: var(--p1)"><div class="kpi__value">1</div><div class="kpi__label">command to start</div><div class="kpi__sub">/sdlc</div></div>
+    <div class="kpi pop" style="--i:1; --accent: var(--p3)"><div class="kpi__value">7</div><div class="kpi__label">lifecycle phases</div><div class="kpi__sub">prepare → operate</div></div>
+    <div class="kpi pop" style="--i:2; --accent: var(--p5)"><div class="kpi__value">35</div><div class="kpi__label">specialist agents</div><div class="kpi__sub">writers + reviewers</div></div>
+    <div class="kpi pop" style="--i:3; --accent: var(--p7)"><div class="kpi__value">100%</div><div class="kpi__label">in your control</div><div class="kpi__sub">never auto-commits</div></div>
+  </div>
+
+  <!-- ============ WHAT IT DOES ============ -->
+  <section>
+    <div class="section-label">What it does for you</div>
+    <h2>A disciplined process, run on autopilot</h2>
+    <p class="section-intro">You bring the idea or the codebase. The plugin brings the rigor of a full software
+      team — and keeps the receipts.</p>
+    <div class="card-grid">
+      <div class="vcard animate" style="--i:0">
+        <div class="vcard__icon"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg></div>
+        <h3>Idea → shipped code</h3>
+        <p>It plans what to build, designs how, writes the code and the tests, proves it works, and prepares the release — in order, nothing skipped.</p>
+      </div>
+      <div class="vcard animate" style="--i:1">
+        <div class="vcard__icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <h3>Checked at every step</h3>
+        <p>The agent that writes something is never the one that approves it. An independent reviewer inspects each phase before the work moves forward.</p>
+      </div>
+      <div class="vcard animate" style="--i:2">
+        <div class="vcard__icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></div>
+        <h3>Writes the docs for you</h3>
+        <p>Requirements, user stories, architecture decisions — all generated and saved in your repository as you go, not as an afterthought.</p>
+      </div>
+      <div class="vcard animate" style="--i:3">
+        <div class="vcard__icon"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.3 2.6L3 8"/><path d="M3 3v5h5M12 7v5l3 3"/></svg></div>
+        <h3>Stop and resume anytime</h3>
+        <p>Every step is saved. Close your laptop mid-phase and the wizard picks up at the exact agent where you left off — even on another machine.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ THE 7 PHASES (diagram) ============ -->
+  <section>
+    <div class="section-label">The journey</div>
+    <h2>Seven phases, start to finish</h2>
+    <p class="section-intro">Each phase hands off to the next only after passing a quality check. After shipping,
+      what's learned in <em>Operate</em> feeds straight back into the next round.</p>
+
+    <section class="diagram-shell animate" style="--i:0">
+      <p class="diagram-shell__hint">Ctrl/Cmd + wheel to zoom · drag to pan · double-click to fit · ⛶ opens full size</p>
+      <div class="mermaid-wrap">
+        <div class="zoom-controls">
+          <button type="button" data-action="zoom-in" title="Zoom in">+</button>
+          <button type="button" data-action="zoom-out" title="Zoom out">&minus;</button>
+          <button type="button" data-action="zoom-fit" title="Smart fit">&#8634;</button>
+          <button type="button" data-action="zoom-one" title="1:1 zoom">1:1</button>
+          <button type="button" data-action="zoom-expand" title="Open full size">&#x26F6;</button>
+          <span class="zoom-label">Loading…</span>
+        </div>
+        <div class="mermaid-viewport"><div class="mermaid mermaid-canvas"></div></div>
+      </div>
+      <script type="text/plain" class="diagram-source">
+        graph TD
+          P["1 · Prepare<br/>understand the project"]
+          D["2 · Define<br/>decide what to build"]
+          S["3 · Design<br/>decide how to build it"]
+          V["4 · Develop<br/>write code &amp; tests"]
+          Vf["5 · Verify<br/>prove it works"]
+          R["6 · Release<br/>package &amp; tag"]
+          O["7 · Operate<br/>run &amp; learn"]
+          P --> D
+          D -->|"gate"| S
+          S -->|"gate"| V
+          V -->|"gate"| Vf
+          Vf -->|"gate"| R
+          R --> O
+          O -.->|"feeds the next cycle"| D
+          classDef start fill:#2f74c033,stroke:#2f74c0,stroke-width:2px
+          classDef ship fill:#b3851f33,stroke:#b3851f,stroke-width:2px
+          classDef learn fill:#bd5f3433,stroke:#bd5f34,stroke-width:2px
+          class P start
+          class R ship
+          class O learn
+      </script>
+    </section>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--p1)"></span> Start here</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--gold)"></span> Ready to ship</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--p7)"></span> Learn &amp; loop back</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--text-dim)"></span> "gate" = a quality check between phases</div>
+    </div>
+
+    <!-- phase detail cards -->
+    <div class="phase-grid">
+      <div class="phase animate" style="--i:0; --accent: var(--p1)">
+        <div class="phase__head"><div class="phase__num">1</div><div><div class="phase__name">Prepare</div><div class="phase__std">ISO/IEC/IEEE 12207</div></div></div>
+        <p>Claude explores your project and writes a guide it can rely on later — your stack, conventions, and how to build and test.</p>
+        <div class="phase__get"><b>You get</b>a project map every later phase trusts.</div>
+      </div>
+      <div class="phase animate" style="--i:1; --accent: var(--p2)">
+        <div class="phase__head"><div class="phase__num">2</div><div><div class="phase__name">Define</div><div class="phase__std">IEEE 12207</div></div></div>
+        <p>Turns your idea into clear, numbered requirements and user stories — then checks them for gaps before a line of code exists.</p>
+        <div class="phase__get"><b>You get</b>requirements + user stories.</div>
+      </div>
+      <div class="phase animate" style="--i:2; --accent: var(--p3)">
+        <div class="phase__head"><div class="phase__num">3</div><div><div class="phase__name">Design</div><div class="phase__std">IEEE 1016 · Microsoft SDL</div></div></div>
+        <p>Decides how to build it: the architecture, the key components, the decisions (with reasons), plus a lightweight security threat check.</p>
+        <div class="phase__get"><b>You get</b>architecture, specs &amp; decision records.</div>
+      </div>
+      <div class="phase animate" style="--i:3; --accent: var(--p4)">
+        <div class="phase__head"><div class="phase__num">4</div><div><div class="phase__name">Develop</div><div class="phase__std">Microsoft SDL</div></div></div>
+        <p>Plans the change, then writes the code and its tests — sized to how big the change is — and a separate reviewer inspects the result.</p>
+        <div class="phase__get"><b>You get</b>implemented code + tests, reviewed.</div>
+      </div>
+      <div class="phase animate" style="--i:4; --accent: var(--p5)">
+        <div class="phase__head"><div class="phase__num">5</div><div><div class="phase__name">Verify</div><div class="phase__std">IEEE 1012 · ISO 25010</div></div></div>
+        <p>Proves it really works: checks test coverage, runs the <em>actual</em> production build, runs the full test suite, and an independent reviewer signs off.</p>
+        <div class="phase__get"><b>You get</b>a building, tested, verified change.</div>
+      </div>
+      <div class="phase animate" style="--i:5; --accent: var(--p6)">
+        <div class="phase__head"><div class="phase__num">6</div><div><div class="phase__name">Release</div><div class="phase__std">ITIL 4</div></div></div>
+        <p>Updates the changelog, bumps the version, and stages the commit and tag — then hands it to you to approve. It never ships on its own.</p>
+        <div class="phase__get"><b>You get</b>a ready-to-ship release; you press go.</div>
+      </div>
+      <div class="phase animate" style="--i:6; --accent: var(--p7)">
+        <div class="phase__head"><div class="phase__num">7</div><div><div class="phase__name">Operate</div><div class="phase__std">ITIL 4 · ISO 27001 · DORA</div></div></div>
+        <p>After shipping: triages issues, watches your dependencies, and feeds what it learns back into the next cycle.</p>
+        <div class="phase__get"><b>You get</b>a feedback loop into your next round.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOW A PHASE WORKS ============ -->
+  <section>
+    <div class="section-label">Under the hood</div>
+    <h2>How each phase keeps quality high</h2>
+    <p class="section-intro">The same simple loop runs inside every phase. It's why long runs don't drift and why
+      a mistake gets caught instead of shipped.</p>
+    <div class="loop">
+      <div class="loop__step animate" style="--i:0"><div class="loop__n">01 — DO</div><h4>Specialists do the work</h4><p>Focused agents each handle one job — a requirements writer, an architect, a security checker, a test author.</p></div>
+      <div class="loop__step animate" style="--i:1"><div class="loop__n">02 — CHECK</div><h4>An independent reviewer gates it</h4><p>A separate, read-only reviewer inspects the output. It can't edit the work — only judge it. Real builds are actually run.</p></div>
+      <div class="loop__step animate" style="--i:2"><div class="loop__n">03 — ROUTE</div><h4>Pass moves on, fail goes back</h4><p>Clean? Continue to the next phase. Problems? Sent back to be fixed and re-checked — automatically.</p></div>
+    </div>
+  </section>
+
+  <!-- ============ INSTALL ============ -->
+  <section>
+    <div class="section-label">Get started</div>
+    <h2>Install &amp; run</h2>
+    <p class="section-intro">No build step, no heavy dependencies. If you have Claude Code, you're a couple of
+      commands away.</p>
+
+    <div class="steps">
+      <div class="step animate" style="--i:0">
+        <div class="step__num"></div>
+        <div class="step__body">
+          <h4>Check the requirements</h4>
+          <p><strong>Claude Code</strong> (CLI, desktop, web, or IDE) and <strong>Node.js 18+</strong> (Node 22 LTS recommended). That's it — there's no <span class="inline-code">npm install</span>.</p>
+        </div>
+      </div>
+      <div class="step animate" style="--i:1">
+        <div class="step__num"></div>
+        <div class="step__body">
+          <h4>Add the marketplace &amp; install</h4>
+          <p>Inside Claude Code, run:</p>
+          <pre class="code-block"><span class="k">/plugin</span> marketplace add orchestratedbyalex/agentic-sdlc-plugin
+<span class="k">/plugin</span> install agentic-sdlc@agentic-sdlc-marketplace</pre>
+        </div>
+      </div>
+      <div class="step animate" style="--i:2">
+        <div class="step__num"></div>
+        <div class="step__body">
+          <h4>Run the wizard</h4>
+          <p>In any repository:</p>
+          <pre class="code-block"><span class="k">/sdlc</span>   <span class="c"># detects empty project, existing code, or a run to resume</span></pre>
+          <p style="margin-top:8px">It prints a seven-phase status board and routes you to the right starting point — scaffold a new project, set up an existing one, or continue where you stopped.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MODEL ROUTING ============ -->
+  <section>
+    <div class="section-label">Cost &amp; speed</div>
+    <h2>Pick a model profile</h2>
+    <p class="section-intro">Trade cost against wall-clock without weakening anything that matters. Switch any time.</p>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Profile</th><th>What it does</th><th>Best when</th></tr></thead>
+          <tbody>
+            <tr><td class="profile">quality</td><td>Every agent runs on the top model.</td><td>Most thorough, highest cost — high-stakes work.</td></tr>
+            <tr><td class="profile">balanced <span class="badge-default">default</span></td><td>Routine agents drop to smaller, faster models; judgment stays on top.</td><td>Cheaper and faster — the everyday choice.</td></tr>
+            <tr><td class="profile">economy</td><td>Pushes routine agents to the smallest models.</td><td>Lowest cost — exploratory or budget runs.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="gate-note">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span>The reviewers and the quality gates <strong>always</strong> run on the top model — no profile ever weakens a check.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TWO-ZONE ============ -->
+  <section>
+    <div class="section-label">Where things live</div>
+    <h2>The plugin runs the process — your repo keeps the record</h2>
+    <p class="section-intro">A clean separation: the plugin stays generic and reusable; everything specific to
+      your project is written into your own repository.</p>
+    <div class="zones">
+      <div class="zone zone--plugin animate" style="--i:0">
+        <div class="zone__tag">The plugin · "how"</div>
+        <h3>Carries the process</h3>
+        <p>The wizard, the 35 specialist agents, the phase playbooks, the quality gates. Installed once, used on any project. Nothing about your code lives here.</p>
+      </div>
+      <div class="zone__arrow">→</div>
+      <div class="zone zone--repo animate" style="--i:1">
+        <div class="zone__tag">Your repository · "what"</div>
+        <h3>Collects the evidence</h3>
+        <p>Every artifact the run produces is saved in your project, so the record travels with your code:</p>
+        <ul>
+          <li>requirements &amp; user stories in <code>docs/requirements/</code></li>
+          <li>architecture &amp; decisions in <code>docs/design/</code></li>
+          <li>operations notes in <code>docs/operate/</code></li>
+          <li>resumable progress in <code>sdlc-metadata.yml</code></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SAFETY ============ -->
+  <div class="callout">
+    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <div>
+      <h3>You stay in control</h3>
+      <p>The agents <strong>stage</strong> commits and <strong>suggest</strong> tags — they never commit, push, or
+        publish for you. Anything that leaves your machine is your call. Git stays in your hands, always.</p>
+    </div>
+  </div>
+
+  <div class="tags">
+    <span class="tag">ISO/IEC/IEEE 12207</span>
+    <span class="tag">IEEE 1012</span>
+    <span class="tag">IEEE 1016</span>
+    <span class="tag">Microsoft SDL</span>
+    <span class="tag">ITIL 4</span>
+    <span class="tag">ISO/IEC 25010</span>
+    <span class="tag">ISO/IEC 27001</span>
+    <span class="tag">Nygard ADRs</span>
+    <span class="tag">DORA</span>
+  </div>
+
+  <footer>
+    <span>Agentic SDLC — Claude Code plugin</span>
+    <span>standards-anchored · agent-driven · resumable</span>
+  </footer>
+
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+  const config = { fitPadding: 28, minHeight: 420, maxHeightPx: 980, maxHeightVh: 0.86, maxInitialZoom: 1.6, minZoom: 0.08, maxZoom: 6.5, zoomStep: 0.14, readabilityFloor: 0.58 };
+  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+  let activeDrag = null;
+  addEventListener('mousemove', (e) => activeDrag?.onMove(e));
+  addEventListener('mouseup', () => { activeDrag?.onEnd(); activeDrag = null; });
+
+  const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'base',
+    look: 'classic',
+    themeVariables: {
+      fontFamily: "'DM Sans', system-ui, sans-serif",
+      fontSize: '15px',
+      primaryColor: isDark ? '#16273d' : '#dbe7f5',
+      primaryBorderColor: isDark ? '#5b9bd5' : '#1e5fa8',
+      primaryTextColor: isDark ? '#e4ecf5' : '#14253c',
+      secondaryColor: isDark ? '#15212f' : '#eef3f9',
+      secondaryBorderColor: isDark ? '#3fb0c9' : '#1f8fab',
+      secondaryTextColor: isDark ? '#e4ecf5' : '#14253c',
+      tertiaryColor: isDark ? '#1c2433' : '#f4f7fb',
+      tertiaryBorderColor: isDark ? '#d4a73a' : '#b3851f',
+      tertiaryTextColor: isDark ? '#e4ecf5' : '#14253c',
+      lineColor: isDark ? '#7f93ab' : '#7184a0',
+    }
+  });
+
+  function initDiagram(shell) {
+    const wrap = shell.querySelector('.mermaid-wrap');
+    const viewport = shell.querySelector('.mermaid-viewport');
+    const canvas = shell.querySelector('.mermaid-canvas');
+    const source = shell.querySelector('.diagram-source');
+    const label = shell.querySelector('.zoom-label');
+    if (!wrap || !viewport || !canvas || !source || !label) return;
+
+    let zoom = 1, fitMode = 'contain', panX = 0, panY = 0, svgW = 0, svgH = 0;
+    let sx = 0, sy = 0, spx = 0, spy = 0, touchDist = 0, touchCx = 0, touchCy = 0;
+
+    function constrainPan() {
+      const vpW = viewport.clientWidth, vpH = viewport.clientHeight;
+      const rW = svgW * zoom, rH = svgH * zoom, pad = config.fitPadding;
+      panX = (rW + pad * 2 <= vpW) ? (vpW - rW) / 2 : clamp(panX, vpW - rW - pad, pad);
+      panY = (rH + pad * 2 <= vpH) ? (vpH - rH) / 2 : clamp(panY, vpH - rH - pad, pad);
+    }
+    function applyTransform() {
+      const svg = canvas.querySelector('svg');
+      if (!svg || !svgW) return;
+      constrainPan();
+      svg.style.width = (svgW * zoom) + 'px';
+      svg.style.height = (svgH * zoom) + 'px';
+      canvas.style.transform = `translate(${panX}px, ${panY}px)`;
+      label.textContent = Math.round(zoom * 100) + '% — ' + fitMode;
+    }
+    function canPan() {
+      const rW = svgW * zoom, rH = svgH * zoom;
+      return rW + config.fitPadding * 2 > viewport.clientWidth || rH + config.fitPadding * 2 > viewport.clientHeight;
+    }
+    function computeSmartFit() {
+      const vpW = viewport.clientWidth, vpH = viewport.clientHeight;
+      const aW = Math.max(80, vpW - config.fitPadding * 2), aH = Math.max(80, vpH - config.fitPadding * 2);
+      const contain = Math.min(aW / svgW, aH / svgH);
+      let z = contain, mode = 'contain';
+      if (contain < config.readabilityFloor) {
+        const chartR = svgH / svgW, vpR = vpH / Math.max(vpW, 1);
+        if (chartR >= vpR) { z = aW / svgW; mode = 'width-priority'; }
+        else { z = aH / svgH; mode = 'height-priority'; }
+      }
+      return { zoom: clamp(z, config.minZoom, config.maxInitialZoom), mode };
+    }
+    function fitDiagram() {
+      if (!svgW) return;
+      const fit = computeSmartFit();
+      zoom = fit.zoom; fitMode = fit.mode;
+      panX = (viewport.clientWidth - svgW * zoom) / 2;
+      panY = (viewport.clientHeight - svgH * zoom) / 2;
+      applyTransform();
+    }
+    function setOneToOne() {
+      zoom = clamp(1, config.minZoom, config.maxZoom); fitMode = '1:1';
+      panX = (viewport.clientWidth - svgW * zoom) / 2;
+      panY = (viewport.clientHeight - svgH * zoom) / 2;
+      applyTransform();
+    }
+    function zoomAround(factor, cx, cy) {
+      const next = clamp(zoom * factor, config.minZoom, config.maxZoom), ratio = next / zoom;
+      panX = cx - ratio * (cx - panX); panY = cy - ratio * (cy - panY);
+      zoom = next; fitMode = 'custom'; applyTransform();
+    }
+    function readSvgNaturalSize(svg) {
+      let w = 0, h = 0;
+      if (svg.viewBox?.baseVal?.width > 0) { w = svg.viewBox.baseVal.width; h = svg.viewBox.baseVal.height; }
+      if (!w) { w = parseFloat(svg.getAttribute('width')) || 0; h = parseFloat(svg.getAttribute('height')) || 0; }
+      if (!w) { const b = svg.getBBox(); w = b.width; h = b.height; }
+      if (!w) { const r = svg.getBoundingClientRect(); w = r.width || 1000; h = r.height || 700; }
+      if (!svg.getAttribute('viewBox')) svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+      return { w, h };
+    }
+    function setAdaptiveHeight() {
+      if (!svgW) return;
+      const usableW = Math.max(280, wrap.getBoundingClientRect().width - 2);
+      const idealH = (svgH / svgW) * usableW + config.fitPadding * 2;
+      const maxVp = Math.floor(innerHeight * config.maxHeightVh);
+      const hardMax = Math.min(config.maxHeightPx, Math.max(config.minHeight + 40, maxVp));
+      wrap.style.height = Math.round(clamp(idealH, config.minHeight, hardMax)) + 'px';
+    }
+    function openInNewTab() {
+      const svg = canvas.querySelector('svg');
+      if (!svg) return;
+      const clone = svg.cloneNode(true);
+      clone.style.width = ''; clone.style.height = '';
+      const bg = isDark ? '#0b131e' : '#eaf0f7';
+      const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Diagram</title><style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:${bg};padding:40px;box-sizing:border-box}svg{max-width:100%;max-height:90vh;height:auto}</style></head><body>${clone.outerHTML}</body></html>`;
+      open(URL.createObjectURL(new Blob([html], { type: 'text/html' })), '_blank');
+    }
+    async function render() {
+      try {
+        const code = source.textContent.trim();
+        if (!code) { label.textContent = 'Error: empty source'; return; }
+        const id = 'diagram-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+        const { svg } = await mermaid.render(id, code);
+        canvas.innerHTML = svg;
+        const svgNode = canvas.querySelector('svg');
+        if (!svgNode) { label.textContent = 'Error: no SVG'; return; }
+        const size = readSvgNaturalSize(svgNode);
+        svgW = size.w; svgH = size.h;
+        svgNode.removeAttribute('width'); svgNode.removeAttribute('height');
+        svgNode.style.maxWidth = 'none'; svgNode.style.display = 'block';
+        setAdaptiveHeight(); fitDiagram();
+      } catch (err) {
+        console.error('Mermaid render failed:', err);
+        label.textContent = 'Error: ' + (err.message || 'render failed');
+      }
+    }
+    const actions = {
+      'zoom-in': () => zoomAround(1 + config.zoomStep, viewport.clientWidth / 2, viewport.clientHeight / 2),
+      'zoom-out': () => zoomAround(1 / (1 + config.zoomStep), viewport.clientWidth / 2, viewport.clientHeight / 2),
+      'zoom-fit': fitDiagram, 'zoom-one': setOneToOne, 'zoom-expand': openInNewTab
+    };
+    Object.entries(actions).forEach(([action, handler]) => {
+      wrap.querySelector(`[data-action="${action}"]`)?.addEventListener('click', handler);
+    });
+    viewport.addEventListener('dblclick', fitDiagram);
+    viewport.addEventListener('wheel', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const rect = viewport.getBoundingClientRect();
+        const factor = e.deltaY < 0 ? 1 + config.zoomStep : 1 / (1 + config.zoomStep);
+        zoomAround(factor, e.clientX - rect.left, e.clientY - rect.top);
+        return;
+      }
+      if (canPan()) { e.preventDefault(); panX -= e.deltaX; panY -= e.deltaY; applyTransform(); }
+    }, { passive: false });
+    viewport.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.zoom-controls') || !canPan()) return;
+      wrap.classList.add('is-panning');
+      sx = e.clientX; sy = e.clientY; spx = panX; spy = panY; e.preventDefault();
+      activeDrag = {
+        onMove: (ev) => { panX = spx + (ev.clientX - sx); panY = spy + (ev.clientY - sy); applyTransform(); },
+        onEnd: () => { wrap.classList.remove('is-panning'); }
+      };
+    });
+    viewport.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; spx = panX; spy = panY; }
+      else if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX, dy = e.touches[0].clientY - e.touches[1].clientY;
+        touchDist = Math.sqrt(dx * dx + dy * dy);
+        const r = viewport.getBoundingClientRect();
+        touchCx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left;
+        touchCy = (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top;
+      }
+    }, { passive: true });
+    viewport.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 1 && canPan()) {
+        if (touchDist > 0) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; spx = panX; spy = panY; touchDist = 0; }
+        e.preventDefault();
+        panX = spx + (e.touches[0].clientX - sx); panY = spy + (e.touches[0].clientY - sy); applyTransform();
+      } else if (e.touches.length === 2 && touchDist > 0) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX, dy = e.touches[0].clientY - e.touches[1].clientY;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        zoomAround(d / touchDist, touchCx, touchCy); touchDist = d;
+      }
+    }, { passive: false });
+    new ResizeObserver(() => { if (svgW) { setAdaptiveHeight(); fitDiagram(); } }).observe(wrap);
+    render();
+  }
+  document.querySelectorAll('.diagram-shell').forEach(initDiagram);
+</script>
+</body>
+</html>
