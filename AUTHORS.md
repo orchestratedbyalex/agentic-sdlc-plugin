@@ -22,6 +22,8 @@ The agent playbooks were authored with AI assistance (Claude Code) under direct 
 
 ## License
 
-This framework is released under the [MIT License](LICENSE.md) — free to use, modify,
-and distribute (including commercially), provided the copyright notice and license text
-are retained. The software is provided "as is", without warranty of any kind.
+This framework is released under the [GNU Affero General Public License v3.0 or later](LICENSE.md).
+You are free to use, run, and modify it — including inside a company. If you distribute it or a
+modified version, or run a modified version as a network service, you must make your source
+available under the same AGPL license. It cannot be relicensed as closed-source or sold as a
+proprietary product. The software is provided "as is", without warranty of any kind.

@@ -1,7 +1,7 @@
 {
   "name": "agentic-sdlc",
   "displayName": "Agentic SDLC",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A standards-anchored, agent-driven Software Development Lifecycle for Claude Code. One /sdlc wizard detects your project state and drives seven phases (Prepare to Operate) with a roster of specialized subagents.",
   "author": {
     "name": "orchestratedbyalex",
@@ -9,6 +9,6 @@
   },
   "homepage": "https://github.com/orchestratedbyalex/agentic-sdlc-plugin",
   "repository": "https://github.com/orchestratedbyalex/agentic-sdlc-plugin",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "keywords": ["sdlc", "agents", "requirements", "adr", "lifecycle", "workflow", "phases", "verification", "design", "release", "testing"]
 }

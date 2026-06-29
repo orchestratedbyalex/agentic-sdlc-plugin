@@ -63,4 +63,5 @@ release.
 
 ## License
 
-By contributing, you agree your contributions are licensed under the [MIT License](LICENSE.md).
+By contributing, you agree your contributions are licensed under the
+[GNU AGPL-3.0-or-later](LICENSE.md).

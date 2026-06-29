@@ -10,6 +10,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] — 2026
+
+First public release.
+
 ### Added
 - Trivial-tier **implementer** agent: writes code and its tests in one pass for 🟢 changes,
   cutting the trivial Develop path from 5 subagent dispatches to 3.
@@ -27,7 +31,10 @@ All notable changes to this project are documented here. The format follows
   changelog, and a CI workflow.
 
 ### Changed
-- License changed to **MIT**.
+- **License changed to GNU AGPL-3.0-or-later** (was MIT) and repository made public. Free to
+  use, run, and modify — including commercially — but any distributed or network-served modified
+  version must publish its source under the same license; it can't be closed-sourced or resold
+  as proprietary.
 
 ## [0.1.0] — 2026
 

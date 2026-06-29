@@ -106,4 +106,8 @@ version-bump policy. Contributor guidance for working *in* this repo lives in
 
 ## License
 
-[MIT](LICENSE.md) © 2026 [@orchestratedbyalex](https://github.com/orchestratedbyalex).
+[GNU AGPL-3.0-or-later](LICENSE.md) © 2026 [@orchestratedbyalex](https://github.com/orchestratedbyalex).
+
+Free to use, run, and modify — including inside companies. If you distribute it or a modified
+version (or run a modified version as a network service), you must release your source under the
+same AGPL license. You can build on it; you can't close it up and resell it as proprietary.
