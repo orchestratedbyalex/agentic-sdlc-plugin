@@ -18,6 +18,18 @@ All notable changes to this project are documented here. The format follows
   `requirement_counts` (Define post-phase + Requirements Sync), `develop.plans`, and the
   Operate cycle block — so design invariant 2 now holds everywhere.
 - The state CLI rejects unknown subcommands instead of silently falling through to `detect`.
+- **Deterministic hook enforcement of two invariants** (`hooks/hooks.json` +
+  `scripts/sdlc-guard.mjs`, a zero-dependency PreToolUse guard): publish commands
+  (`git commit`/`tag`/`push`, `gh release`, `npm publish`) now trigger an explicit
+  permission **ask** — deliberately ask, never deny: the human approving the prompt is
+  exactly the gate invariant 4 wants — and direct writes to `sdlc-metadata.yml`
+  (Edit/Write/MultiEdit, shell redirects, in-place `sed`, `tee`, `cp`/`mv` onto it) are
+  **denied** with a pointer at the state script, which stays the file's only writer
+  (invariant 2). The guard fails open on anything it doesn't positively recognize, exempts
+  read-only usage (`git tag -l`, `gh release list`, `--dry-run`) and the plugin's own
+  template, and is fully unit-tested against the hook's stdin/stdout JSON protocol. Note:
+  hooks fire session-wide wherever the plugin is enabled — the ask-not-deny design keeps
+  that acceptable.
 - A defined **`HUMAN_REVIEW_REQUIRED` escalation protocol**: every playbook's gate loop is
   bounded (Prepare and Operate previously had no bound at all) and every bound ends in one
   block the wizard presents to the user — phase/gate, trigger, open blockers, artifacts —

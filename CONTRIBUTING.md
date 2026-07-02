@@ -7,11 +7,12 @@ itself lives in [CLAUDE.md](CLAUDE.md).
 ## Project shape
 
 There is no build step. Everything is markdown (commands, agents, playbooks, skills,
-templates) except one zero-dependency Node ESM file, `scripts/sdlc-state.mjs`, which owns all
-state. Tests use the built-in `node:test` runner.
+templates) except two zero-dependency Node ESM files: `scripts/sdlc-state.mjs`, which owns all
+state, and `scripts/sdlc-guard.mjs`, the PreToolUse hook guard wired up by `hooks/hooks.json`.
+Tests use the built-in `node:test` runner.
 
 ```bash
-node --test            # must stay green (39 tests: state logic + plugin structure)
+node --test            # must stay green (92 tests: state logic + hook guard + plugin structure)
 claude --plugin-dir .  # load the plugin into a Claude Code session
 /reload-plugins        # after edits, inside the session
 ```

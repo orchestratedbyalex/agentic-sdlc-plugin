@@ -110,6 +110,29 @@ test('the orchestrator dispatch loop references contracts that exist in the play
   assert.match(text, /\*\*Gate FAIL\*\*/, 'sdlc.md does not reference the playbooks\' **Gate FAIL** routing')
 })
 
+// Invariants 4 (git human-gated) and 2 (script-only metadata writes) are enforced by a
+// PreToolUse hook (audit item 5), not just prompts: hooks.json must exist, parse, cover
+// Bash plus the file-mutation tools, and run the bundled guard via ${CLAUDE_PLUGIN_ROOT}.
+test('hooks/hooks.json wires the sdlc-guard to Bash and the file-mutation tools', () => {
+  const p = join(ROOT, 'hooks', 'hooks.json')
+  assert.ok(existsSync(p), 'missing hooks/hooks.json')
+  const cfg = JSON.parse(readFileSync(p, 'utf8'))
+  const entries = cfg.hooks?.PreToolUse
+  assert.ok(Array.isArray(entries) && entries.length > 0, 'no PreToolUse entries')
+  const matchers = entries.map(e => e.matcher)
+  for (const tool of ['Bash', 'Edit', 'Write', 'MultiEdit']) {
+    assert.ok(matchers.some(m => new RegExp(`^(?:${m})$`).test(tool)),
+      `no PreToolUse matcher covers ${tool}`)
+  }
+  for (const e of entries) {
+    for (const h of e.hooks) {
+      assert.equal(h.type, 'command', 'hook entries must be type "command"')
+      assert.match(h.command, /\$\{CLAUDE_PLUGIN_ROOT\}.*sdlc-guard\.mjs/,
+        'hook must run the bundled guard via ${CLAUDE_PLUGIN_ROOT}')
+    }
+  }
+})
+
 test('the HUMAN_REVIEW_REQUIRED escalation protocol is defined in the orchestrator', () => {
   const text = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
   assert.match(text, /^\s*HUMAN_REVIEW_REQUIRED\s*$/m, 'no HUMAN_REVIEW_REQUIRED block template')

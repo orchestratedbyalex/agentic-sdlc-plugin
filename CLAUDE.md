@@ -26,20 +26,21 @@ accumulates the evidence.
 | `phases/` | 7 machine-readable phase playbooks (groups, modes, gates, post_phase) |
 | `skills/` | `sdlc-conventions` (read hygiene, shared rules) + `sdlc-feature-intake` (change tiering) |
 | `templates/` | Artifact templates (FR, NFR, US, PLAN, ADR, CS, metadata) |
-| `scripts/sdlc-state.mjs` | **The only real code.** Zero-dep Node ESM that owns ALL metadata state |
-| `test/` | `node:test` suites (state logic + plugin structure) |
+| `hooks/hooks.json` | PreToolUse wiring: Bash + file-mutation calls run the guard script |
+| `scripts/` | **The only real code** (zero-dep Node ESM): `sdlc-state.mjs` owns ALL metadata state; `sdlc-guard.mjs` enforces invariants 2 + 4 as a hook |
+| `test/` | `node:test` suites (state logic + hook guard + plugin structure) |
 
 ## Build / test / run
 
 ```bash
-node --test            # run all tests (currently 77, must stay green)
+node --test            # run all tests (currently 92, must stay green)
 claude --plugin-dir .  # load the plugin into a Claude Code session for live use
 /reload-plugins        # (inside the session, after edits)
 /agentic-sdlc:sdlc     # run the wizard
 ```
 
-There is no build/transpile step — agents and playbooks are markdown; the only executable is
-`scripts/sdlc-state.mjs` (plain ESM, no dependencies).
+There is no build/transpile step — agents and playbooks are markdown; the only executables are
+`scripts/sdlc-state.mjs` and `scripts/sdlc-guard.mjs` (plain ESM, no dependencies).
 
 ## Design invariants — DO NOT regress these
 
@@ -52,7 +53,9 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
    `scripts/sdlc-state.mjs` (`init` / `complete` / `config` / `brief` / `counts` /
    `plan-add` / `cycle`) — never an LLM hand-edit of YAML. Agents that produce lifecycle
    data (Requirements Sync, Feedback Loop) report it in sentinel lines
-   (`REQUIREMENT_COUNTS:` / `CYCLE:`); the orchestrator is the single writer.
+   (`REQUIREMENT_COUNTS:` / `CYCLE:`); the orchestrator is the single writer. Enforced
+   deterministically by a PreToolUse hook: `scripts/sdlc-guard.mjs` **denies** direct
+   Edit/Write of the YAML (and the obvious Bash writes into it), pointing at the script.
 3. **Exercise the real artifact, not a proxy.** Gates must run the *actual* production build
    and confirm tests truly executed (0 suites collected = FAIL), not just "types pass / no
    failing assertions." (Verify + Release + Develop reviewer.) Gate reports quote **verbatim
@@ -60,7 +63,10 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
    Verify release gate independently re-runs the test suite once (condition d2) rather than
    trusting self-reported counts.
 4. **Git stays human-gated.** Agents **stage + suggest** commits/tags; they do not commit,
-   tag, push, or publish. (Develop + Release.)
+   tag, push, or publish. (Develop + Release.) Enforced deterministically by the same hook:
+   `git commit`/`tag`/`push`, `gh release`, `npm publish` become an explicit permission
+   **ask** — deliberately ask, never deny, because the human approving the prompt IS the
+   gate. Hooks fire session-wide in the repo where the plugin is enabled.
 5. **Don't yak-shave the target.** If a target repo's *pre-existing* toolchain is broken,
    that's a gate finding to route back — agents must NOT rewrite the target's dependency tree,
    add `resolutions`, monkey-patch `node_modules`, or add `postinstall` patches.

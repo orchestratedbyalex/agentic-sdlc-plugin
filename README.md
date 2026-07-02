@@ -91,6 +91,11 @@ the plugin stays generic, your repo accumulates the lifecycle record.
   **reviewer ≠ author** rule (reviewers are read-only).
 - **7 machine-readable phase playbooks** (`phases/`) — groups, modes, gates, post-phase state.
 - **Deterministic, tested state** (`scripts/sdlc-state.mjs`) — the single source of metadata truth.
+- **Deterministic guardrails** (`hooks/hooks.json` → `scripts/sdlc-guard.mjs`) — a PreToolUse
+  hook turns publish commands (`git commit`/`tag`/`push`, `gh release`, `npm publish`) into an
+  explicit permission **ask** (the human approving the prompt *is* the gate) and **denies**
+  direct edits of `sdlc-metadata.yml`, pointing back at the state script. Hooks fire
+  session-wide wherever the plugin is enabled — the ask-not-deny design keeps that safe.
 - Artifact templates (`templates/`) and two skills (`sdlc-conventions`, `sdlc-feature-intake`).
 - **Configurable model routing** (`quality` / `balanced` / `economy`) that never downgrades the
   judgment-bearing agents or the gates.
@@ -98,7 +103,7 @@ the plugin stays generic, your repo accumulates the lifecycle record.
 ## Test
 
 ```bash
-node --test          # 39 tests, all green (state logic + plugin structure)
+node --test          # 92 tests, all green (state logic + hook guard + plugin structure)
 ```
 
 ## Contributing
