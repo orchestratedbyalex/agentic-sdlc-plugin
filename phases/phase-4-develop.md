@@ -11,7 +11,7 @@ groups:
   - { mode: sequential, agents: [sdlc-develop-reqs-sync] }
   - { mode: sequential, agents: [sdlc-develop-code-reviewer] }
 gate_after_each_group: true
-post_phase: "stage the change + suggest a commit message (do NOT commit/push); append the PLAN-NNN id to develop.plans; set develop.status completed; develop is repeatable"
+post_phase: "stage the change + suggest a commit message (do NOT commit/push); record the PLAN-NNN id + requirement counts via the state script (plan-add, counts); set develop.status completed; develop is repeatable"
 ---
 
 # Phase 4 — Develop (repeatable, one change per run)
@@ -60,14 +60,18 @@ Dispatch (steps marked ⊘ are skipped for 🟢 trivial):
      blockers it previously cleared), STOP and escalate to the user.
 4. **Requirements Sync (sequential):** reconcile the feature-intake drafts (promote
    `proposed`→`accepted`, no duplicates), create FR + US only for genuinely-new behavior, update
-   `traceability-matrix.md` + `design-traceability.md`, bump `requirement_counts`, complete the
-   ADR supersede + deferred-security follow-through, and run its self-check.
+   `traceability-matrix.md` + `design-traceability.md`, report the new totals in a
+   `REQUIREMENT_COUNTS:` line, complete the ADR supersede + deferred-security follow-through,
+   and run its self-check.
 5. **New-requirements review (sequential, lightweight):** ⊘ skipped for 🟢 trivial (no new
    requirements). Otherwise re-dispatch **sdlc-develop-code-reviewer** over ONLY the new/promoted
    FR/US + traceability rows (reviewer ≠ author still holds) to confirm their acceptance criteria
    match the shipped behavior before completion.
 
 **On completion:** **stage** the change (`git add` the touched files) and **suggest a commit
-message** to the user — do NOT commit or push (git stays human-gated). Then append the
-`PLAN-NNN` id under `develop.plans` and set `develop.status: "completed"`. Develop is repeatable
-— a later feature starts a fresh run at the planner.
+message** to the user — do NOT commit or push (git stays human-gated). Then record the
+lifecycle data deterministically — never hand-edit the YAML:
+`node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" plan-add --id PLAN-NNN`, then `counts`
+with the totals from Requirements Sync's `REQUIREMENT_COUNTS:` line, then
+`complete --phase develop`. Develop is repeatable — a later feature starts a fresh run at
+the planner.

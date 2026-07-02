@@ -7,7 +7,7 @@ groups:
   - { mode: parallel, agents: [sdlc-define-fr-author, sdlc-define-nfr-author, sdlc-define-us-author] }
   - { mode: sequential, agents: [sdlc-define-requirement-reviewer] }
 gate_after_each_group: true
-post_phase: "write traceability-matrix.md + review-checklist.md; set define.status + agent statuses to completed; update requirement_counts"
+post_phase: "write traceability-matrix.md + review-checklist.md; record requirement_counts via the state script (counts); set define.status + agent statuses to completed"
 ---
 
 # Phase 2 — Define
@@ -35,5 +35,8 @@ Run the setup command first. Then dispatch:
      reappears), STOP and emit `HUMAN_REVIEW_REQUIRED` — do not keep looping.
 
 **On completion:** write `docs/requirements/traceability-matrix.md` and
-`docs/requirements/review-checklist.md`; update `requirement_counts`; set every
-`define.agents.*.status` and `define.status` to `"completed"`.
+`docs/requirements/review-checklist.md`; record the requirement totals deterministically —
+count the files in `docs/requirements/` and run
+`node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" counts --functional <n> --nonfunctional <n> --user-stories <n>`
+(never hand-edit the YAML); set every `define.agents.*.status` and `define.status` to
+`"completed"`.

@@ -40,8 +40,10 @@ non-completed phase (next), `·` pending. Show `project` and `version` if presen
       node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" init --name "<project>" --version "0.1.0" --mode greenfield
 
   **Verify** the output has `"ok": true` and `state.valid: true` before continuing (retry if
-  the write didn't land — e.g. it needed approval). Then record the brief: with Edit, append
-  an `sdlc.brief:` block (purpose, stack, users, key_features) under the `sdlc:` key.
+  the write didn't land — e.g. it needed approval). Then record the brief **deterministically**
+  with the state script — do NOT hand-edit the YAML:
+
+      node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" brief --purpose "<...>" --stack "<...>" --users "<...>" --key-features "<...>"
 
   **Then SCAFFOLD a minimal skeleton from the brief — BEFORE Phase 1.** The Prepare agents
   *analyze existing code*, so an empty repo gives the read-only explorer nothing to work
@@ -122,3 +124,14 @@ Each call rewrites the statuses deterministically and prints a terse `{ ok, phas
 Prefer ONE `complete --phase <phase>` at the END of a phase — it marks the phase AND all its
 agents; use `--agent` only to checkpoint mid-phase. Don't chain many per-agent calls at once.
 Re-read the detector (Step 0) for the board / next decision.
+
+Lifecycle data goes through the same script — never hand-edit `sdlc-metadata.yml`:
+
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" counts --functional <n> --nonfunctional <n> --user-stories <n>
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" plan-add --id PLAN-NNN
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" cycle --assessment <stable|maintain|evolve|urgent> --next-cycle <true|false> [--scope "..."] [--reason "..."]
+
+`counts` records the totals Define / Requirements Sync report (`REQUIREMENT_COUNTS:` line);
+`plan-add` appends the plan id in Develop's post-phase; `cycle` records Operate's `CYCLE:`
+verdict AND resets the next cycle's phases (maintain/urgent → develop..operate pending;
+evolve → define..operate pending; stable → lifecycle complete).

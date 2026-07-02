@@ -195,6 +195,195 @@ export function setModelProfile(content, profile) {
   return lines.join('\n')
 }
 
+// Quote a value as a single-line YAML double-quoted scalar.
+function yamlQuote(value) {
+  return '"' + String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\r?\n/g, ' ') + '"'
+}
+
+// Drop a 2-space-indented block: its `  <key>:` line plus every deeper-indented line after it.
+function stripTopBlock(lines, key) {
+  const res = []
+  let skipping = false
+  for (const line of lines) {
+    if (skipping && /^ {3,}\S/.test(line)) continue
+    skipping = false
+    if (new RegExp(`^ {2}${key}:`).test(line)) { skipping = true; continue }
+    res.push(line)
+  }
+  return res
+}
+
+// Deterministically set the sdlc.brief block (no YAML dependency, idempotent).
+// The greenfield wizard records the collected brief through this — never via hand-edit.
+export function setBrief(content, { purpose = '', stack = '', users = '', keyFeatures = '' }) {
+  const block = [
+    '  brief:',
+    `    purpose: ${yamlQuote(purpose)}`,
+    `    stack: ${yamlQuote(stack)}`,
+    `    users: ${yamlQuote(users)}`,
+    `    key_features: ${yamlQuote(keyFeatures)}`,
+  ]
+  const lines = stripTopBlock(content.split('\n'), 'brief')
+  let anchor = lines.findIndex(l => /^ {2}model_profile:/.test(l))
+  if (anchor === -1) anchor = lines.findIndex(l => /^ {2}methodology:/.test(l))
+  if (anchor === -1) anchor = lines.findIndex(l => /^ {2}mode:/.test(l))
+  if (anchor === -1) anchor = lines.findIndex(l => /^ {2}version:/.test(l))
+  if (anchor === -1) anchor = lines.findIndex(l => /^sdlc:\s*$/.test(l))
+  if (anchor === -1) lines.push(...block)
+  else lines.splice(anchor + 1, 0, ...block)
+  return lines.join('\n')
+}
+
+// Deterministically set requirement_counts (no YAML dependency, idempotent).
+// The wizard records the totals reported by Requirements Sync through this — never via hand-edit.
+export function setRequirementCounts(content, { functional, nonfunctional, userStories }) {
+  const block = [
+    '  requirement_counts:',
+    `    functional: ${functional}`,
+    `    nonfunctional: ${nonfunctional}`,
+    `    user_stories: ${userStories}`,
+  ]
+  const src = content.split('\n')
+  const at = src.findIndex(l => /^ {2}requirement_counts:/.test(l))
+  const lines = stripTopBlock(src, 'requirement_counts')
+  if (at === -1) {
+    // No existing block (legacy file): append under the single sdlc root, before trailing blanks.
+    let end = lines.length
+    while (end > 0 && lines[end - 1].trim() === '') end--
+    lines.splice(end, 0, ...block)
+  } else {
+    lines.splice(at, 0, ...block)
+  }
+  return lines.join('\n')
+}
+
+// Deterministically append a plan id to develop.plans (no YAML dependency, idempotent).
+// The wizard records the PLAN id in post-phase through this — the list has a single writer.
+// Returns null when there is no develop phase to write under.
+export function appendPlan(content, id) {
+  const lines = content.split('\n')
+  let inPhases = false, inDevelop = false, developStatusIdx = -1
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (/^ {2}phases:\s*$/.test(line)) { inPhases = true; continue }
+    if (inPhases && /^ {2}\S/.test(line)) { inPhases = false; inDevelop = false }
+    if (!inPhases) continue
+    const pm = line.match(/^ {4}(\w+):\s*$/)
+    if (pm) { inDevelop = pm[1] === 'develop'; continue }
+    if (!inDevelop) continue
+    const fm = line.match(/^ {6}plans:\s*\[(.*)\]\s*$/)
+    if (fm) {
+      const ids = fm[1].split(',').map(s => s.trim().replace(/^"|"$/g, '')).filter(Boolean)
+      if (ids.includes(id)) return content
+      ids.push(id)
+      lines[i] = `      plans: [${ids.map(x => `"${x}"`).join(', ')}]`
+      return lines.join('\n')
+    }
+    if (developStatusIdx === -1 && /^ {6}status:/.test(line)) developStatusIdx = i
+  }
+  if (developStatusIdx !== -1) {
+    lines.splice(developStatusIdx + 1, 0, `      plans: ["${id}"]`)
+    return lines.join('\n')
+  }
+  return null
+}
+
+export const ASSESSMENTS = ['stable', 'maintain', 'evolve', 'urgent']
+
+// Which phases a cycle assessment resets to "pending" for the next cycle.
+const CYCLE_RESETS = {
+  stable: [],
+  maintain: ['develop', 'verify', 'release', 'operate'],
+  urgent: ['develop', 'verify', 'release', 'operate'],
+  evolve: ['define', 'design', 'develop', 'verify', 'release', 'operate'],
+}
+
+// Locate the [start, end) line range of one phase's body under `  phases:`.
+function phaseRange(lines, phase) {
+  let inPhases = false, start = -1
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (/^ {2}phases:\s*$/.test(line)) { inPhases = true; continue }
+    if (inPhases && /^ {2}\S/.test(line)) inPhases = false
+    if (!inPhases) {
+      if (start !== -1) return [start, i]
+      continue
+    }
+    const pm = line.match(/^ {4}(\w+):\s*$/)
+    if (pm) {
+      if (start !== -1) return [start, i]
+      if (pm[1] === phase) start = i + 1
+    }
+  }
+  return start === -1 ? null : [start, lines.length]
+}
+
+const CYCLE_FIELD_RE = /^ {6}(completed|assessment|next_cycle|next_cycle_scope):/
+
+// Deterministically record the Operate cycle assessment (no YAML dependency, idempotent):
+// completes operate, writes the cycle record under it, bumps the sdlc.cycle counter, and
+// resets the per-assessment phases for the next cycle. The wizard records the feedback-loop's
+// reported assessment through this — never via hand-edit. Returns null on unknown assessment
+// or a file without an operate phase.
+export function recordCycle(content, { assessment, nextCycle, scope, reason, date }) {
+  if (!CYCLE_RESETS[assessment]) return null
+  let lines = updateStatus(content, { phase: 'operate', status: 'completed' }).split('\n')
+
+  // Strip any previous cycle record under operate so a re-record replaces, never duplicates.
+  let range = phaseRange(lines, 'operate')
+  if (!range) return null
+  const kept = []
+  let skipUrgent = false
+  for (let i = 0; i < lines.length; i++) {
+    if (i >= range[0] && i < range[1]) {
+      if (skipUrgent && /^ {7,}\S/.test(lines[i])) continue
+      skipUrgent = false
+      if (/^ {6}urgent:\s*$/.test(lines[i])) { skipUrgent = true; continue }
+      if (CYCLE_FIELD_RE.test(lines[i])) continue
+    }
+    kept.push(lines[i])
+  }
+  lines = kept
+
+  // Insert the fresh record right after operate's status line (before agents — parse-safe).
+  range = phaseRange(lines, 'operate')
+  let statusIdx = -1
+  for (let i = range[0]; i < range[1]; i++) {
+    if (/^ {6}status:/.test(lines[i])) { statusIdx = i; break }
+  }
+  if (statusIdx === -1) return null
+  const fields = [
+    `      completed: ${yamlQuote(date)}`,
+    `      assessment: ${yamlQuote(assessment)}`,
+    `      next_cycle: ${nextCycle ? 'true' : 'false'}`,
+  ]
+  if (scope) fields.push(`      next_cycle_scope: ${yamlQuote(scope)}`)
+  if (assessment === 'urgent') {
+    fields.push('      urgent:', `        triggered: ${yamlQuote(date)}`, `        reason: ${yamlQuote(reason || '')}`)
+  }
+  lines.splice(statusIdx + 1, 0, ...fields)
+
+  // Bump the one 2-space cycle counter under the sdlc root.
+  let n = 0
+  lines = lines.filter(l => {
+    const m = l.match(/^ {2}cycle:\s*(\d+)\s*$/)
+    if (m) { n = parseInt(m[1], 10); return false }
+    return true
+  })
+  const counter = `  cycle: ${n + 1}`
+  let anchor = lines.findIndex(l => /^ {2}model_profile:/.test(l))
+  if (anchor === -1) anchor = lines.findIndex(l => /^ {2}methodology:/.test(l))
+  if (anchor === -1) anchor = lines.findIndex(l => /^ {2}version:/.test(l))
+  if (anchor === -1) anchor = lines.findIndex(l => /^sdlc:\s*$/.test(l))
+  if (anchor === -1) lines.push(counter)
+  else lines.splice(anchor + 1, 0, counter)
+
+  // Reset the next cycle's phases (status + agents) — the record above survives, as history.
+  let out = lines.join('\n')
+  for (const p of CYCLE_RESETS[assessment]) out = updateStatus(out, { phase: p, status: 'pending' })
+  return out
+}
+
 // ── CLI entry ───────────────────────────────────────────────────
 function detectCmd() {
   const cwd = process.cwd()
@@ -299,12 +488,134 @@ function configCmd(argv) {
   process.stdout.write(JSON.stringify({ ok: true, model_profile: opts.modelProfile }, null, 2) + '\n')
 }
 
+function cliFail(error) {
+  process.stdout.write(JSON.stringify({ ok: false, error }, null, 2) + '\n')
+  process.exitCode = 1
+}
+
+// Read the metadata file for a mutating command, or fail loudly. Returns null on failure.
+function readMetaOrFail() {
+  const metaPath = join(process.cwd(), 'docs/requirements/sdlc-metadata.yml')
+  if (!existsSync(metaPath)) {
+    cliFail('no metadata file; run init first')
+    return null
+  }
+  return { metaPath, content: readFileSync(metaPath, 'utf8') }
+}
+
+// `brief --purpose P --stack S --users U --key-features F`
+// Deterministically records the greenfield brief under sdlc.brief — never hand-edited.
+function briefCmd(argv) {
+  const opts = {}
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--purpose') opts.purpose = argv[++i]
+    else if (argv[i] === '--stack') opts.stack = argv[++i]
+    else if (argv[i] === '--users') opts.users = argv[++i]
+    else if (argv[i] === '--key-features') opts.keyFeatures = argv[++i]
+  }
+  const missing = [
+    opts.purpose === undefined && '--purpose',
+    opts.stack === undefined && '--stack',
+    opts.users === undefined && '--users',
+    opts.keyFeatures === undefined && '--key-features',
+  ].filter(Boolean)
+  if (missing.length) return cliFail(`missing required flag(s): ${missing.join(', ')}`)
+  const meta = readMetaOrFail()
+  if (!meta) return
+  writeFileSync(meta.metaPath, setBrief(meta.content, opts))
+  process.stdout.write(JSON.stringify({ ok: true, updated: 'brief' }, null, 2) + '\n')
+}
+
+// `counts --functional N --nonfunctional N --user-stories N`
+// Deterministically records the requirement totals reported by Requirements Sync.
+function countsCmd(argv) {
+  const raw = {}
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--functional') raw.functional = argv[++i]
+    else if (argv[i] === '--nonfunctional') raw.nonfunctional = argv[++i]
+    else if (argv[i] === '--user-stories') raw.userStories = argv[++i]
+  }
+  const counts = {}
+  for (const [flag, key] of [['--functional', 'functional'], ['--nonfunctional', 'nonfunctional'], ['--user-stories', 'userStories']]) {
+    if (raw[key] === undefined || !/^\d+$/.test(raw[key])) {
+      return cliFail(`${flag} must be a non-negative integer`)
+    }
+    counts[key] = parseInt(raw[key], 10)
+  }
+  const meta = readMetaOrFail()
+  if (!meta) return
+  writeFileSync(meta.metaPath, setRequirementCounts(meta.content, counts))
+  process.stdout.write(JSON.stringify({ ok: true, requirement_counts: { functional: counts.functional, nonfunctional: counts.nonfunctional, user_stories: counts.userStories } }, null, 2) + '\n')
+}
+
+// `plan-add --id PLAN-NNN`
+// Deterministically appends the plan id to develop.plans (idempotent, single writer).
+function planAddCmd(argv) {
+  const opts = {}
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--id') opts.id = argv[++i]
+  }
+  if (!opts.id || !/^[A-Za-z0-9._-]+$/.test(opts.id)) {
+    return cliFail('--id must be a plan id like PLAN-001 (letters, digits, . _ - only)')
+  }
+  const meta = readMetaOrFail()
+  if (!meta) return
+  const out = appendPlan(meta.content, opts.id)
+  if (out === null) return cliFail('no develop phase found in metadata — nothing updated')
+  if (out !== meta.content) writeFileSync(meta.metaPath, out)
+  const m = out.match(/^ {6}plans:\s*\[(.*)\]\s*$/m)
+  const plans = m ? m[1].split(',').map(s => s.trim().replace(/^"|"$/g, '')).filter(Boolean) : []
+  process.stdout.write(JSON.stringify({ ok: true, plans }, null, 2) + '\n')
+}
+
+// `cycle --assessment stable|maintain|evolve|urgent --next-cycle true|false [--scope S] [--reason R] [--date YYYY-MM-DD]`
+// Deterministically records the Operate cycle assessment and resets phases for the next cycle.
+function cycleCmd(argv) {
+  const opts = {}
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--assessment') opts.assessment = argv[++i]
+    else if (argv[i] === '--next-cycle') opts.nextCycle = argv[++i]
+    else if (argv[i] === '--scope') opts.scope = argv[++i]
+    else if (argv[i] === '--reason') opts.reason = argv[++i]
+    else if (argv[i] === '--date') opts.date = argv[++i]
+  }
+  const assessment = (opts.assessment || '').toLowerCase()
+  if (!ASSESSMENTS.includes(assessment)) {
+    return cliFail(`--assessment must be one of: ${ASSESSMENTS.join(', ')}`)
+  }
+  if (opts.nextCycle !== 'true' && opts.nextCycle !== 'false') {
+    return cliFail('--next-cycle must be true or false')
+  }
+  const nextCycle = opts.nextCycle === 'true'
+  if (assessment === 'stable' && nextCycle) return cliFail('a stable assessment requires --next-cycle false')
+  if (assessment !== 'stable' && !nextCycle) return cliFail(`a ${assessment} assessment requires --next-cycle true`)
+  if (assessment === 'urgent' && !opts.reason) return cliFail('an urgent assessment requires --reason (e.g. incident ids)')
+  const date = opts.date || new Date().toISOString().slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return cliFail('--date must be YYYY-MM-DD')
+  const meta = readMetaOrFail()
+  if (!meta) return
+  const out = recordCycle(meta.content, { assessment, nextCycle, scope: opts.scope, reason: opts.reason, date })
+  if (out === null) return cliFail('no operate phase found in metadata — nothing updated')
+  writeFileSync(meta.metaPath, out)
+  const cyc = Number((out.match(/^ {2}cycle:\s*(\d+)\s*$/m) || [])[1])
+  const state = computeState({ hasMetadata: true, metadataContent: out, hasCode: detectCode(process.cwd()) })
+  process.stdout.write(JSON.stringify({ ok: true, assessment, next_cycle: nextCycle, cycle: cyc, phase: state.phase }, null, 2) + '\n')
+}
+
+const COMMANDS = ['detect', 'init', 'complete', 'config', 'brief', 'counts', 'plan-add', 'cycle']
+
 function main() {
   const cmd = process.argv[2]
-  if (cmd === 'init') initCmd(process.argv.slice(3))
-  else if (cmd === 'complete') completeCmd(process.argv.slice(3))
-  else if (cmd === 'config') configCmd(process.argv.slice(3))
-  else detectCmd()
+  const rest = process.argv.slice(3)
+  if (cmd === undefined || cmd === 'detect') detectCmd()
+  else if (cmd === 'init') initCmd(rest)
+  else if (cmd === 'complete') completeCmd(rest)
+  else if (cmd === 'config') configCmd(rest)
+  else if (cmd === 'brief') briefCmd(rest)
+  else if (cmd === 'counts') countsCmd(rest)
+  else if (cmd === 'plan-add') planAddCmd(rest)
+  else if (cmd === 'cycle') cycleCmd(rest)
+  else cliFail(`unknown command '${cmd}' — expected one of: ${COMMANDS.join(', ')}`)
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) main()

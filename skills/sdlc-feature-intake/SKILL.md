@@ -43,4 +43,5 @@ plans against criteria, not a vague sentence.
 
 The drafted US/FR are provisional (`status: proposed`). The Develop **Requirements Sync**
 agent finalizes them at the end of the phase (sets `accepted`, wires the traceability
-matrix, bumps `requirement_counts`) so the up-front draft and the shipped code converge.
+matrix, reports the new `requirement_counts` for the wizard to record via the state
+script) so the up-front draft and the shipped code converge.

@@ -1,14 +1,14 @@
 ---
 name: sdlc-develop-reqs-sync
-description: Phase 4 Develop — creates new FR+US for new behavior, updates traceability + counts.
+description: Phase 4 Develop — creates new FR+US for new behavior, updates traceability, reports counts.
 tools: Read Grep Glob Bash Write Edit
 ---
 
 You are the **Requirements Sync** subagent of the Agentic SDLC **Develop** phase,
 dispatched by the /sdlc wizard after the Code Reviewer APPROVED the change. The
 orchestrator passes you the PLAN_PATH. First read `CLAUDE.md` and the `sdlc-conventions`
-skill. Your FINAL MESSAGE must report the new FR/US ids created and the traceability/metadata
-updates made.
+skill. Your FINAL MESSAGE must report the new FR/US ids created, the traceability updates
+made, and end with a `REQUIREMENT_COUNTS:` line (see STEP 6).
 
 --- TASK ---
 You are the Requirements Sync agent. After a feature has been implemented
@@ -55,10 +55,14 @@ STEP 5 — UPDATE docs/design/design-traceability.md:
   - Map each new FR to the CS docs whose `satisfies_fr` should now include it, and
     update those CS `satisfies_fr` lists (that is the canonical FR↔CS link).
 
-STEP 6 — UPDATE docs/requirements/sdlc-metadata.yml:
-  - Increment requirement_counts to match the new file totals.
-  (The orchestrator — not you — appends the PLAN id to `develop.plans` in post-phase,
-  so the list has a single writer.)
+STEP 6 — REPORT the new requirement counts (do NOT edit sdlc-metadata.yml yourself).
+  Count the files in docs/requirements/functional/, nonfunctional/, and user-stories/,
+  then end your final message with the exact line:
+
+  REQUIREMENT_COUNTS: functional=<n> nonfunctional=<n> user_stories=<n>
+
+  (The orchestrator — the metadata's single writer — records them with the state
+  script's `counts` command and appends the PLAN id to `develop.plans` in post-phase.)
 
 STEP 7 — ADR + SECURITY FOLLOW-THROUGH.
   - If the plan's `proposes_new_adrs` is non-empty, verify each new ADR exists AND
@@ -72,8 +76,8 @@ STEP 7 — ADR + SECURITY FOLLOW-THROUGH.
     must never live only inside a plan.
 
 STEP 8 — SELF-CHECK (makes "no orphans" verifiable).
-  - Assert `requirement_counts` equals the file count in functional/ + nonfunctional/
-    + user-stories/.
+  - Assert the totals in your REQUIREMENT_COUNTS line equal the file count in
+    functional/ + nonfunctional/ + user-stories/.
   - Assert every new FR appears as a row in traceability-matrix.md, and every new
     US's `implements_fr` resolves to a real FR.
   Report any mismatch as BLOCKED rather than completing.

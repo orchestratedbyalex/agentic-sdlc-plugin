@@ -10,6 +10,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **Complete deterministic write surface** for `sdlc-metadata.yml`: new state commands
+  `brief`, `counts`, `plan-add`, and `cycle` (the last records the Operate assessment,
+  bumps the cycle counter, and resets the next cycle's phases). This closes the four
+  previously-sanctioned LLM hand-edits of the metadata — the greenfield brief,
+  `requirement_counts` (Define post-phase + Requirements Sync), `develop.plans`, and the
+  Operate cycle block — so design invariant 2 now holds everywhere.
+- The state CLI rejects unknown subcommands instead of silently falling through to `detect`.
+
+### Changed
+- Requirements Sync and the Feedback Loop no longer edit `sdlc-metadata.yml`. They report
+  `REQUIREMENT_COUNTS:` / `CYCLE:` sentinel lines in their final message and the wizard —
+  the metadata's single writer — records them via the state script.
+
 ## [0.2.0] — 2026
 
 First public release.

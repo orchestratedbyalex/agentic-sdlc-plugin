@@ -49,7 +49,10 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
 1. **Reviewer ≠ author.** Review agents have read-only tools (`Read Grep Glob Bash`); only
    authors get `Write Edit`. Never give a reviewer write tools.
 2. **Deterministic state.** Every `sdlc-metadata.yml` mutation goes through
-   `scripts/sdlc-state.mjs` (`init` / `complete` / `config`) — never an LLM hand-edit of YAML.
+   `scripts/sdlc-state.mjs` (`init` / `complete` / `config` / `brief` / `counts` /
+   `plan-add` / `cycle`) — never an LLM hand-edit of YAML. Agents that produce lifecycle
+   data (Requirements Sync, Feedback Loop) report it in sentinel lines
+   (`REQUIREMENT_COUNTS:` / `CYCLE:`); the orchestrator is the single writer.
 3. **Exercise the real artifact, not a proxy.** Gates must run the *actual* production build
    and confirm tests truly executed (0 suites collected = FAIL), not just "types pass / no
    failing assertions." (Verify + Release + Develop reviewer.)

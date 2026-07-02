@@ -7,7 +7,7 @@ groups:
   - { mode: conditional, agents: [sdlc-operate-incident-responder] }
   - { mode: sequential, agents: [sdlc-operate-feedback-loop] }
 gate_after_each_group: true
-post_phase: "set operate.status + agent statuses completed; record cycle assessment + next_cycle; if next_cycle, begin a new cycle at the first pending phase"
+post_phase: "record the cycle via the state script (cycle — completes operate, stores assessment/next_cycle, resets next-cycle phases); if next_cycle, begin a new cycle at the first pending phase"
 ---
 
 # Phase 7 — Operate (Deliver & Support + Improve)
@@ -23,10 +23,14 @@ Operate and Develop are normally the same DevOps team (Software Production Syste
    containment + permanent fix). If nothing was flagged, skip this group.
 3. **Feedback loop (sequential):** feedback-loop consumes all reports, creates new FR/NFR/US
    (status `proposed`) for gaps, updates the traceability matrix, writes
-   `docs/operate/operate-report-<date>.md`, and updates `sdlc-metadata.yml`. Its cycle
-   assessment is one of STABLE | MAINTAIN | EVOLVE | URGENT.
+   `docs/operate/operate-report-<date>.md`, and reports its cycle assessment
+   (STABLE | MAINTAIN | EVOLVE | URGENT) in a `CYCLE:` line — it never edits
+   `sdlc-metadata.yml`.
 
-**On completion:** set every `operate.agents.*.status` and `operate.status` to `"completed"`;
-record the cycle assessment and `next_cycle: true|false`. If `next_cycle` is true, the wizard
-re-reads the board and begins a new cycle at the first pending phase (MAINTAIN/EVOLVE/URGENT
-reset the relevant phases; STABLE = lifecycle complete).
+**On completion:** record the cycle deterministically from the feedback-loop's `CYCLE:` line —
+never hand-edit the YAML:
+`node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" cycle --assessment <a> --next-cycle <t|f> [--scope "..."] [--reason "..."]`.
+The command completes operate (status + agents), stores the assessment, bumps the cycle
+counter, and resets the next cycle's phases (MAINTAIN/URGENT → develop..operate pending;
+EVOLVE → define..operate pending; STABLE = lifecycle complete). If `next_cycle` is true, the
+wizard re-reads the board and begins the new cycle at the first pending phase.
