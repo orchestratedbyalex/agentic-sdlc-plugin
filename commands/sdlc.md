@@ -85,9 +85,40 @@ why and route them to the first pending setup phase instead.
 
 ### Step 4 — Run the chosen phase
 Read the phase playbook at `${CLAUDE_PLUGIN_ROOT}/phases/phase-<n>-<name>.md` and follow
-it: dispatch its subagents via the Task tool (sequential across "Depends on", concurrent
-within a parallel group), run the validation gate after each group, and on a gate FAIL
-re-dispatch the relevant author agent per the playbook's "On failure".
+it: dispatch its subagents via the Task tool per the playbook's `groups:` frontmatter —
+groups run top to bottom; in a `sequential` group dispatch one agent at a time in listed
+order; in a `parallel` group dispatch all agents concurrently in ONE message; a
+`conditional` group is dispatched only when the condition stated in the playbook body
+holds (otherwise skip it). Run the validation gate after each group. On a gate FAIL,
+follow the playbook's bolded **Gate FAIL** routing — re-dispatch the named author(s),
+re-run the gate — and when the playbook's loop bound trips, STOP and run the escalation
+protocol below.
+
+#### Escalation — `HUMAN_REVIEW_REQUIRED`
+Every playbook loop is bounded, and every bound ends the same way (a gate FAILing 3×, a
+previously-cleared issue reappearing, an author still blocked after 3 clarifier rounds,
+Verify still REWORK REQUIRED after cycle 3): STOP dispatching and present this block. Do
+not keep looping, and do not mark the phase or the gate agent completed — state stays
+where it is, so a later `/sdlc` run resumes at the same spot.
+
+    HUMAN_REVIEW_REQUIRED
+    Phase / gate:  <phase> — <the agent whose loop hit its bound>
+    Trigger:       <which bound tripped, with the count>
+    Open blockers: <each unresolved blocker, quoted from the last gate report>
+    Artifacts:     <paths of the report/plan/docs the human needs to decide>
+    Options:       1) guidance — give me the decision and I resume the loop
+                   2) waive — accept these blockers; the gate records WAIVED, not PASS
+                   3) abort — stop here; /sdlc resumes from saved state later
+
+Then act on the user's choice:
+1. **guidance** — re-dispatch the relevant author with the user's decision embedded in
+   the prompt. The loop bound resets (the human changed the inputs), but the
+   previously-cleared-issue rule still applies.
+2. **waive** — proceed with the playbook's completion steps, reporting the gate as
+   **WAIVED by the user** (with their one-line reason) in the phase summary. A waived
+   gate is never reported as PASS.
+3. **abort** — stop the run and report where it stopped. Nothing further is marked
+   complete, so `/sdlc` resumes from the metadata.
 
 #### Model routing (apply on every dispatch)
 `modelProfile` from Step 0 selects how much model to spend per agent. Each agent belongs to

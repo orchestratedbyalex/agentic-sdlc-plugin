@@ -31,8 +31,8 @@ Prerequisite: the Develop phase has completed the change(s) under verification.
    (REWORK REQUIRED) if the release build did not exit 0 and produce its artifact
    (condition c2).
    - **READY FOR RELEASE:** set every `verify.agents.*.status` and `verify.status` to `"completed"`.
-   - **REWORK REQUIRED:** do NOT update status; route the blockers back to Phase 4 (Develop)
-     and re-run Verify after they're fixed, per the bounded protocol below.
+   - **Gate FAIL (REWORK REQUIRED):** do NOT update status; route the blockers back to
+     Phase 4 (Develop) and re-run Verify after they're fixed, per the bounded protocol below.
 3. **Re-verification after REWORK (bounded — track the cycle count; cycle 1 = the initial run):**
    - **Cycle 2** (first re-run after the Phase 4 fixes): re-run **static-dynamic-analyzer +
      regression-tester IN FULL** (the mechanical safety net — a fix can break anything), and

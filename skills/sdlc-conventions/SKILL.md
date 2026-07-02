@@ -59,6 +59,13 @@ passed/failed totals) copied as-is — never re-typed or paraphrased. Summary li
 not the full log. Counts without a verbatim block are claims, not evidence, and cannot
 PASS a gate condition.
 
+## Escalation (HUMAN_REVIEW_REQUIRED)
+An agent that cannot proceed without a human decision (an ambiguity no existing document
+resolves, a gate loop at its bound) ends its final message with a `HUMAN_REVIEW_REQUIRED`
+block: the trigger, the open blockers/questions, and the artifact paths a human needs to
+decide. The orchestrator — never the agent — presents it to the user and handles the
+outcome (guidance / waive / abort). Agents do not loop past their bound.
+
 ## Requirements sync
 Every new behavior added in Develop becomes a new FR + US wired into
 `docs/requirements/traceability-matrix.md`. No orphan features.

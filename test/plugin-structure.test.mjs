@@ -87,3 +87,36 @@ test('the validation reviewer independently re-runs the suite instead of trustin
   assert.match(text, /\bd2\b/,
     'no d2 gate condition covering the independent re-run')
 })
+
+// Failure routing is a playbook↔orchestrator contract (audit item 4): every playbook marks
+// its routing with a bolded **Gate FAIL** and bounds the loop with HUMAN_REVIEW_REQUIRED —
+// one sentinel name everywhere, no unnamed "escalate to the user" variants.
+test('every phase playbook carries **Gate FAIL** routing bounded by HUMAN_REVIEW_REQUIRED', () => {
+  const dir = join(ROOT, 'phases')
+  for (const f of readdirSync(dir).filter(f => f.endsWith('.md'))) {
+    const text = readFileSync(join(dir, f), 'utf8')
+    assert.match(text, /\*\*Gate FAIL/, `${f}: no **Gate FAIL** routing marker`)
+    assert.match(text, /HUMAN_REVIEW_REQUIRED/, `${f}: gate loop has no HUMAN_REVIEW_REQUIRED bound`)
+    assert.doesNotMatch(text, /escalate to the user/i,
+      `${f}: unnamed escalation phrasing — use the HUMAN_REVIEW_REQUIRED sentinel`)
+  }
+})
+
+test('the orchestrator dispatch loop references contracts that exist in the playbooks', () => {
+  const text = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
+  assert.doesNotMatch(text, /"On failure"|"Depends on"/,
+    'sdlc.md references playbook sections that exist in no playbook')
+  assert.match(text, /`groups:`/, 'sdlc.md does not reference the playbook groups: frontmatter for ordering')
+  assert.match(text, /\*\*Gate FAIL\*\*/, 'sdlc.md does not reference the playbooks\' **Gate FAIL** routing')
+})
+
+test('the HUMAN_REVIEW_REQUIRED escalation protocol is defined in the orchestrator', () => {
+  const text = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
+  assert.match(text, /^\s*HUMAN_REVIEW_REQUIRED\s*$/m, 'no HUMAN_REVIEW_REQUIRED block template')
+  for (const field of ['Trigger:', 'Open blockers:', 'Artifacts:']) {
+    assert.match(text, new RegExp(field), `escalation block lacks the "${field}" field`)
+  }
+  for (const option of ['guidance', 'waive', 'abort']) {
+    assert.match(text, new RegExp(`\\*\\*${option}\\*\\*`), `escalation protocol lacks the "${option}" outcome`)
+  }
+})

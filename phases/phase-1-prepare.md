@@ -21,7 +21,10 @@ Dispatch in order (sequential; the author depends on the explorer):
 2. **sdlc-prepare-claude-md** — pass the explorer's findings. It writes `CLAUDE.md`.
 
 **Gate:** confirm `CLAUDE.md` exists at the repo root and contains build/test commands +
-an architecture overview. If missing, re-dispatch sdlc-prepare-claude-md.
+an architecture overview.
+
+- **Gate FAIL:** re-dispatch sdlc-prepare-claude-md with the missing pieces named. If the
+  gate FAILs **3** times, STOP and emit `HUMAN_REVIEW_REQUIRED` — do not keep looping.
 
 **On completion:** update `docs/requirements/sdlc-metadata.yml` — set
 `prepare.agents.explorer.status` and `prepare.agents.claude_md.status` to `"completed"`,

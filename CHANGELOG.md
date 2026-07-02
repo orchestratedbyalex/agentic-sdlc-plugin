@@ -18,6 +18,12 @@ All notable changes to this project are documented here. The format follows
   `requirement_counts` (Define post-phase + Requirements Sync), `develop.plans`, and the
   Operate cycle block — so design invariant 2 now holds everywhere.
 - The state CLI rejects unknown subcommands instead of silently falling through to `detect`.
+- A defined **`HUMAN_REVIEW_REQUIRED` escalation protocol**: every playbook's gate loop is
+  bounded (Prepare and Operate previously had no bound at all) and every bound ends in one
+  block the wizard presents to the user — phase/gate, trigger, open blockers, artifacts —
+  with three outcomes: **guidance** (resume the loop with the human's decision, bounds
+  reset), **waive** (the gate records WAIVED, never PASS), **abort** (stop; `/sdlc` resumes
+  from saved state). Agents' side of the contract lives in the `sdlc-conventions` skill.
 
 ### Changed
 - Requirements Sync and the Feedback Loop no longer edit `sdlc-metadata.yml`. They report
@@ -33,6 +39,12 @@ All notable changes to this project are documented here. The format follows
   block cannot PASS its gate condition.
 
 ### Fixed
+- The wizard's dispatch loop (Step 4) referenced playbook markers that existed in no
+  playbook. It now follows the contract the playbooks actually carry: the `groups:`
+  frontmatter for ordering (sequential / parallel / conditional) and each playbook's bolded
+  **Gate FAIL** routing for failures — now present in all seven playbooks (Develop's and
+  Verify's keep their CHANGES REQUESTED / REWORK REQUIRED verdict names). Structure tests
+  pin the marker, the bound, and the orchestrator's references.
 - `complete --agent` on metadata with **block-style** agent entries (name and status on
   separate lines) silently wrote nothing while reporting success. `updateStatus` now rewrites
   both agent styles the parser accepts — including a phase `status:` line placed after the

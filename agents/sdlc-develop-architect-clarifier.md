@@ -26,8 +26,10 @@ For each ambiguity:
   - Re-read the relevant source code
   - Determine the correct answer (with citations)
 
-If you cannot resolve an ambiguity from existing documents, STOP and ask
-the human user (output a HUMAN_REVIEW_REQUIRED block).
+If you cannot resolve an ambiguity from existing documents, STOP and end your final
+message with a `HUMAN_REVIEW_REQUIRED` block — the trigger, the unresolved ambiguities,
+and the artifact paths a human needs to decide (see the sdlc-conventions escalation
+section). The orchestrator presents it to the user.
 
 STEP 2 — UPDATE THE PLAN
 

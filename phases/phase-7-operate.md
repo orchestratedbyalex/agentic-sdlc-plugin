@@ -26,6 +26,10 @@ Operate and Develop are normally the same DevOps team (Software Production Syste
    `docs/operate/operate-report-<date>.md`, and reports its cycle assessment
    (STABLE | MAINTAIN | EVOLVE | URGENT) in a `CYCLE:` line — it never edits
    `sdlc-metadata.yml`.
+   - **Gate FAIL:** if a routine-ops monitor errored out (rather than skipping gracefully),
+     or the feedback-loop's final message lacks a parseable `CYCLE:` line (the deterministic
+     cycle write depends on it), re-dispatch that agent ONCE with the defect named. If it
+     fails again, STOP and emit `HUMAN_REVIEW_REQUIRED` — do not keep looping.
 
 **On completion:** record the cycle deterministically from the feedback-loop's `CYCLE:` line —
 never hand-edit the YAML:

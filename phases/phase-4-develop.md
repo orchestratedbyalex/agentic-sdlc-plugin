@@ -57,9 +57,10 @@ Dispatch (steps marked ⊘ are skipped for 🟢 trivial):
    - 🟢 **trivial:** focused review — the load-bearing checks above only; skip the deep
      CS-conformance / performance-NFR / backward-compat passes that don't apply to a localized fix.
    - 🟡/🔴 **standard/complex:** the full 10-point checklist.
-   - **CHANGES REQUESTED:** route each blocker to code-author or test-author, re-run them, then
-     re-run the reviewer. If the reviewer issues CHANGES REQUESTED **3** times (or re-introduces
-     blockers it previously cleared), STOP and escalate to the user.
+   - **Gate FAIL (CHANGES REQUESTED):** route each blocker to code-author or test-author,
+     re-run them, then re-run the reviewer. If the reviewer issues CHANGES REQUESTED **3**
+     times (or re-introduces blockers it previously cleared), STOP and emit
+     `HUMAN_REVIEW_REQUIRED` — do not keep looping.
 4. **Requirements Sync (sequential):** reconcile the feature-intake drafts (promote
    `proposed`→`accepted`, no duplicates), create FR + US only for genuinely-new behavior, update
    `traceability-matrix.md` + `design-traceability.md`, report the new totals in a
