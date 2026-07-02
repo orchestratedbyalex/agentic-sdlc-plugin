@@ -24,6 +24,17 @@ All notable changes to this project are documented here. The format follows
   `REQUIREMENT_COUNTS:` / `CYCLE:` sentinel lines in their final message and the wizard —
   the metadata's single writer — records them via the state script.
 
+### Fixed
+- `complete --agent` on metadata with **block-style** agent entries (name and status on
+  separate lines) silently wrote nothing while reporting success. `updateStatus` now rewrites
+  both agent styles the parser accepts — including a phase `status:` line placed after the
+  agents block — so an update that parses is an update that lands.
+- Corrupt-but-nonempty metadata (zero parseable phases) now reports `valid: false`, routing
+  the wizard to its repair path instead of presenting corruption as a fresh project resuming
+  at phase 1.
+- `complete --status` is validated against the lifecycle statuses (`pending` / `in_progress` /
+  `completed`) instead of accepting any string into the file.
+
 ## [0.2.0] — 2026
 
 First public release.

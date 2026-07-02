@@ -42,6 +42,11 @@ test('parseMetadata marks empty content invalid', () => {
   assert.equal(parseMetadata('').valid, false)
 })
 
+test('parseMetadata marks nonempty garbage invalid (zero phases parsed)', () => {
+  assert.equal(parseMetadata('!!! this is not sdlc metadata {{{').valid, false)
+  assert.equal(parseMetadata('foo: bar\nbaz: qux\n').valid, false)
+})
+
 import { computeState } from '../scripts/sdlc-state.mjs'
 
 test('computeState: no metadata + no code = greenfield', () => {
@@ -116,6 +121,12 @@ test('computeState: reads project/version on resume', () => {
 test('computeState: corrupt metadata = valid false', () => {
   const s = computeState({ hasMetadata: true, metadataContent: '', hasCode: true })
   assert.equal(s.valid, false)
+})
+
+test('computeState: nonempty-garbage metadata routes to the repair path, not a fresh board', () => {
+  const s = computeState({ hasMetadata: true, metadataContent: 'corrupted beyond recognition', hasCode: true })
+  assert.equal(s.valid, false)
+  assert.equal(s.phase, null) // must NOT present as a clean resume at phase 1
 })
 
 import { detectCode } from '../scripts/sdlc-state.mjs'
@@ -534,7 +545,7 @@ test('recordCycle returns null on an unknown assessment', () => {
 // ── CLI integration: the `complete` command's guards (run the real script) ──
 
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), '../scripts/sdlc-state.mjs')
@@ -611,6 +622,80 @@ test('CLI: an unknown command fails loudly instead of silently running detect', 
   const r = runCLI(mkdtempSync(join(tmpdir(), 'sdlc-cli-')), ['breif'])
   assert.equal(r.json.ok, false)
   assert.match(r.json.error, /unknown command/)
+})
+
+// ── updateStatus must handle block-style agent entries, not just flow style ──
+// parseMetadata accepts both styles, so the unknown-agent guard passes on a block-style
+// file while updateStatus rewrote nothing — a silent no-op reported as ok:true.
+
+test('updateStatus completes a block-style agent entry (no silent no-op)', () => {
+  const out = updateStatus(MIDWAY, { phase: 'develop', agent: 'test_author', status: 'completed' })
+  assert.notEqual(out, MIDWAY, 'a block-style agent update must actually change the file')
+  const md = parseMetadata(out)
+  const byName = Object.fromEntries(md.phases.develop.agents.map(a => [a.name, a.status]))
+  assert.equal(byName.test_author, 'completed')
+  assert.equal(byName.architect_planner, 'completed')
+  assert.equal(md.phases.develop.status, 'in_progress') // agent update leaves the phase status alone
+})
+
+test('updateStatus targeting one block-style agent leaves its block-style siblings alone', () => {
+  const out = updateStatus(MIDWAY, { phase: 'develop', agent: 'architect_planner', status: 'in_progress' })
+  const byName = Object.fromEntries(parseMetadata(out).phases.develop.agents.map(a => [a.name, a.status]))
+  assert.equal(byName.architect_planner, 'in_progress')
+  assert.equal(byName.code_author, 'completed')
+  assert.equal(byName.test_author, 'pending')
+})
+
+test('updateStatus whole-phase update also rewrites block-style agents', () => {
+  const md = parseMetadata(updateStatus(MIDWAY, { phase: 'develop', status: 'completed' }))
+  assert.equal(md.phases.develop.status, 'completed')
+  assert.ok(md.phases.develop.agents.every(a => a.status === 'completed'), 'block-style agents completed too')
+  assert.ok(md.phases.design.agents.every(a => a.status === 'completed')) // neighbors untouched
+  assert.equal(md.phases.verify.status, 'pending')
+})
+
+test('updateStatus whole-phase reaches a phase status line placed AFTER the agents block', () => {
+  const md = `sdlc:
+  project: "x"
+  version: "0.1.0"
+  phases:
+    prepare:
+      agents:
+        explorer: { status: "pending" }
+      status: "pending"
+`
+  const out = parseMetadata(updateStatus(md, { phase: 'prepare', status: 'completed' }))
+  assert.equal(out.phases.prepare.status, 'completed')
+  assert.equal(out.phases.prepare.agents[0].status, 'completed')
+})
+
+test('updateStatus never mistakes recordCycle urgent fields (triggered/reason) for agents', () => {
+  const cycled = recordCycle(allCompleted(), { assessment: 'urgent', nextCycle: true, reason: 'INC-001', date: '2026-07-02' })
+  const out = updateStatus(cycled, { phase: 'operate', status: 'completed' })
+  assert.match(out, /^ {8}triggered: "2026-07-02"$/m)
+  assert.match(out, /^ {8}reason: "INC-001"$/m)
+  assert.equal(parseMetadata(out).valid, true)
+})
+
+test('CLI: complete --agent on block-style metadata really writes (was ok:true with no write)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'sdlc-cli-'))
+  mkdirSync(join(dir, 'docs/requirements'), { recursive: true })
+  writeFileSync(join(dir, 'docs/requirements/sdlc-metadata.yml'), MIDWAY)
+  const r = runCLI(dir, ['complete', '--phase', 'develop', '--agent', 'test_author'])
+  assert.equal(r.json.ok, true)
+  const y = readFileSync(join(dir, 'docs/requirements/sdlc-metadata.yml'), 'utf8')
+  const byName = Object.fromEntries(parseMetadata(y).phases.develop.agents.map(a => [a.name, a.status]))
+  assert.equal(byName.test_author, 'completed')
+})
+
+test('CLI: complete validates --status against the known lifecycle statuses', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'sdlc-cli-'))
+  runCLI(dir, ['init', '--name', 'x', '--version', '0.1.0', '--mode', 'existing'])
+  const bad = runCLI(dir, ['complete', '--phase', 'prepare', '--status', 'done'])
+  assert.equal(bad.json.ok, false)
+  assert.match(bad.json.error, /--status/)
+  const ok = runCLI(dir, ['complete', '--phase', 'prepare', '--agent', 'explorer', '--status', 'in_progress'])
+  assert.equal(ok.json.ok, true)
 })
 
 test('CLI: setupComplete only after every setup phase AND its agents complete', () => {

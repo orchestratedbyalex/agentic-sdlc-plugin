@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url'
 export const PHASES = ['prepare', 'define', 'design', 'develop', 'verify', 'release', 'operate']
 export const SETUP_PHASES = ['prepare', 'define', 'design']
 export const MODEL_PROFILES = ['quality', 'balanced', 'economy']
+export const STATUSES = ['pending', 'in_progress', 'completed']
 
 // Parse the known-shape metadata YAML without a YAML dependency.
 // Returns { valid, project, version, phases: { key: { status, agents: [{name,status}] } } }
@@ -16,7 +17,7 @@ export function parseMetadata(content) {
   if (typeof content !== 'string' || content.trim() === '') {
     return { valid: false, project: null, version: null, modelProfile: null, phases: {} }
   }
-  const out = { valid: true, project: null, version: null, modelProfile: null, phases: {} }
+  const out = { valid: false, project: null, version: null, modelProfile: null, phases: {} }
   let inPhases = false
   let curPhase = null
   let inAgents = false
@@ -76,6 +77,9 @@ export function parseMetadata(content) {
       }
     }
   }
+  // A file that parses to zero phases is corruption, not a fresh board — the wizard's
+  // repair path must trigger, not a clean "resume at phase 1".
+  out.valid = Object.keys(out.phases).length > 0
   return out
 }
 
@@ -150,28 +154,46 @@ export function initMetadata(template, { name, version, mode }) {
 // With `agent`: set just that agent. Without: set the phase status + every agent in it.
 export function updateStatus(content, { phase, agent, status = 'completed' }) {
   const lines = content.split('\n')
-  let inPhases = false, curPhase = null, inAgents = false
+  let inPhases = false, curPhase = null, inAgents = false, curAgent = null
+  const setPhaseStatus = (i) => {
+    if (!agent && /^\s{6}status:/.test(lines[i])) {
+      lines[i] = lines[i].replace(/status:\s*"?[^"]*"?\s*$/, `status: "${status}"`)
+    }
+  }
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     if (/^\s{2}phases:\s*$/.test(line)) { inPhases = true; continue }
     if (inPhases && /^\s{2}\S/.test(line) && !/^\s{2}phases:/.test(line)) {
-      inPhases = false; curPhase = null; inAgents = false
+      inPhases = false; curPhase = null; inAgents = false; curAgent = null
     }
     if (!inPhases) continue
     const pm = line.match(/^\s{4}(\w+):\s*$/)
-    if (pm) { curPhase = pm[1]; inAgents = false; continue }
+    if (pm) { curPhase = pm[1]; inAgents = false; curAgent = null; continue }
     if (curPhase !== phase) continue
-    if (/^\s{6}agents:\s*$/.test(line)) { inAgents = true; continue }
+    if (/^\s{6}agents:\s*$/.test(line)) { inAgents = true; curAgent = null; continue }
     if (!inAgents) {
       // phase-level status — only when completing the whole phase (no specific agent)
-      if (!agent && /^\s{6}status:/.test(line)) {
-        lines[i] = line.replace(/status:\s*"?[^"]*"?\s*$/, `status: "${status}"`)
-      }
+      setPhaseStatus(i)
     } else {
+      // a 6-space key ends the agents block (mirror parseMetadata); it may be the phase status
+      if (/^\s{6}\S/.test(line)) {
+        inAgents = false; curAgent = null
+        setPhaseStatus(i)
+        continue
+      }
       // flow-style agent line: `        key: { status: "..." }`
       const fm = line.match(/^(\s{8})([\w-]+):\s*\{\s*status:\s*"?[^"}]*"?\s*\}\s*$/)
-      if (fm && (!agent || fm[2] === agent)) {
-        lines[i] = `${fm[1]}${fm[2]}: { status: "${status}" }`
+      if (fm) {
+        curAgent = null
+        if (!agent || fm[2] === agent) lines[i] = `${fm[1]}${fm[2]}: { status: "${status}" }`
+        continue
+      }
+      // block-style agent entry: `        key:` followed by `          status: "..."`
+      const bm = line.match(/^\s{8}([\w-]+):\s*$/)
+      if (bm) { curAgent = bm[1]; continue }
+      const sm = line.match(/^(\s{10})status:\s*"?[^"]*"?\s*$/)
+      if (sm && curAgent && (!agent || curAgent === agent)) {
+        lines[i] = `${sm[1]}status: "${status}"`
       }
     }
   }
@@ -440,6 +462,9 @@ function completeCmd(argv) {
     process.stdout.write(JSON.stringify({ ok: false, error: `--phase must be one of: ${PHASES.join(', ')}` }, null, 2) + '\n')
     process.exitCode = 1
     return
+  }
+  if (!STATUSES.includes(opts.status)) {
+    return cliFail(`--status must be one of: ${STATUSES.join(', ')}`)
   }
   if (!existsSync(metaPath)) {
     process.stdout.write(JSON.stringify({ ok: false, error: 'no metadata file; run init first', path: metaPath }, null, 2) + '\n')
