@@ -7,7 +7,7 @@ groups:
   - { mode: parallel, agents: [sdlc-define-fr-author, sdlc-define-nfr-author, sdlc-define-us-author] }
   - { mode: sequential, agents: [sdlc-define-requirement-reviewer] }
 gate_after_each_group: true
-post_phase: "write traceability-matrix.md + review-checklist.md; record requirement_counts via the state script (counts); set define.status + agent statuses to completed"
+post_phase: "write traceability-matrix.md + review-checklist.md; record requirement_counts via the state script (counts); present the HUMAN_CHECKPOINT requirements sign-off; on approve, complete define with --evidence citing gate PASS + user sign-off"
 ---
 
 # Phase 2 — Define
@@ -38,5 +38,9 @@ Run the setup command first. Then dispatch:
 `docs/requirements/review-checklist.md`; record the requirement totals deterministically —
 count the files in `docs/requirements/` and run
 `node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" counts --functional <n> --nonfunctional <n> --user-stories <n>`
-(never hand-edit the YAML); set every `define.agents.*.status` and `define.status` to
-`"completed"`.
+(never hand-edit the YAML). Then present the **requirements sign-off** (`HUMAN_CHECKPOINT`,
+see the wizard): the gate validated consistency, but only the human can confirm the
+requirements describe the product they actually want — summarize the totals and the key
+FRs/NFRs/stories, point at the artifacts. Only on **approve** set every
+`define.agents.*.status` and `define.status` to `"completed"`, attesting both proofs:
+`complete --phase define --evidence "requirement-reviewer VERDICT: PASS <date>; user sign-off <date>"`.

@@ -7,7 +7,7 @@ groups:
   - { mode: conditional, agents: [sdlc-operate-incident-responder] }
   - { mode: sequential, agents: [sdlc-operate-feedback-loop] }
 gate_after_each_group: true
-post_phase: "record the cycle via the state script (cycle — completes operate, stores assessment/next_cycle, resets next-cycle phases); if next_cycle, begin a new cycle at the first pending phase"
+post_phase: "if the CYCLE: line proposes a next cycle, present the HUMAN_CHECKPOINT go/no-go FIRST; then record the cycle via the state script (cycle — completes operate, stores assessment/next_cycle, resets next-cycle phases); begin a new cycle only on an explicit go"
 ---
 
 # Phase 7 — Operate (Deliver & Support + Improve)
@@ -31,10 +31,14 @@ Operate and Develop are normally the same DevOps team (Software Production Syste
      cycle write depends on it), re-dispatch that agent ONCE with the defect named. If it
      fails again, STOP and emit `HUMAN_REVIEW_REQUIRED` — do not keep looping.
 
-**On completion:** record the cycle deterministically from the feedback-loop's `CYCLE:` line —
-never hand-edit the YAML:
-`node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" cycle --assessment <a> --next-cycle <t|f> [--scope "..."] [--reason "..."]`.
-The command completes operate (status + agents), stores the assessment, bumps the cycle
-counter, and resets the next cycle's phases (MAINTAIN/URGENT → develop..operate pending;
-EVOLVE → define..operate pending; STABLE = lifecycle complete). If `next_cycle` is true, the
-wizard re-reads the board and begins the new cycle at the first pending phase.
+**On completion:** if the `CYCLE:` line proposes a next cycle (`next_cycle=true`), present
+the **cycle go/no-go** (`HUMAN_CHECKPOINT`, see the wizard) BEFORE recording anything — the
+feedback loop proposes, the human disposes; a new cycle never starts on the agent's say-so
+alone. Then record the cycle deterministically — never hand-edit the YAML:
+`node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" cycle --assessment <a> --next-cycle <t|f> [--scope "..."] [--reason "..."]`
+— with the assessment as reported on **go** or **defer**, or the human's own on
+**override** (`--reason "user override: ..."`). The command completes operate (status +
+agents), stores the assessment, bumps the cycle counter, and resets the next cycle's phases
+(MAINTAIN/URGENT → develop..operate pending; EVOLVE → define..operate pending; STABLE =
+lifecycle complete, recorded directly with no checkpoint). Begin the new cycle at the first
+pending phase only on an explicit **go**; on **defer**, `/sdlc` resumes there later.

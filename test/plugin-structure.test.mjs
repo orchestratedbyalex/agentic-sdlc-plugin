@@ -259,6 +259,38 @@ test('the persisted loop state (runtime) is wired into the orchestrator and play
   assert.match(verify, /verifyCycle/, 'phase 5 still tracks the cycle count in conversation only')
 })
 
+test('the HUMAN_CHECKPOINT sign-off protocol is defined in the orchestrator', () => {
+  const sdlc = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
+  assert.match(sdlc, /HUMAN_CHECKPOINT/, 'the orchestrator never defines the checkpoint block')
+  // a checkpoint is a planned sign-off on gate-passed work, not a tripped failure bound —
+  // both protocols must coexist, distinctly
+  assert.match(sdlc, /HUMAN_REVIEW_REQUIRED/, 'the escalation protocol must stay alongside checkpoints')
+  // proportionate ceremony: exactly three altitudes, pinned so checkpoint creep is a deliberate act
+  assert.match(sdlc, /[Ee]xactly three/, 'the proportionality rule (exactly three checkpoints) is gone')
+  for (const outcome of ['approve', 'adjust', 'abort']) {
+    assert.match(sdlc, new RegExp(`\\*\\*${outcome}\\*\\*`), `sign-off checkpoints lack the "${outcome}" outcome`)
+  }
+  for (const outcome of ['go', 'defer', 'override']) {
+    assert.match(sdlc, new RegExp(`\\*\\*${outcome}\\*\\*`), `the cycle go/no-go lacks the "${outcome}" outcome`)
+  }
+})
+
+test('the three human checkpoints are wired at their altitudes (Define, Design, Operate)', () => {
+  const define = readFileSync(join(ROOT, 'phases', 'phase-2-define.md'), 'utf8')
+  assert.match(define, /HUMAN_CHECKPOINT/, 'Define completes without a human sign-off')
+  const design = readFileSync(join(ROOT, 'phases', 'phase-3-design.md'), 'utf8')
+  assert.match(design, /HUMAN_CHECKPOINT/, 'Design completes without a human sign-off')
+  assert.match(design, /proposed/, 'Design sign-off never accepts the proposed ADRs')
+  const operate = readFileSync(join(ROOT, 'phases', 'phase-7-operate.md'), 'utf8')
+  assert.match(operate, /HUMAN_CHECKPOINT/, 'a new cycle can start without a human go')
+  assert.match(operate, /go\/no-go/, 'phase 7 never names the go/no-go decision')
+  // ADR trade-offs are decided by the human: new decisions enter proposed, the sign-off accepts them
+  const adr = readFileSync(join(ROOT, 'agents', 'sdlc-design-adr-traceability-author.md'), 'utf8')
+  assert.match(adr, /sign-off/, 'the ADR author still self-accepts new decisions')
+  const reviewer = readFileSync(join(ROOT, 'agents', 'sdlc-design-reviewer.md'), 'utf8')
+  assert.match(reviewer, /proposed/, 'the design gate would FAIL proposed (pre-sign-off) ADRs')
+})
+
 test('the route-back recovery mechanics (reopen + evidence) are wired into the wizard and playbooks', () => {
   const sdlc = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
   // Step 5: per-agent checkpointing is encouraged, phase completion carries an attestation,

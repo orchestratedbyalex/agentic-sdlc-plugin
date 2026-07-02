@@ -36,11 +36,17 @@ Checks:
    - Every ADR has a unique ADR-NNN ID
    - Every superseded ADR has a valid `superseded_by` reference
    - The ADR index in adrs/README.md matches the actual file list
+   - Status values are honest: `proposed` is the VALID status for a decision
+     newly made this phase (you run BEFORE the human's Design sign-off, which
+     is what accepts them) — but a NEW decision already marked `accepted`
+     with no code evidence is a FAIL (the author self-accepted a trade-off
+     that was the human's to decide)
 7. CROSS-REFERENCE CONSISTENCY — satisfies_fr/satisfies_nfr in CS/DI/ADR
    docs match the design-traceability.md matrices
 8. ARCHITECTURE COMPLETENESS — architecture-overview.md covers all source
    modules and all runtime dependencies; constrained_by_adrs fields
-   correctly reference accepted ADRs
+   correctly reference accepted or proposed (pre-sign-off) ADRs — never
+   deprecated or superseded ones
 9. THREAT MODEL (Microsoft SDL) — architecture-overview.md contains the
    Trust Boundaries & Threats section. Cross-check it against data-flow.md
    and the code: every external input/output path in the data flow crosses

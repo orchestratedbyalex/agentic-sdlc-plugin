@@ -102,6 +102,10 @@ the plugin stays generic, your repo accumulates the lifecycle record.
   explicit permission **ask** (the human approving the prompt *is* the gate) and **denies**
   direct edits of `sdlc-metadata.yml`, pointing back at the state script. Hooks fire
   session-wide wherever the plugin is enabled — the ask-not-deny design keeps that safe.
+- **Human checkpoints at exactly three altitudes** — Define completes only after your
+  requirements sign-off; Design completes only after you decide the ADR trade-offs
+  (new-decision ADRs enter `proposed`; your approval accepts them); and a new Operate cycle
+  starts only on your explicit go (go / defer / override) — never on an agent's say-so.
 - Artifact templates (`templates/`) and two skills (`sdlc-conventions`, `sdlc-feature-intake`).
 - **Configurable model routing** (`quality` / `balanced` / `economy`) that never downgrades the
   judgment-bearing agents or the gates.
@@ -109,7 +113,7 @@ the plugin stays generic, your repo accumulates the lifecycle record.
 ## Test
 
 ```bash
-node --test          # 131 tests, all green (state logic + hook guard + plugin structure)
+node --test          # 133 tests, all green (state logic + hook guard + plugin structure)
 ```
 
 ## Contributing

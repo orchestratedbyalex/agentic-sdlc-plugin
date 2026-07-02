@@ -33,7 +33,7 @@ accumulates the evidence.
 ## Build / test / run
 
 ```bash
-node --test            # run all tests (currently 131, must stay green)
+node --test            # run all tests (currently 133, must stay green)
 claude --plugin-dir .  # load the plugin into a Claude Code session for live use
 /reload-plugins        # (inside the session, after edits)
 /agentic-sdlc:sdlc     # run the wizard
@@ -89,6 +89,14 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
    see `commands/sdlc.md`) may run mechanical/analysis agents on smaller models, but full-tier
    agents (every reviewer/validator, the planner, the clarifier, the code/test/implementer
    authors, the feedback-loop) always inherit the session model — in every profile.
+10. **The lifecycle pauses for humans at exactly three altitudes.** `HUMAN_CHECKPOINT`
+    (distinct from the `HUMAN_REVIEW_REQUIRED` failure escalation) is a planned sign-off on
+    gate-PASSed work: the Define requirements sign-off, the Design sign-off — where ADR
+    trade-offs are decided: new-decision ADRs enter `proposed` and only the human's approval
+    flips them to `accepted` — and the Operate cycle go/no-go (the feedback loop proposes
+    via `CYCLE:`, the human disposes before `cycle` records; a new cycle never self-starts).
+    The sign-off enters the phase's `--evidence` attestation. Exactly three — don't add more
+    (see invariant 6) and don't remove one.
 
 ## When editing agents
 
@@ -100,9 +108,12 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
   model-routing table's exact roster coverage, the gate agents' machine-parsable
   `VERDICT: PASS|FAIL` line, the sentinel templates, the persisted-loop-state wiring
   (`gate-log` / `loop-reset` / `runtime` in the orchestrator; `plan-active` /
-  `clarifier-round` / `verifyCycle` in playbooks 4–5), and the route-back recovery wiring
+  `clarifier-round` / `verifyCycle` in playbooks 4–5), the route-back recovery wiring
   (`reopen` + `--evidence` in the orchestrator; `reopen --phase develop` /
-  `reopen --phase verify` in playbooks 5–6). Don't let those drift silently.
+  `reopen --phase verify` in playbooks 5–6), and the human-checkpoint wiring
+  (`HUMAN_CHECKPOINT` + the exactly-three rule + both outcome sets in the orchestrator; the
+  checkpoint in playbooks 2/3/7; `proposed`-ADR handling in the ADR author and design
+  reviewer). Don't let those drift silently.
 
 ## Status
 

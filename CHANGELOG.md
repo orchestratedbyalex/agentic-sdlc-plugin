@@ -74,6 +74,19 @@ All notable changes to this project are documented here. The format follows
   per-agent checkpointing** (it previously discouraged it): each agent is checkpointed as
   its work lands, so resume is precise and route-backs can reopen exactly the responsible
   agents.
+- **Human checkpoints at exactly three altitudes** (`HUMAN_CHECKPOINT` — a planned sign-off
+  on gate-PASSed work, deliberately distinct from the `HUMAN_REVIEW_REQUIRED` failure
+  escalation): Define completes only after a human **requirements sign-off**; Design
+  completes only after a **design & ADR sign-off** — decisions newly made in the design
+  phase now enter as `proposed` ADRs (the agent no longer self-accepts trade-offs; the
+  human's approval flips them to `accepted`, and the design gate treats pre-sign-off
+  `proposed` as valid while failing a self-accepted new decision); and Operate's next cycle
+  needs an explicit human **go/no-go** *before* `cycle` records — **go** starts it,
+  **defer** records but waits, **override** replaces the agent's assessment with the
+  human's. Previously the wizard rolled from Define/Design gate PASS straight to completion
+  and from the feedback loop's `CYCLE:` line straight into a new cycle. Sign-offs land in
+  the phase's `--evidence` attestation; structure tests pin the protocol, the exactly-three
+  rule, and the wiring at all three altitudes.
 - A defined **`HUMAN_REVIEW_REQUIRED` escalation protocol**: every playbook's gate loop is
   bounded (Prepare and Operate previously had no bound at all) and every bound ends in one
   block the wizard presents to the user — phase/gate, trigger, open blockers, artifacts —

@@ -8,7 +8,7 @@ groups:
   - { mode: sequential, agents: [sdlc-design-adr-traceability-author] }
   - { mode: sequential, agents: [sdlc-design-reviewer] }
 gate_after_each_group: true
-post_phase: "set design.status + agent statuses completed; set design.adrs_count"
+post_phase: "present the HUMAN_CHECKPOINT design & ADR sign-off; on approve, flip approved proposed ADRs to accepted, then complete design with --evidence citing gate PASS + user sign-off; set design.adrs_count"
 ---
 
 # Phase 3 — Design
@@ -20,12 +20,21 @@ Run setup. Then dispatch:
 2. **Authoring (parallel):** architecture-author (includes the STRIDE-lite Trust Boundaries
    & Threats section — Microsoft SDL design-time threat modeling), component-spec-author.
 3. **ADR consolidation (sequential):** adr-traceability-author — writes the ADRs (Nygard),
-   the ADR index, and design-traceability.md.
+   the ADR index, and design-traceability.md. Decisions already embodied in the code enter
+   as `accepted` (retroactive record); decisions newly made in THIS design phase enter as
+   `proposed` — the human accepts them at the sign-off checkpoint, not the agent.
 4. **Validation (sequential):** design-reviewer — 9-point gate.
    - **Gate FAIL:** route issues to the relevant author, re-run, re-review. If the gate FAILs
      **3** times (or a previously-cleared issue reappears), STOP and emit
      `HUMAN_REVIEW_REQUIRED` — do not keep looping.
 
-**On completion:** set every `design.agents.*.status` and `design.status` to `"completed"`;
+**On completion:** present the **design & ADR sign-off** (`HUMAN_CHECKPOINT`, see the
+wizard): summarize the architecture choice and, for EACH `proposed` ADR, its decision, the
+alternative it rejected, and the cost being accepted — the trade-offs are the human's call,
+not the agent's. Only on **approve**: flip each approved ADR from `proposed` to `accepted`
+(frontmatter `status:`, the `## Status` section, its `adrs/README.md` row — mechanical
+orchestrator edits), then set every `design.agents.*.status` and `design.status` to
+`"completed"` with
+`complete --phase design --evidence "design-reviewer VERDICT: PASS <date>; user sign-off <date>"`;
 set `design.adrs_count` to the number of ADRs written. `implementation-plans/` stays empty
 (Phase 4 populates it per change).
