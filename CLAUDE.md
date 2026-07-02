@@ -33,7 +33,7 @@ accumulates the evidence.
 ## Build / test / run
 
 ```bash
-node --test            # run all tests (currently 97, must stay green)
+node --test            # run all tests (currently 117, must stay green)
 claude --plugin-dir .  # load the plugin into a Claude Code session for live use
 /reload-plugins        # (inside the session, after edits)
 /agentic-sdlc:sdlc     # run the wizard
@@ -51,7 +51,11 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
    authors get `Write Edit`. Never give a reviewer write tools. Pinned by a structure test.
 2. **Deterministic state.** Every `sdlc-metadata.yml` mutation goes through
    `scripts/sdlc-state.mjs` (`init` / `complete` / `config` / `brief` / `counts` /
-   `plan-add` / `cycle`) — never an LLM hand-edit of YAML. Agents that produce lifecycle
+   `plan-add` / `cycle` / `gate-log` / `plan-active` / `clarifier-round` / `loop-reset`)
+   — never an LLM hand-edit of YAML. That includes the **persisted loop state** (the
+   script-owned `runtime:` block: gate strike counters, clarifier rounds, the active
+   plan, the gate-verdict log), so the 3-strike bounds and the Verify cycle survive
+   interruption instead of living in conversation memory. Agents that produce lifecycle
    data (Requirements Sync, Feedback Loop) report it in sentinel lines
    (`REQUIREMENT_COUNTS:` / `CYCLE:`); the orchestrator is the single writer. Enforced
    deterministically by a PreToolUse hook: `scripts/sdlc-guard.mjs` **denies** direct
@@ -90,7 +94,9 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
 - After any change, run `node --test` — `test/plugin-structure.test.mjs` asserts all 7
   playbooks exist, the **35-agent** roster count, reviewer read-only tool grants, the
   model-routing table's exact roster coverage, the gate agents' machine-parsable
-  `VERDICT: PASS|FAIL` line, and the sentinel templates. Don't let those drift silently.
+  `VERDICT: PASS|FAIL` line, the sentinel templates, and the persisted-loop-state wiring
+  (`gate-log` / `loop-reset` / `runtime` in the orchestrator; `plan-active` /
+  `clarifier-round` / `verifyCycle` in playbooks 4–5). Don't let those drift silently.
 
 ## Status
 

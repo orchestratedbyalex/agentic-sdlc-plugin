@@ -8,8 +8,8 @@ argument-hint: "[optional: phase name or change request]"
 ## Step 0 — Detect project state
 
 Your FIRST action: run the state detector with the Bash tool and read its JSON output. It
-prints `{ mode, board, phase, agent, setupComplete, valid, modelProfile }` for the current
-working directory:
+prints `{ mode, board, phase, agent, setupComplete, valid, modelProfile, runtime,
+verifyCycle }` for the current working directory:
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs"
@@ -22,7 +22,10 @@ set, substitute the absolute path of the folder that contains `scripts/sdlc-stat
 
 You are the SDLC orchestrator. The JSON from Step 0 tells you the `mode`, the phase
 `board`, the resume `phase`, the resume `agent`, and `setupComplete`. Use it — do not
-re-derive state by hand.
+re-derive state by hand. `runtime` is the persisted loop state (gate strike counts,
+clarifier rounds, the active plan, the gate-verdict log) and `verifyCycle` is the Verify
+cycle the next run enters — on resume, continue from those bounds; never assume they are
+zero because the conversation is fresh.
 
 User argument (may be empty): `$ARGUMENTS`
 
@@ -94,9 +97,16 @@ its report with one machine-parsable `VERDICT: PASS|FAIL` line (the phase's own 
 name — APPROVED, READY FOR RELEASE, PUBLISH GATE — stays alongside): key the pass/fail
 decision off that line, not the surrounding prose. If a gate report lacks a parseable
 `VERDICT:` line, re-dispatch that gate agent once with the defect named; a second miss is
-a gate FAIL. On a gate FAIL, follow the playbook's bolded **Gate FAIL** routing —
-re-dispatch the named author(s), re-run the gate — and when the playbook's loop bound
-trips, STOP and run the escalation protocol below.
+a gate FAIL. Record every gate verdict deterministically the moment you parse it:
+
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" gate-log --phase <phase> --gate <gate-agent> --verdict PASS|FAIL|WAIVED [--note "<one line>"]
+
+The script owns the strike counter — FAIL increments it, PASS/WAIVED resets it — and
+prints `strikes`: trip the playbook's 3-strike bound off that number, never off
+conversation memory (it survives interruption; Step 0's `runtime` restores it on resume).
+On a gate FAIL, follow the playbook's bolded **Gate FAIL** routing — re-dispatch the named
+author(s), re-run the gate — and when the playbook's loop bound trips, STOP and run the
+escalation protocol below.
 
 #### Escalation — `HUMAN_REVIEW_REQUIRED`
 Every playbook loop is bounded, and every bound ends the same way (a gate FAILing 3×, a
@@ -116,11 +126,14 @@ where it is, so a later `/sdlc` run resumes at the same spot.
 
 Then act on the user's choice:
 1. **guidance** — re-dispatch the relevant author with the user's decision embedded in
-   the prompt. The loop bound resets (the human changed the inputs), but the
-   previously-cleared-issue rule still applies.
+   the prompt. The loop bound resets (the human changed the inputs) — clear the persisted
+   counter with `loop-reset --phase <phase>` — but the previously-cleared-issue rule
+   still applies.
 2. **waive** — proceed with the playbook's completion steps, reporting the gate as
-   **WAIVED by the user** (with their one-line reason) in the phase summary. A waived
-   gate is never reported as PASS.
+   **WAIVED by the user** (with their one-line reason) in the phase summary. Record it:
+   `gate-log --phase <phase> --gate <gate-agent> --verdict WAIVED --note "<the user's
+   reason>"` — the ONLY path by which WAIVED enters the log. A waived gate is never
+   reported as PASS.
 3. **abort** — stop the run and report where it stopped. Nothing further is marked
    complete, so `/sdlc` resumes from the metadata.
 
@@ -173,3 +186,16 @@ Lifecycle data goes through the same script — never hand-edit `sdlc-metadata.y
 `plan-add` appends the plan id in Develop's post-phase; `cycle` records Operate's `CYCLE:`
 verdict AND resets the next cycle's phases (maintain/urgent → develop..operate pending;
 evolve → define..operate pending; stable → lifecycle complete).
+
+So does the loop state (the `runtime` block is script-owned):
+
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" gate-log --phase <p> --gate <g> --verdict PASS|FAIL|WAIVED [--note "..."]
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" plan-active --id PLAN-NNN
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" clarifier-round --author <author>
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" loop-reset --phase <p>
+
+`gate-log` records each parsed `VERDICT:` and reports the phase's strike count (Step 4);
+`plan-active` points at the plan the current Develop run follows (re-point on SUPERSEDED);
+`clarifier-round` counts a clarifier dispatch against the blocked author; `loop-reset` is
+the escalation guidance outcome. All of it lands in the metadata, so bounds survive
+interruption.

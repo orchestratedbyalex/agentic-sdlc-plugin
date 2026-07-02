@@ -44,6 +44,18 @@ All notable changes to this project are documented here. The format follows
   Agents column now lists explicit agent names instead of prose shorthand), the
   `VERDICT:` line in every gate agent, and the sentinel templates (`REQUIREMENT_COUNTS:`,
   `CYCLE:`, `PLAN_PATH:`) pinned at their sources.
+- **Persisted loop state** (a script-owned `runtime:` block in `sdlc-metadata.yml`): gate
+  strike counters, clarifier rounds, the active implementation plan, and a gate-verdict
+  audit log now live in the metadata instead of the orchestrator's conversation — an
+  interruption no longer resets the 3-strike bounds or the Verify cycle count. Four new
+  state commands own the semantics, not the LLM: `gate-log` records each parsed `VERDICT:`
+  line and reports the strike count (FAIL increments, PASS/WAIVED resets — WAIVED still
+  only ever enters via the human escalation outcome), `plan-active` tracks the plan a
+  Develop run follows (re-pointed on a clarifier SUPERSEDED), `clarifier-round` counts
+  rounds against the blocked author, and `loop-reset` implements the escalation guidance
+  outcome. The detector exposes `runtime` plus a derived `verifyCycle`, `cycle` clears the
+  counters for the phases it resets (the log survives as history), and the wizard and the
+  Develop/Verify playbooks key their bounds off the script's counts.
 - A defined **`HUMAN_REVIEW_REQUIRED` escalation protocol**: every playbook's gate loop is
   bounded (Prepare and Operate previously had no bound at all) and every bound ends in one
   block the wizard presents to the user — phase/gate, trigger, open blockers, artifacts —

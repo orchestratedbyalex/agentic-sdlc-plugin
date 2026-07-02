@@ -243,3 +243,18 @@ test('the HUMAN_REVIEW_REQUIRED escalation protocol is defined in the orchestrat
     assert.match(text, new RegExp(`\\*\\*${option}\\*\\*`), `escalation protocol lacks the "${option}" outcome`)
   }
 })
+
+test('the persisted loop state (runtime) is wired into the orchestrator and playbooks', () => {
+  const sdlc = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
+  // Step 0's detector output exposes the persisted loop state; resume must read it
+  assert.match(sdlc, /runtime/, 'Step 0 output list lacks runtime')
+  assert.match(sdlc, /verifyCycle/, 'the orchestrator never mentions verifyCycle')
+  // every gate verdict is recorded deterministically; the bounds key off the script's counts
+  assert.match(sdlc, /gate-log --phase/, 'Step 4 lacks the gate-log command')
+  assert.match(sdlc, /loop-reset --phase/, 'the escalation guidance outcome lacks loop-reset')
+  const develop = readFileSync(join(ROOT, 'phases', 'phase-4-develop.md'), 'utf8')
+  assert.match(develop, /plan-active/, 'phase 4 never persists the active plan pointer')
+  assert.match(develop, /clarifier-round/, 'phase 4 never persists clarifier rounds')
+  const verify = readFileSync(join(ROOT, 'phases', 'phase-5-verify.md'), 'utf8')
+  assert.match(verify, /verifyCycle/, 'phase 5 still tracks the cycle count in conversation only')
+})

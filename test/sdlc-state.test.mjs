@@ -707,3 +707,233 @@ test('CLI: setupComplete only after every setup phase AND its agents complete', 
   runCLI(dir, ['complete', '--phase', 'define'])
   assert.equal(runCLI(dir, ['complete', '--phase', 'design']).json.setupComplete, true)
 })
+
+// ── Persisted loop state: the script-owned `runtime:` block ──
+// Strike counters, clarifier rounds, the active plan, and the gate-verdict log live in
+// the metadata (not in the orchestrator's conversation), so an interruption no longer
+// resets the 3-strike bounds or the Verify cycle count.
+
+const WITH_RUNTIME = `sdlc:
+  project: "demo"
+  version: "1.2.3"
+  phases:
+    develop:
+      status: "in_progress"
+      agents:
+        code_author: { status: "pending" }
+    verify:
+      status: "pending"
+      agents:
+        validation_reviewer: { status: "pending" }
+  runtime:
+    active_plan: "PLAN-003"
+    gate_attempts:
+      develop: 2
+      verify: 1
+    clarifier_rounds:
+      code_author: 1
+    gate_log:
+      - "2026-07-01 develop code_reviewer FAIL -- 3 blockers"
+      - "2026-07-02 develop code_reviewer PASS"
+`
+
+const EMPTY_RUNTIME = { activePlan: null, gateAttempts: {}, clarifierRounds: {}, gateLog: [] }
+
+test('parseMetadata reads the script-owned runtime block', () => {
+  const md = parseMetadata(WITH_RUNTIME)
+  assert.equal(md.valid, true)
+  assert.equal(md.runtime.activePlan, 'PLAN-003')
+  assert.deepEqual(md.runtime.gateAttempts, { develop: 2, verify: 1 })
+  assert.deepEqual(md.runtime.clarifierRounds, { code_author: 1 })
+  assert.deepEqual(md.runtime.gateLog, [
+    '2026-07-01 develop code_reviewer FAIL -- 3 blockers',
+    '2026-07-02 develop code_reviewer PASS',
+  ])
+})
+
+test('parseMetadata defaults runtime to empty on legacy files without the block', () => {
+  assert.deepEqual(parseMetadata(SAMPLE).runtime, EMPTY_RUNTIME)
+})
+
+test('a runtime block does not disturb phase/agent parsing', () => {
+  const md = parseMetadata(WITH_RUNTIME)
+  assert.equal(md.phases.develop.status, 'in_progress')
+  assert.deepEqual(md.phases.develop.agents, [{ name: 'code_author', status: 'pending' }])
+  // runtime subkeys must never leak into the phase map
+  assert.deepEqual(Object.keys(md.phases), ['develop', 'verify'])
+})
+
+test('computeState surfaces runtime and derives verifyCycle = verify strikes + 1', () => {
+  const s = computeState({ hasMetadata: true, metadataContent: WITH_RUNTIME, hasCode: true })
+  assert.equal(s.runtime.activePlan, 'PLAN-003')
+  assert.equal(s.runtime.gateAttempts.develop, 2)
+  assert.equal(s.verifyCycle, 2)
+})
+
+test('computeState defaults runtime + verifyCycle 1 when metadata is absent or legacy', () => {
+  const fresh = computeState({ hasMetadata: false, metadataContent: '', hasCode: false })
+  assert.deepEqual(fresh.runtime, EMPTY_RUNTIME)
+  assert.equal(fresh.verifyCycle, 1)
+  const legacy = computeState({ hasMetadata: true, metadataContent: SAMPLE, hasCode: true })
+  assert.deepEqual(legacy.runtime, EMPTY_RUNTIME)
+  assert.equal(legacy.verifyCycle, 1)
+})
+
+// ── recordGateVerdict: the script owns strike semantics, the orchestrator just reports ──
+
+import { recordGateVerdict, VERDICTS } from '../scripts/sdlc-state.mjs'
+
+test('recordGateVerdict FAIL increments the phase strike counter and appends to the log', () => {
+  const r1 = recordGateVerdict(MIDWAY, { phase: 'develop', gate: 'code_reviewer', verdict: 'FAIL', note: '3 blockers', date: '2026-07-02' })
+  assert.equal(r1.strikes, 1)
+  const r2 = recordGateVerdict(r1.content, { phase: 'develop', gate: 'code_reviewer', verdict: 'FAIL', date: '2026-07-03' })
+  assert.equal(r2.strikes, 2)
+  const rt = parseMetadata(r2.content).runtime
+  assert.deepEqual(rt.gateAttempts, { develop: 2 })
+  assert.deepEqual(rt.gateLog, [
+    '2026-07-02 develop code_reviewer FAIL -- 3 blockers',
+    '2026-07-03 develop code_reviewer FAIL',
+  ])
+})
+
+test('recordGateVerdict PASS resets strikes but keeps the log as history', () => {
+  const fail = recordGateVerdict(MIDWAY, { phase: 'develop', gate: 'code_reviewer', verdict: 'FAIL', date: '2026-07-02' })
+  const pass = recordGateVerdict(fail.content, { phase: 'develop', gate: 'code_reviewer', verdict: 'PASS', date: '2026-07-03' })
+  assert.equal(pass.strikes, 0)
+  const md = parseMetadata(pass.content)
+  assert.equal(md.valid, true)
+  assert.deepEqual(md.runtime.gateAttempts, {})
+  assert.equal(md.runtime.gateLog.length, 2)
+  assert.match(md.runtime.gateLog[1], /PASS$/)
+  assert.equal(md.phases.develop.status, 'in_progress') // phase statuses untouched
+})
+
+test('recordGateVerdict WAIVED resets strikes like PASS and records the human outcome', () => {
+  const r = recordGateVerdict(WITH_RUNTIME, { phase: 'verify', gate: 'validation_reviewer', verdict: 'WAIVED', note: 'perf NFR deferred by user', date: '2026-07-02' })
+  assert.equal(r.strikes, 0)
+  const rt = parseMetadata(r.content).runtime
+  assert.equal(rt.gateAttempts.verify, undefined)
+  assert.equal(rt.gateAttempts.develop, 2) // other phases' counters survive
+  assert.equal(rt.gateLog.at(-1), '2026-07-02 verify validation_reviewer WAIVED -- perf NFR deferred by user')
+})
+
+test('recordGateVerdict on a develop PASS clears the clarifier rounds (the run is over)', () => {
+  const r = recordGateVerdict(WITH_RUNTIME, { phase: 'develop', gate: 'code_reviewer', verdict: 'PASS', date: '2026-07-02' })
+  const rt = parseMetadata(r.content).runtime
+  assert.deepEqual(rt.clarifierRounds, {})
+  assert.equal(rt.activePlan, 'PLAN-003') // the plan pointer survives for post-phase plan-add
+})
+
+test('recordGateVerdict verify FAILs drive computeState.verifyCycle', () => {
+  const r = recordGateVerdict(WITH_RUNTIME, { phase: 'verify', gate: 'validation_reviewer', verdict: 'FAIL', note: 'REWORK REQUIRED', date: '2026-07-02' })
+  assert.equal(r.strikes, 2) // WITH_RUNTIME already carries one verify strike
+  const s = computeState({ hasMetadata: true, metadataContent: r.content, hasCode: true })
+  assert.equal(s.verifyCycle, 3)
+})
+
+test('recordGateVerdict rejects unknown phases and verdicts', () => {
+  assert.deepEqual(VERDICTS, ['PASS', 'FAIL', 'WAIVED'])
+  assert.equal(recordGateVerdict(MIDWAY, { phase: 'ship', gate: 'g', verdict: 'PASS', date: '2026-07-02' }), null)
+  assert.equal(recordGateVerdict(MIDWAY, { phase: 'develop', gate: 'g', verdict: 'MAYBE', date: '2026-07-02' }), null)
+})
+
+test('recordGateVerdict escapes quotes in notes and round-trips through the parser', () => {
+  const r = recordGateVerdict(MIDWAY, { phase: 'define', gate: 'requirement_reviewer', verdict: 'FAIL', note: 'FR-003 "export" ambiguous', date: '2026-07-02' })
+  const md = parseMetadata(r.content)
+  assert.equal(md.valid, true)
+  assert.equal(md.runtime.gateLog[0], '2026-07-02 define requirement_reviewer FAIL -- FR-003 "export" ambiguous')
+})
+
+// ── setActivePlan / bumpClarifierRound / resetLoop: the rest of the loop state ──
+
+import { setActivePlan, bumpClarifierRound, resetLoop } from '../scripts/sdlc-state.mjs'
+
+test('setActivePlan records the plan pointer and a SUPERSEDED re-record replaces it', () => {
+  const a = setActivePlan(MIDWAY, 'PLAN-004')
+  assert.equal(parseMetadata(a).runtime.activePlan, 'PLAN-004')
+  const b = setActivePlan(a, 'PLAN-005') // clarifier reported SUPERSEDED: PLAN-004 → PLAN-005
+  const md = parseMetadata(b)
+  assert.equal(md.runtime.activePlan, 'PLAN-005')
+  assert.equal(md.valid, true)
+  assert.equal((b.match(/active_plan:/g) || []).length, 1) // replaced, never duplicated
+})
+
+test('bumpClarifierRound counts per author and reports the new round', () => {
+  const r1 = bumpClarifierRound(MIDWAY, 'code_author')
+  assert.equal(r1.rounds, 1)
+  const r2 = bumpClarifierRound(r1.content, 'code_author')
+  assert.equal(r2.rounds, 2)
+  const r3 = bumpClarifierRound(r2.content, 'test_author')
+  assert.equal(r3.rounds, 1) // per author — the bound is "the SAME author still blocked"
+  assert.deepEqual(parseMetadata(r3.content).runtime.clarifierRounds, { code_author: 2, test_author: 1 })
+})
+
+test('resetLoop zeroes one phase bound (the escalation guidance outcome), keeping history', () => {
+  const out = resetLoop(WITH_RUNTIME, 'develop')
+  const rt = parseMetadata(out).runtime
+  assert.equal(rt.gateAttempts.develop, undefined)
+  assert.equal(rt.gateAttempts.verify, 1) // other bounds untouched
+  assert.deepEqual(rt.clarifierRounds, {}) // develop's reset covers the authoring loop too
+  assert.equal(rt.activePlan, 'PLAN-003') // guidance resumes the same plan
+  assert.equal(rt.gateLog.length, 2) // the audit trail is history — never erased
+  assert.equal(resetLoop(WITH_RUNTIME, 'nope'), null)
+})
+
+test('recordCycle clears the loop counters for the phases it resets, keeping the log', () => {
+  let y = allCompleted()
+  y = recordGateVerdict(y, { phase: 'define', gate: 'requirement_reviewer', verdict: 'FAIL', date: '2026-07-01' }).content
+  y = recordGateVerdict(y, { phase: 'develop', gate: 'code_reviewer', verdict: 'FAIL', date: '2026-07-01' }).content
+  y = recordGateVerdict(y, { phase: 'verify', gate: 'validation_reviewer', verdict: 'FAIL', date: '2026-07-01' }).content
+  y = setActivePlan(y, 'PLAN-007')
+  y = bumpClarifierRound(y, 'code_author').content
+  const out = recordCycle(y, { assessment: 'maintain', nextCycle: true, date: '2026-07-02' })
+  const rt = parseMetadata(out).runtime
+  assert.equal(rt.gateAttempts.develop, undefined) // maintain resets develop..operate
+  assert.equal(rt.gateAttempts.verify, undefined)
+  assert.equal(rt.gateAttempts.define, 1) // define is NOT reset by maintain
+  assert.deepEqual(rt.clarifierRounds, {}) // develop's reset covers the authoring loop
+  assert.equal(rt.activePlan, null) // the next cycle starts on a fresh plan pointer
+  assert.equal(rt.gateLog.length, 3) // history survives the cycle boundary
+  assert.equal(parseMetadata(out).valid, true)
+})
+
+test('CLI: gate-log records verdicts, reports strikes, and validates its inputs', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'sdlc-cli-'))
+  runCLI(dir, ['init', '--name', 'x', '--version', '0.1.0', '--mode', 'existing'])
+  const f1 = runCLI(dir, ['gate-log', '--phase', 'develop', '--gate', 'code_reviewer', '--verdict', 'FAIL', '--note', '2 blockers'])
+  assert.equal(f1.json.ok, true)
+  assert.equal(f1.json.strikes, 1)
+  const f2 = runCLI(dir, ['gate-log', '--phase', 'develop', '--gate', 'code_reviewer', '--verdict', 'fail']) // agents shout, humans type — accept both
+  assert.equal(f2.json.strikes, 2)
+  assert.equal(runCLI(dir, ['gate-log', '--phase', 'develop', '--gate', 'code_reviewer', '--verdict', 'PASS']).json.strikes, 0)
+  assert.equal(runCLI(dir, ['gate-log', '--phase', 'develop', '--gate', 'code_reviewer', '--verdict', 'MAYBE']).json.ok, false)
+  assert.equal(runCLI(dir, ['gate-log', '--phase', 'ship', '--gate', 'g', '--verdict', 'PASS']).json.ok, false)
+  assert.equal(runCLI(dir, ['gate-log', '--phase', 'develop', '--verdict', 'PASS']).json.ok, false) // --gate required
+})
+
+test('CLI: gate-log on verify reports the cycle, and detect restores it on resume', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'sdlc-cli-'))
+  runCLI(dir, ['init', '--name', 'x', '--version', '0.1.0', '--mode', 'existing'])
+  const f = runCLI(dir, ['gate-log', '--phase', 'verify', '--gate', 'validation_reviewer', '--verdict', 'FAIL', '--note', 'REWORK REQUIRED'])
+  assert.equal(f.json.verify_cycle, 2) // the next Verify run is cycle 2
+  const d = runCLI(dir, ['detect'])
+  assert.equal(d.json.verifyCycle, 2)
+  assert.equal(d.json.runtime.gateAttempts.verify, 1)
+})
+
+test('CLI: plan-active sets the pointer, clarifier-round counts, loop-reset clears the bound', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'sdlc-cli-'))
+  runCLI(dir, ['init', '--name', 'x', '--version', '0.1.0', '--mode', 'existing'])
+  assert.equal(runCLI(dir, ['plan-active', '--id', 'PLAN-001']).json.active_plan, 'PLAN-001')
+  assert.equal(runCLI(dir, ['plan-active', '--id', 'PLAN 001']).json.ok, false)
+  assert.equal(runCLI(dir, ['clarifier-round', '--author', 'code_author']).json.rounds, 1)
+  assert.equal(runCLI(dir, ['clarifier-round', '--author', 'code_author']).json.rounds, 2)
+  assert.equal(runCLI(dir, ['clarifier-round']).json.ok, false)
+  runCLI(dir, ['gate-log', '--phase', 'develop', '--gate', 'code_reviewer', '--verdict', 'FAIL'])
+  assert.equal(runCLI(dir, ['loop-reset', '--phase', 'develop']).json.ok, true)
+  const d = runCLI(dir, ['detect'])
+  assert.deepEqual(d.json.runtime.gateAttempts, {})
+  assert.deepEqual(d.json.runtime.clarifierRounds, {})
+  assert.equal(d.json.runtime.activePlan, 'PLAN-001') // guidance resumes the same plan
+  assert.equal(runCLI(dir, ['loop-reset', '--phase', 'nope']).json.ok, false)
+})

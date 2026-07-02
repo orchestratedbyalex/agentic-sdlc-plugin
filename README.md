@@ -47,7 +47,9 @@ Run `/sdlc` in any repository. The wizard:
    `docs/requirements/sdlc-metadata.yml`.
 
 State is deterministic and resumable: every status change goes through `sdlc-state.mjs`, never
-an ad-hoc edit, so you can stop and resume any time.
+an ad-hoc edit, so you can stop and resume any time — including mid-loop: gate strike counts,
+the Verify cycle, the active implementation plan, and a full gate-verdict log persist in the
+metadata, so an interruption never resets a review loop's bounds.
 
 ## Model routing
 
@@ -103,7 +105,7 @@ the plugin stays generic, your repo accumulates the lifecycle record.
 ## Test
 
 ```bash
-node --test          # 97 tests, all green (state logic + hook guard + plugin structure)
+node --test          # 117 tests, all green (state logic + hook guard + plugin structure)
 ```
 
 ## Contributing

@@ -33,7 +33,10 @@ Prerequisite: the Develop phase has completed the change(s) under verification.
    - **READY FOR RELEASE:** set every `verify.agents.*.status` and `verify.status` to `"completed"`.
    - **Gate FAIL (REWORK REQUIRED):** do NOT update status; route the blockers back to
      Phase 4 (Develop) and re-run Verify after they're fixed, per the bounded protocol below.
-3. **Re-verification after REWORK (bounded — track the cycle count; cycle 1 = the initial run):**
+3. **Re-verification after REWORK (bounded; cycle 1 = the initial run):** the cycle count
+   is persisted, not remembered — the wizard records each validation verdict via
+   `gate-log --phase verify`, and the detector's `verifyCycle` reports which cycle the
+   next run (including a resumed one) enters.
    - **Cycle 2** (first re-run after the Phase 4 fixes): re-run **static-dynamic-analyzer +
      regression-tester IN FULL** (the mechanical safety net — a fix can break anything), and
      re-dispatch **coverage-analyst + independent-code-reviewer in RE-VERIFY mode**: pass each a

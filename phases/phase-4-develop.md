@@ -26,7 +26,9 @@ traceability, and the security check are kept at every tier. Record the tier in 
 Dispatch (steps marked ⊘ are skipped for 🟢 trivial):
 
 1. **Architect Planner (sequential):** pass the approved US/FR **and TIER**. It writes
-   `docs/design/implementation-plans/PLAN-NNN-<slug>.md` and captures PLAN_PATH.
+   `docs/design/implementation-plans/PLAN-NNN-<slug>.md` and captures PLAN_PATH. Persist
+   the pointer — `plan-active --id PLAN-NNN` via the state script — so a resumed session
+   follows the right plan.
    - 🟢 **trivial:** lite plan — target file(s) + the ACs to satisfy + the Security-Impact
      line; read only an ADR/CS the change clearly touches (skip the full sweep).
    - 🟡/🔴 **standard/complex:** the full plan (complex MUST assess ADR impact and, if the
@@ -45,10 +47,12 @@ Dispatch (steps marked ⊘ are skipped for 🟢 trivial):
      gate, not the Test Author's.
    - **If any author returns an AMBIGUITIES block:** dispatch **sdlc-develop-architect-clarifier**
      with the block; it updates the PLAN (version bump + Clarifications). Then re-dispatch the
-     blocked author(s). If the same author still reports AMBIGUITIES after **3** clarifier
-     rounds, STOP and emit `HUMAN_REVIEW_REQUIRED` to the user.
+     blocked author(s), counting the round persistently — `clarifier-round --author <author>`
+     via the state script; its `rounds` output IS the bound. If the same author still reports
+     AMBIGUITIES after **3** clarifier rounds, STOP and emit `HUMAN_REVIEW_REQUIRED` to the user.
    - **If the clarifier reports `SUPERSEDED: PLAN-NNN → PLAN-MMM`:** switch PLAN_PATH to the new
-     plan for ALL remaining agents this run (authors, reviewer, reqs-sync).
+     plan for ALL remaining agents this run (authors, reviewer, reqs-sync) and re-record it
+     (`plan-active --id PLAN-MMM`).
 3. **Code Reviewer (sequential):** pass the **TIER**. Always establishes the real diff
    (`git diff`), confirms the plan's ACs are implemented + tested, runs the test suite + lint,
    and applies the SECURITY check; an unresolved SECURITY blocker can never reach APPROVED.
@@ -59,7 +63,8 @@ Dispatch (steps marked ⊘ are skipped for 🟢 trivial):
    - 🟡/🔴 **standard/complex:** the full 10-point checklist.
    - **Gate FAIL (CHANGES REQUESTED):** route each blocker to code-author or test-author,
      re-run them, then re-run the reviewer. If the reviewer issues CHANGES REQUESTED **3**
-     times (or re-introduces blockers it previously cleared), STOP and emit
+     times — the persisted strike count `gate-log` reports, not a remembered tally — (or
+     re-introduces blockers it previously cleared), STOP and emit
      `HUMAN_REVIEW_REQUIRED` — do not keep looping.
 4. **Requirements Sync (sequential):** reconcile the feature-intake drafts (promote
    `proposed`→`accepted`, no duplicates), create FR + US only for genuinely-new behavior, update

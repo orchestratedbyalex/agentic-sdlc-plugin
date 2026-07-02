@@ -11,17 +11,23 @@ export const SETUP_PHASES = ['prepare', 'define', 'design']
 export const MODEL_PROFILES = ['quality', 'balanced', 'economy']
 export const STATUSES = ['pending', 'in_progress', 'completed']
 
+// The script-owned runtime block: persisted loop state (gate strike counters, clarifier
+// rounds, the active plan, the gate-verdict log). Empty shape used wherever it's absent.
+const emptyRuntime = () => ({ activePlan: null, gateAttempts: {}, clarifierRounds: {}, gateLog: [] })
+
 // Parse the known-shape metadata YAML without a YAML dependency.
-// Returns { valid, project, version, phases: { key: { status, agents: [{name,status}] } } }
+// Returns { valid, project, version, phases: { key: { status, agents: [{name,status}] } }, runtime }
 export function parseMetadata(content) {
   if (typeof content !== 'string' || content.trim() === '') {
-    return { valid: false, project: null, version: null, modelProfile: null, phases: {} }
+    return { valid: false, project: null, version: null, modelProfile: null, phases: {}, runtime: emptyRuntime() }
   }
-  const out = { valid: false, project: null, version: null, modelProfile: null, phases: {} }
+  const out = { valid: false, project: null, version: null, modelProfile: null, phases: {}, runtime: emptyRuntime() }
   let inPhases = false
   let curPhase = null
   let inAgents = false
   let curAgent = null
+  let inRuntime = false
+  let runtimeSection = null
 
   for (const raw of content.split('\n')) {
     const line = raw.replace(/\t/g, '  ')
@@ -33,9 +39,28 @@ export function parseMetadata(content) {
     const mpM = line.match(/^\s{2}model_profile:\s*"?([^"#]*)"?\s*(#.*)?$/)
     if (mpM) out.modelProfile = mpM[1].trim() || null
 
-    if (/^\s{2}phases:\s*$/.test(line)) { inPhases = true; continue }
+    if (/^\s{2}phases:\s*$/.test(line)) { inPhases = true; inRuntime = false; continue }
     if (inPhases && /^\s{2}\S/.test(line) && !/^\s{2}phases:/.test(line)) {
       inPhases = false; curPhase = null; inAgents = false
+    }
+    if (/^\s{2}runtime:\s*$/.test(line)) { inRuntime = true; runtimeSection = null; continue }
+    if (inRuntime && /^\s{2}\S/.test(line)) { inRuntime = false; runtimeSection = null }
+    if (inRuntime) {
+      const sec = line.match(/^\s{4}(gate_attempts|clarifier_rounds|gate_log):\s*$/)
+      if (sec) { runtimeSection = sec[1]; continue }
+      const ap = line.match(/^\s{4}active_plan:\s*"?([^"]*)"?\s*$/)
+      if (ap) { out.runtime.activePlan = ap[1].trim() || null; runtimeSection = null; continue }
+      if (runtimeSection === 'gate_log') {
+        const item = line.match(/^\s{6}- "(.*)"\s*$/)
+        if (item) out.runtime.gateLog.push(item[1].replace(/\\(["\\])/g, '$1'))
+      } else if (runtimeSection) {
+        const kv = line.match(/^\s{6}([\w-]+):\s*(\d+)\s*$/)
+        if (kv) {
+          const target = runtimeSection === 'gate_attempts' ? out.runtime.gateAttempts : out.runtime.clarifierRounds
+          target[kv[1]] = parseInt(kv[2], 10)
+        }
+      }
+      continue
     }
     if (!inPhases) continue
 
@@ -96,11 +121,13 @@ export function computeState({ hasMetadata, metadataContent, hasCode }) {
       agent: null,
       setupComplete: false,
       modelProfile: 'balanced',
+      runtime: emptyRuntime(),
+      verifyCycle: 1,
     }
   }
   const md = parseMetadata(metadataContent)
   if (!md.valid) {
-    return { mode: 'resume', valid: false, project: null, version: null, board: [], phase: null, agent: null, setupComplete: false, modelProfile: 'balanced' }
+    return { mode: 'resume', valid: false, project: null, version: null, board: [], phase: null, agent: null, setupComplete: false, modelProfile: 'balanced', runtime: emptyRuntime(), verifyCycle: 1 }
   }
   const board = PHASES.map((key, i) => ({
     num: i + 1,
@@ -128,7 +155,9 @@ export function computeState({ hasMetadata, metadataContent, hasCode }) {
       ph.agents.every(a => a.status === 'completed')
   })
   const modelProfile = MODEL_PROFILES.includes(md.modelProfile) ? md.modelProfile : 'balanced'
-  return { mode: 'resume', valid: true, project: md.project, version: md.version, board, phase, agent, setupComplete, modelProfile }
+  // Cycle 1 = the initial Verify run; each recorded verify FAIL (REWORK REQUIRED) bumps it.
+  const verifyCycle = (md.runtime.gateAttempts.verify || 0) + 1
+  return { mode: 'resume', valid: true, project: md.project, version: md.version, board, phase, agent, setupComplete, modelProfile, runtime: md.runtime, verifyCycle }
 }
 
 const CODE_MANIFESTS = ['package.json', 'Cargo.toml', 'pyproject.toml', 'go.mod', 'pom.xml', 'build.gradle', 'Gemfile', 'composer.json']
@@ -311,6 +340,85 @@ export function appendPlan(content, id) {
 }
 
 export const ASSESSMENTS = ['stable', 'maintain', 'evolve', 'urgent']
+export const VERDICTS = ['PASS', 'FAIL', 'WAIVED']
+
+// Serialize the runtime object and splice it back in as the one script-owned `  runtime:`
+// block (stripped + re-appended at the end — outside `phases:`, so it can never disturb
+// the phase/agent parser). An entirely-empty runtime writes no block at all, so files
+// stay clean until the first record and legacy files are untouched.
+function writeRuntime(content, rt) {
+  const lines = stripTopBlock(content.split('\n'), 'runtime')
+  const block = []
+  if (rt.activePlan) block.push(`    active_plan: ${yamlQuote(rt.activePlan)}`)
+  const attempts = Object.entries(rt.gateAttempts).filter(([, n]) => n > 0)
+  if (attempts.length) {
+    block.push('    gate_attempts:')
+    for (const [k, n] of attempts) block.push(`      ${k}: ${n}`)
+  }
+  const rounds = Object.entries(rt.clarifierRounds).filter(([, n]) => n > 0)
+  if (rounds.length) {
+    block.push('    clarifier_rounds:')
+    for (const [k, n] of rounds) block.push(`      ${k}: ${n}`)
+  }
+  if (rt.gateLog.length) {
+    block.push('    gate_log:')
+    for (const e of rt.gateLog) block.push(`      - ${yamlQuote(e)}`)
+  }
+  if (block.length) {
+    let end = lines.length
+    while (end > 0 && lines[end - 1].trim() === '') end--
+    lines.splice(end, 0, '  runtime:', ...block)
+  }
+  return lines.join('\n')
+}
+
+// Deterministically record a gate verdict: appends to the runtime.gate_log audit trail
+// and owns the strike-counter semantics — FAIL increments the phase's counter,
+// PASS/WAIVED resets it (the loop is over; a waiver is a human escalation outcome, never
+// agent-issued). A develop PASS/WAIVED also clears the clarifier rounds, whose loop ends
+// with the run. Returns { content, strikes } or null on an unknown phase/verdict.
+export function recordGateVerdict(content, { phase, gate, verdict, note, date }) {
+  if (!PHASES.includes(phase) || !VERDICTS.includes(verdict)) return null
+  const rt = parseMetadata(content).runtime
+  if (verdict === 'FAIL') {
+    rt.gateAttempts[phase] = (rt.gateAttempts[phase] || 0) + 1
+  } else {
+    delete rt.gateAttempts[phase]
+    if (phase === 'develop') rt.clarifierRounds = {}
+  }
+  rt.gateLog.push(`${date} ${phase} ${gate} ${verdict}${note ? ` -- ${note}` : ''}`)
+  return { content: writeRuntime(content, rt), strikes: rt.gateAttempts[phase] || 0 }
+}
+
+// Deterministically point runtime.active_plan at the plan the current develop run follows.
+// Set by the wizard when the planner reports PLAN_PATH, and re-set when the clarifier
+// supersedes a plan — so a resumed session picks up the RIGHT plan, not the first one.
+export function setActivePlan(content, id) {
+  const rt = parseMetadata(content).runtime
+  rt.activePlan = id
+  return writeRuntime(content, rt)
+}
+
+// Deterministically count a clarifier round against the author it unblocked. The bound
+// ("the SAME author still blocked after 3 rounds") reads the returned count — per author,
+// persisted, so an interruption doesn't reset the loop.
+export function bumpClarifierRound(content, author) {
+  const rt = parseMetadata(content).runtime
+  rt.clarifierRounds[author] = (rt.clarifierRounds[author] || 0) + 1
+  return { content: writeRuntime(content, rt), rounds: rt.clarifierRounds[author] }
+}
+
+// Deterministically zero one phase's loop bound — the escalation protocol's "guidance"
+// outcome (the human changed the inputs, so the bound resets). Clears the phase's strike
+// counter, and for develop the clarifier rounds too; the gate log stays (it's history).
+// Returns the new content, or null on an unknown phase.
+export function resetLoop(content, phase) {
+  if (!PHASES.includes(phase)) return null
+  const rt = parseMetadata(content).runtime
+  delete rt.gateAttempts[phase]
+  if (phase === 'develop') rt.clarifierRounds = {}
+  return writeRuntime(content, rt)
+}
 
 // Which phases a cycle assessment resets to "pending" for the next cycle.
 const CYCLE_RESETS = {
@@ -403,6 +511,14 @@ export function recordCycle(content, { assessment, nextCycle, scope, reason, dat
   // Reset the next cycle's phases (status + agents) — the record above survives, as history.
   let out = lines.join('\n')
   for (const p of CYCLE_RESETS[assessment]) out = updateStatus(out, { phase: p, status: 'pending' })
+  // A new cycle starts with fresh loop bounds for the phases it reset — stale strike
+  // counts must not pre-trip the next cycle's gates. The gate log survives as history.
+  if (CYCLE_RESETS[assessment].length) {
+    const rt = parseMetadata(out).runtime
+    for (const p of CYCLE_RESETS[assessment]) delete rt.gateAttempts[p]
+    if (CYCLE_RESETS[assessment].includes('develop')) { rt.clarifierRounds = {}; rt.activePlan = null }
+    out = writeRuntime(out, rt)
+  }
   return out
 }
 
@@ -627,7 +743,93 @@ function cycleCmd(argv) {
   process.stdout.write(JSON.stringify({ ok: true, assessment, next_cycle: nextCycle, cycle: cyc, phase: state.phase }, null, 2) + '\n')
 }
 
-const COMMANDS = ['detect', 'init', 'complete', 'config', 'brief', 'counts', 'plan-add', 'cycle']
+// `gate-log --phase P --gate G --verdict PASS|FAIL|WAIVED [--note N] [--date YYYY-MM-DD]`
+// Deterministically records the VERDICT: line the wizard parsed from a gate report. The
+// script owns the strike semantics (FAIL increments, PASS/WAIVED resets) and reports the
+// persisted count — the loop bound keys off `strikes`, not conversation memory.
+function gateLogCmd(argv) {
+  const opts = {}
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--phase') opts.phase = argv[++i]
+    else if (argv[i] === '--gate') opts.gate = argv[++i]
+    else if (argv[i] === '--verdict') opts.verdict = argv[++i]
+    else if (argv[i] === '--note') opts.note = argv[++i]
+    else if (argv[i] === '--date') opts.date = argv[++i]
+  }
+  if (!opts.phase || !PHASES.includes(opts.phase)) {
+    return cliFail(`--phase must be one of: ${PHASES.join(', ')}`)
+  }
+  if (!opts.gate || !/^[\w-]+$/.test(opts.gate)) {
+    return cliFail('--gate must name the gate agent (letters, digits, _ - only)')
+  }
+  const verdict = (opts.verdict || '').toUpperCase()
+  if (!VERDICTS.includes(verdict)) {
+    return cliFail(`--verdict must be one of: ${VERDICTS.join(', ')}`)
+  }
+  const date = opts.date || new Date().toISOString().slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return cliFail('--date must be YYYY-MM-DD')
+  const meta = readMetaOrFail()
+  if (!meta) return
+  const r = recordGateVerdict(meta.content, { phase: opts.phase, gate: opts.gate, verdict, note: opts.note, date })
+  writeFileSync(meta.metaPath, r.content)
+  const outJson = { ok: true, phase: opts.phase, gate: opts.gate, verdict, strikes: r.strikes }
+  if (opts.phase === 'verify') outJson.verify_cycle = r.strikes + 1
+  process.stdout.write(JSON.stringify(outJson, null, 2) + '\n')
+}
+
+// `plan-active --id PLAN-NNN`
+// Deterministically points runtime.active_plan at the plan the current develop run
+// follows — set after the planner reports PLAN_PATH, re-set on a clarifier SUPERSEDED.
+function planActiveCmd(argv) {
+  const opts = {}
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--id') opts.id = argv[++i]
+  }
+  if (!opts.id || !/^[A-Za-z0-9._-]+$/.test(opts.id)) {
+    return cliFail('--id must be a plan id like PLAN-001 (letters, digits, . _ - only)')
+  }
+  const meta = readMetaOrFail()
+  if (!meta) return
+  writeFileSync(meta.metaPath, setActivePlan(meta.content, opts.id))
+  process.stdout.write(JSON.stringify({ ok: true, active_plan: opts.id }, null, 2) + '\n')
+}
+
+// `clarifier-round --author <agent>`
+// Deterministically counts a clarifier round against the author it unblocked and reports
+// the persisted total — the 3-round bound keys off `rounds`, not conversation memory.
+function clarifierRoundCmd(argv) {
+  const opts = {}
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--author') opts.author = argv[++i]
+  }
+  if (!opts.author || !/^[\w-]+$/.test(opts.author)) {
+    return cliFail('--author must name the blocked author agent (letters, digits, _ - only)')
+  }
+  const meta = readMetaOrFail()
+  if (!meta) return
+  const r = bumpClarifierRound(meta.content, opts.author)
+  writeFileSync(meta.metaPath, r.content)
+  process.stdout.write(JSON.stringify({ ok: true, author: opts.author, rounds: r.rounds }, null, 2) + '\n')
+}
+
+// `loop-reset --phase P`
+// Deterministically zeroes one phase's loop bound — the escalation protocol's "guidance"
+// outcome. The gate log is history and survives.
+function loopResetCmd(argv) {
+  const opts = {}
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--phase') opts.phase = argv[++i]
+  }
+  if (!opts.phase || !PHASES.includes(opts.phase)) {
+    return cliFail(`--phase must be one of: ${PHASES.join(', ')}`)
+  }
+  const meta = readMetaOrFail()
+  if (!meta) return
+  writeFileSync(meta.metaPath, resetLoop(meta.content, opts.phase))
+  process.stdout.write(JSON.stringify({ ok: true, phase: opts.phase, strikes: 0 }, null, 2) + '\n')
+}
+
+const COMMANDS = ['detect', 'init', 'complete', 'config', 'brief', 'counts', 'plan-add', 'cycle', 'gate-log', 'plan-active', 'clarifier-round', 'loop-reset']
 
 function main() {
   const cmd = process.argv[2]
@@ -640,6 +842,10 @@ function main() {
   else if (cmd === 'counts') countsCmd(rest)
   else if (cmd === 'plan-add') planAddCmd(rest)
   else if (cmd === 'cycle') cycleCmd(rest)
+  else if (cmd === 'gate-log') gateLogCmd(rest)
+  else if (cmd === 'plan-active') planActiveCmd(rest)
+  else if (cmd === 'clarifier-round') clarifierRoundCmd(rest)
+  else if (cmd === 'loop-reset') loopResetCmd(rest)
   else cliFail(`unknown command '${cmd}' — expected one of: ${COMMANDS.join(', ')}`)
 }
 
