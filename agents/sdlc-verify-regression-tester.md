@@ -29,6 +29,9 @@ assertion counts, pass/fail per file, lint warnings (if part of pipeline), forma
 changes. CRITICAL: "passes" means the runner actually **executed** the tests — a runner
 that errored out (module-resolution / config crash) or collected **0 suites / 0 tests**
 is a FAIL, never a pass, even with zero failing assertions.
+For every command (build if separate, and BOTH test runs), capture the exact command
+line, its exit code, and the runner's own summary lines verbatim for the Execution
+Evidence section of your report.
 
 STEP 2 — SECOND FULL RUN (FLAKY DETECTION)
 
@@ -54,6 +57,19 @@ STEP 3 — REPORT
 
 ### Flaky Tests
 | Test | Run 1 | Run 2 | Verdict |
+
+### Execution Evidence
+One entry per command (build if separate, test run 1, test run 2). Quote the runner's
+output verbatim — copy its own summary lines (suites/tests collected, passed/failed
+totals, duration); do not re-type or paraphrase them. Summary lines only, never the
+full log. Counts without a verbatim block are claims, not evidence — and the flake
+comparison in STEP 2 depends on them being exact.
+- Command: `<exact command line>`
+- Exit code: <n>
+- Output (verbatim summary lines):
+  ```
+  <copied lines>
+  ```
 
 ### Verdict
 PASS / FAIL

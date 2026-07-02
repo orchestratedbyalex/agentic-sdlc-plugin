@@ -32,6 +32,8 @@ Run each available tool. Record:
   - Format violations
   - Dead code, unused imports
   - Security advisories
+For EVERY tool run in STEPs 1–3, capture the exact command line, its exit code, and the
+tool's own summary lines verbatim for the Execution Evidence section of your report.
 
 STEP 2 — DEPENDENCY SCANNING
 
@@ -81,6 +83,19 @@ STEP 4 — REPORT
 ### Integration / Smoke
 - Result: PASS / FAIL / N/A
 - Details: <run output summary>
+
+### Execution Evidence
+One entry per command run in STEPs 1–3 (lint, type check, audit, release build, smoke).
+Quote each tool's output verbatim — copy its own summary lines (error/warning totals,
+advisory counts, build result + artifact line); do not re-type or paraphrase them.
+Summary lines only, never the full log. Counts without a verbatim block are claims,
+not evidence.
+- Command: `<exact command line>`
+- Exit code: <n>
+- Output (verbatim summary lines):
+  ```
+  <copied lines>
+  ```
 
 ### Verdict
 PASS — analysis clean

@@ -60,3 +60,30 @@ test('the full 35-agent roster is present', () => {
   const n = readdirSync(join(ROOT, 'agents')).filter(f => f.endsWith('.md')).length
   assert.equal(n, 35, `expected 35 agent files, found ${n}`)
 })
+
+// Gate reports must carry verbatim execution evidence (audit item 3): every agent that
+// runs commands (tests / build / lint) has to quote the exact command, exit code, and the
+// runner's own summary lines — counts without a verbatim block are claims, not evidence.
+test('command-running gate reviewers require a verbatim Execution Evidence block', () => {
+  const files = [
+    'sdlc-develop-code-reviewer.md',
+    'sdlc-verify-coverage-analyst.md',
+    'sdlc-verify-static-dynamic-analyzer.md',
+    'sdlc-verify-regression-tester.md',
+    'sdlc-verify-validation-reviewer.md',
+  ]
+  for (const f of files) {
+    const text = readFileSync(join(ROOT, 'agents', f), 'utf8')
+    assert.match(text, /^#{2,3} Execution Evidence/m,
+      `${f}: report template lacks an Execution Evidence section`)
+    assert.match(text, /verbatim/i, `${f}: no verbatim-quoting requirement`)
+  }
+})
+
+test('the validation reviewer independently re-runs the suite instead of trusting reported counts', () => {
+  const text = readFileSync(join(ROOT, 'agents', 'sdlc-verify-validation-reviewer.md'), 'utf8')
+  assert.match(text, /independent(ly)? re-run/i,
+    'validation reviewer has no independent re-run instruction')
+  assert.match(text, /\bd2\b/,
+    'no d2 gate condition covering the independent re-run')
+})

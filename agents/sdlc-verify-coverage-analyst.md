@@ -43,7 +43,9 @@ STEP 2 — RUN TESTS WITH COVERAGE
 
 Run the test command from CLAUDE.md.
 
-Record total test files, pass/fail count, coverage percentage if reported.
+Record total test files, pass/fail count, coverage percentage if reported. Capture the
+exact command line, its exit code, and the runner's own summary lines verbatim for the
+Execution Evidence section of your report.
 
 STEP 3 — VERIFY AC-TO-TEST TRACEABILITY
 
@@ -81,6 +83,18 @@ COVERAGE GAP REPORT
 - Test files executed: XX / YY
 - Passed: XX
 - Failed: XX (list)
+
+## Execution Evidence
+Quote the STEP 2 run verbatim — copy the runner's own summary lines (suites/tests
+collected, passed/failed totals, coverage line); do not re-type or paraphrase them.
+Summary lines only, never the full log. Counts without a verbatim block are claims,
+not evidence.
+- Command: `<exact command line>`
+- Exit code: <n>
+- Output (verbatim summary lines):
+  ```
+  <copied lines>
+  ```
 
 ## FR Coverage Matrix
 | FR ID  | Title | AC Count | ACs Covered | ACs Uncovered | Test Files | Status |

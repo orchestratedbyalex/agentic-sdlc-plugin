@@ -23,6 +23,14 @@ All notable changes to this project are documented here. The format follows
 - Requirements Sync and the Feedback Loop no longer edit `sdlc-metadata.yml`. They report
   `REQUIREMENT_COUNTS:` / `CYCLE:` sentinel lines in their final message and the wizard —
   the metadata's single writer — records them via the state script.
+- Gate reports now carry **verbatim execution evidence**: the Develop code reviewer and every
+  command-running Verify agent quote the exact command, exit code, and the runner's own
+  summary lines for each test/build/lint run — counts without a verbatim block are claims,
+  not evidence. Structure tests pin the requirement so it can't silently regress.
+- The Verify release gate no longer trusts self-reported numbers: the Validation Reviewer
+  independently re-runs the test suite once and cross-checks the totals against the
+  Regression Tester's runs (new gate condition d2); a report whose counts lack an evidence
+  block cannot PASS its gate condition.
 
 ### Fixed
 - `complete --agent` on metadata with **block-style** agent entries (name and status on

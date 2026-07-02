@@ -20,11 +20,16 @@ Prerequisite: the Develop phase has completed the change(s) under verification.
    deployable artifact, not the unit-test toolchain — they can differ) and the
    regression-tester must confirm the suite actually **executed** (0 suites collected =
    FAIL, not a pass). A failing build, or a runner that errored out, is a gate BLOCKER even
-   when types + unit assertions are green.
+   when types + unit assertions are green. Every command-running verifier must quote
+   **verbatim execution evidence** in its report — the exact command, exit code, and the
+   runner's own summary lines; counts without a verbatim block are claims, not evidence.
 2. **Validation group (sequential):** validation-reviewer — consumes the four reports, runs
    UAT against the user stories, and is the release gate ("are we building the right thing?").
-   The gate fails (REWORK REQUIRED) if the release build did not exit 0 and produce its
-   artifact (condition c2).
+   It does not merely trust the reports: it independently re-runs the test command once and
+   cross-checks the totals against the Regression Tester's runs (condition d2), and a report
+   whose counts lack a verbatim evidence block cannot PASS its gate condition. The gate fails
+   (REWORK REQUIRED) if the release build did not exit 0 and produce its artifact
+   (condition c2).
    - **READY FOR RELEASE:** set every `verify.agents.*.status` and `verify.status` to `"completed"`.
    - **REWORK REQUIRED:** do NOT update status; route the blockers back to Phase 4 (Develop)
      and re-run Verify after they're fixed, per the bounded protocol below.

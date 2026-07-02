@@ -105,7 +105,9 @@ REVIEW CHECKLIST:
    test command (e.g. CRA tests via babel but ships via webpack — a green suite does NOT
    prove the build works); a non-zero build exit is a BLOCKER. Then run the lint/
    static-analysis command from CLAUDE.md (e.g. oxlint); treat security-relevant lint
-   findings as blockers and populate "Lint issues" in the report.
+   findings as blockers and populate "Lint issues" in the report. For EVERY command run
+   in this check, capture the exact command line, its exit code, and the runner's own
+   summary lines verbatim for the Execution Evidence section of your report.
 
 10. ADR INTEGRITY
     If the plan declared `proposes_new_adrs`, verify the new ADR was
@@ -143,6 +145,18 @@ REPORT FORMAT:
 - Exit code: 0 / non-zero
 - Passed: XX, Failed: XX (list)
 - Lint issues: XX
+
+### Execution Evidence
+One entry per command run in check 9 (test suite, production build, lint). Quote the
+output verbatim — copy the runner's own summary lines (suites/tests collected,
+passed/failed totals, build result); do not re-type or paraphrase them. Summary lines
+only, never the full log. Counts without a verbatim block are claims, not evidence.
+- Command: `<exact command line>`
+- Exit code: <n>
+- Output (verbatim summary lines):
+  ```
+  <copied lines>
+  ```
 
 ### Verdict
 APPROVED — all checks pass, ready for Requirements Sync, then Verify

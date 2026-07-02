@@ -55,7 +55,10 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
    (`REQUIREMENT_COUNTS:` / `CYCLE:`); the orchestrator is the single writer.
 3. **Exercise the real artifact, not a proxy.** Gates must run the *actual* production build
    and confirm tests truly executed (0 suites collected = FAIL), not just "types pass / no
-   failing assertions." (Verify + Release + Develop reviewer.)
+   failing assertions." (Verify + Release + Develop reviewer.) Gate reports quote **verbatim
+   execution evidence** (exact command, exit code, the runner's own summary lines), and the
+   Verify release gate independently re-runs the test suite once (condition d2) rather than
+   trusting self-reported counts.
 4. **Git stays human-gated.** Agents **stage + suggest** commits/tags; they do not commit,
    tag, push, or publish. (Develop + Release.)
 5. **Don't yak-shave the target.** If a target repo's *pre-existing* toolchain is broken,

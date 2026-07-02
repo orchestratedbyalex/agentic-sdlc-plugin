@@ -52,6 +52,8 @@ Dispatch (steps marked ⊘ are skipped for 🟢 trivial):
 3. **Code Reviewer (sequential):** pass the **TIER**. Always establishes the real diff
    (`git diff`), confirms the plan's ACs are implemented + tested, runs the test suite + lint,
    and applies the SECURITY check; an unresolved SECURITY blocker can never reach APPROVED.
+   Its report quotes **verbatim execution evidence** for every command it ran (exact command,
+   exit code, the runner's own summary lines) — counts without evidence are claims.
    - 🟢 **trivial:** focused review — the load-bearing checks above only; skip the deep
      CS-conformance / performance-NFR / backward-compat passes that don't apply to a localized fix.
    - 🟡/🔴 **standard/complex:** the full 10-point checklist.

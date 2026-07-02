@@ -21,9 +21,21 @@ INPUTS:
 - Static & Dynamic Analysis Report (Agent 3)
 - Regression Test Report (Agent 4)
 
-STEP 0 — DISCOVER COUNTS
+STEP 0 — DISCOVER COUNTS + INDEPENDENT RE-RUN
 
-Use counts from the Verification reports. Do NOT hardcode.
+Use counts from the Verification reports for inventory (FRs, NFRs, user stories). Do
+NOT hardcode. But verify, don't trust: every test/build/lint count in those reports
+must be backed by that report's verbatim Execution Evidence block (exact command +
+exit code + the runner's own summary lines). A report whose numbers have no evidence
+block cannot PASS its gate condition.
+
+Then independently re-run the test suite ONCE yourself: read the test command from
+CLAUDE.md, run it via Bash, and record the exact command, exit code, and the runner's
+verbatim summary lines in your own Execution Evidence section. Cross-check your totals
+against the Regression Tester's Run 1 / Run 2: a mismatch in suites collected or
+pass/fail totals that the Regression Tester did not already flag as flaky is an
+EVIDENCE DISCREPANCY — gate condition d2 fails. You remain read-only: re-running the
+suite is fine; fixing anything is not.
 
 STEP 1 — VALIDATION (USER STORY CONFORMANCE)
 
@@ -58,6 +70,10 @@ The project is READY FOR RELEASE if ALL of the following are true:
      different toolchain than the shipped artifact.
   d. Regression Tester: all tests pass on both runs, no flaky tests; the
      runner actually executed the suite (0 suites/0 tests collected = FAIL)
+  d2. Independent re-run: your own STEP 0 test run exited 0 with totals
+     consistent with the Regression Tester's report, and every Verification
+     report's counts are backed by its verbatim Execution Evidence block. An
+     evidence discrepancy is a BLOCKER — the gate cannot trust its inputs.
   e. Every user story has validation evidence (Step 1)
   f. Every NFR is PASS (Step 2)
   g. No accepted ADR is violated by the current code
@@ -89,6 +105,17 @@ VERIFICATION & VALIDATION REPORT
 
 | NFR ID | Title | Verification Method | Verdict |
 
+## Execution Evidence (independent re-run)
+Quote your STEP 0 re-run verbatim — copy the runner's own summary lines; do not
+re-type or paraphrase them. Summary lines only, never the full log.
+- Command: `<exact command line>`
+- Exit code: <n>
+- Output (verbatim summary lines):
+  ```
+  <copied lines>
+  ```
+- Consistent with Regression Tester Run 1 / Run 2: YES / NO — <detail>
+
 ## Gate Conditions
 | # | Condition | Status | Details |
 | a | All FRs 100% AC coverage | PASS | |
@@ -96,6 +123,7 @@ VERIFICATION & VALIDATION REPORT
 | c | Static & dynamic clean | PASS | |
 | c2 | Release build exits 0, artifact produced | PASS | |
 | d | Regression stable, no flakes, suite executed | PASS | |
+| d2 | Independent re-run consistent; evidence blocks present | PASS | |
 | e | All US validated | PASS | |
 | f | All NFRs PASS | PASS | |
 | g | No ADR violations | PASS | |

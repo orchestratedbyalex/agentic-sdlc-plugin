@@ -51,6 +51,14 @@ Evidence; when an RP is not relevant, document the exception.
 Review/validation agents run as isolated subagents with fresh context that did not author
 the work under review (Microsoft SDL).
 
+## Execution evidence (gate reports)
+Any gate/review agent that runs a command (tests, build, lint, audit) must quote the
+result verbatim in an **Execution Evidence** section of its report: the exact command
+line, its exit code, and the runner's own summary lines (suites/tests collected,
+passed/failed totals) copied as-is — never re-typed or paraphrased. Summary lines only,
+not the full log. Counts without a verbatim block are claims, not evidence, and cannot
+PASS a gate condition.
+
 ## Requirements sync
 Every new behavior added in Develop becomes a new FR + US wired into
 `docs/requirements/traceability-matrix.md`. No orphan features.
