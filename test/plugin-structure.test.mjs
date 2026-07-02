@@ -258,3 +258,15 @@ test('the persisted loop state (runtime) is wired into the orchestrator and play
   const verify = readFileSync(join(ROOT, 'phases', 'phase-5-verify.md'), 'utf8')
   assert.match(verify, /verifyCycle/, 'phase 5 still tracks the cycle count in conversation only')
 })
+
+test('the route-back recovery mechanics (reopen + evidence) are wired into the wizard and playbooks', () => {
+  const sdlc = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
+  // Step 5: per-agent checkpointing is encouraged, phase completion carries an attestation,
+  // and route-backs reopen the earlier phase through the state script
+  assert.match(sdlc, /--evidence/, 'Step 5 never attests phase completion with --evidence')
+  assert.match(sdlc, /reopen --phase/, 'the orchestrator never names the reopen command')
+  const verify = readFileSync(join(ROOT, 'phases', 'phase-5-verify.md'), 'utf8')
+  assert.match(verify, /reopen --phase develop/, 'phase 5 REWORK routing never reopens Develop')
+  const release = readFileSync(join(ROOT, 'phases', 'phase-6-release.md'), 'utf8')
+  assert.match(release, /reopen --phase verify/, 'phase 6 Verify-miss routing never reopens Verify')
+})

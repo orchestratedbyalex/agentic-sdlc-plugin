@@ -6,7 +6,7 @@ groups:
   - { mode: parallel, agents: [sdlc-verify-coverage-analyst, sdlc-verify-independent-code-reviewer, sdlc-verify-static-dynamic-analyzer, sdlc-verify-regression-tester] }
   - { mode: sequential, agents: [sdlc-verify-validation-reviewer] }
 gate_after_each_group: true
-post_phase: "READY FOR RELEASE → set verify.status + agent statuses completed; REWORK REQUIRED → do NOT update status, route blockers back to Phase 4"
+post_phase: "READY FOR RELEASE → set verify.status + agent statuses completed; REWORK REQUIRED → do NOT update Verify's status, reopen Phase 4 via the state script (reopen --phase develop --agent <authors>) and route the blockers back"
 ---
 
 # Phase 5 — Verify (Verification + Validation, IEEE 1012)
@@ -31,8 +31,13 @@ Prerequisite: the Develop phase has completed the change(s) under verification.
    (REWORK REQUIRED) if the release build did not exit 0 and produce its artifact
    (condition c2).
    - **READY FOR RELEASE:** set every `verify.agents.*.status` and `verify.status` to `"completed"`.
-   - **Gate FAIL (REWORK REQUIRED):** do NOT update status; route the blockers back to
-     Phase 4 (Develop) and re-run Verify after they're fixed, per the bounded protocol below.
+   - **Gate FAIL (REWORK REQUIRED):** do NOT update Verify's status. Record the FAIL via
+     `gate-log --phase verify`, then **reopen Develop deterministically** —
+     `reopen --phase develop --agent <the responsible author(s), e.g. code_author test_author>`
+     via the state script — so a resumed session lands on the rework, not on Verify; the
+     persisted verify strikes survive the route-back (they carry the re-verify cycle bound
+     below). Then route the blockers to Phase 4 and re-run Verify after they're fixed, per
+     the bounded protocol below.
 3. **Re-verification after REWORK (bounded; cycle 1 = the initial run):** the cycle count
    is persisted, not remembered — the wizard records each validation verdict via
    `gate-log --phase verify`, and the detector's `verifyCycle` reports which cycle the

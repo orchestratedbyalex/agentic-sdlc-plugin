@@ -56,6 +56,24 @@ All notable changes to this project are documented here. The format follows
   outcome. The detector exposes `runtime` plus a derived `verifyCycle`, `cycle` clears the
   counters for the phases it resets (the log survives as history), and the wizard and the
   Develop/Verify playbooks key their bounds off the script's counts.
+- **Route-back recovery mechanics**: when a later gate routes work back to an
+  already-completed phase (Verify's REWORK REQUIRED → Develop; a Release-discovered
+  Verify miss → Verify), the wizard now **reopens** that phase deterministically with a
+  new `reopen --phase <p> [--agent <a>]...` state command — the phase returns to
+  `in_progress` and only the named agents drop to `pending`, so completed siblings keep
+  their status, the persisted loop bounds survive (the verify strike count carries the
+  re-verify cycle across the rework), and a resumed session lands on the rework instead
+  of the phase that sent it back. Previously no state mechanics existed for route-backs
+  at all: an interruption mid-rework resumed at the wrong phase. The Verify and Release
+  playbooks name the command in their routing.
+- **Evidence attestation on phase completion**: `complete --phase` accepts `--evidence
+  "<proof>"` recording what backed the completion (the gate verdict just logged via
+  `gate-log`, or an artifact path) as a phase-level `evidence:` line — a bulk
+  phase-complete with zero proof is a claim, not evidence. The attestation is cleared
+  automatically when the phase is reopened. The wizard's Step 5 now also **encourages
+  per-agent checkpointing** (it previously discouraged it): each agent is checkpointed as
+  its work lands, so resume is precise and route-backs can reopen exactly the responsible
+  agents.
 - A defined **`HUMAN_REVIEW_REQUIRED` escalation protocol**: every playbook's gate loop is
   bounded (Prepare and Operate previously had no bound at all) and every bound ends in one
   block the wizard presents to the user — phase/gate, trigger, open blockers, artifacts —

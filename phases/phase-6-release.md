@@ -22,9 +22,12 @@ production build — see Phase 5).
    **NOT commit, tag, push, or publish** — all are human-gated.
    - **Build fails?** Triage first: if the build was ALREADY broken before this release's diff
      (pre-existing toolchain rot), that is a **Verify-gate miss**, not a release task. STOP and
-     route back — do NOT rewrite the target's dependency tree, add `resolutions`/overrides, pin
-     transitive deps, monkey-patch `node_modules`, or add `postinstall` patches. Only fix a
-     break caused by this release's own changelog/version/manifest edits, minimally.
+     route back: **reopen Verify deterministically** — `reopen --phase verify --agent
+     static_dynamic_analyzer --agent validation_reviewer` via the state script — so a resumed
+     session lands on the re-verification, and report the finding there. Do NOT rewrite the
+     target's dependency tree, add `resolutions`/overrides, pin transitive deps, monkey-patch
+     `node_modules`, or add `postinstall` patches. Only fix a break caused by this release's
+     own changelog/version/manifest edits, minimally.
 3. **release-reviewer** — 7-point gate (version consistency of the STAGED release, changelog
    accuracy, semver, build artifacts, package exports, sensitive-file exclusion, dependency
    audit). An author that committed/tagged on its own is a discipline FAIL.

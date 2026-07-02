@@ -921,6 +921,141 @@ test('CLI: gate-log on verify reports the cycle, and detect restores it on resum
   assert.equal(d.json.runtime.gateAttempts.verify, 1)
 })
 
+// ── Evidence attestation: `complete --phase` records WHAT proved the completion ──
+// A bulk phase-complete with zero proof is a claim; the attestation cites the gate
+// verdict (or artifact) that backs it, and lives under the phase — script-written only.
+
+import { setPhaseEvidence } from '../scripts/sdlc-state.mjs'
+
+test('setPhaseEvidence records the attestation under the phase without disturbing parsing', () => {
+  const out = setPhaseEvidence(MIDWAY, 'develop', 'code_reviewer VERDICT: PASS 2026-07-02')
+  assert.match(out, /^ {6}evidence: "code_reviewer VERDICT: PASS 2026-07-02"$/m)
+  const md = parseMetadata(out)
+  assert.equal(md.valid, true)
+  assert.equal(md.phases.develop.status, 'in_progress')
+  assert.deepEqual(md.phases.develop.agents.map(a => a.name), ['architect_planner', 'code_author', 'test_author'])
+})
+
+test('setPhaseEvidence is idempotent per phase — a re-record replaces, never duplicates', () => {
+  const a = setPhaseEvidence(MIDWAY, 'develop', 'first run')
+  const b = setPhaseEvidence(a, 'develop', 'second run')
+  assert.equal((b.match(/evidence:/g) || []).length, 1)
+  assert.match(b, /^ {6}evidence: "second run"$/m)
+  const two = setPhaseEvidence(b, 'prepare', 'CLAUDE.md verified')
+  assert.equal((two.match(/evidence:/g) || []).length, 2) // each phase carries its own
+})
+
+test('setPhaseEvidence escapes quotes and round-trips through the parser', () => {
+  const out = setPhaseEvidence(MIDWAY, 'develop', 'suite "green" 42/42')
+  assert.equal(parseMetadata(out).valid, true)
+  assert.match(out, /^ {6}evidence: "suite \\"green\\" 42\/42"$/m)
+})
+
+test('setPhaseEvidence returns null when the phase is missing (no silent no-op)', () => {
+  assert.equal(setPhaseEvidence(MIDWAY, 'release', 'x'), null) // MIDWAY carries no release phase
+  assert.equal(setPhaseEvidence(MIDWAY, 'nope', 'x'), null)
+})
+
+// ── reopenPhase: the route-back transition (Verify→Develop, Release→Verify) ──
+// A later gate FAIL routes work back to an earlier phase whose status is already
+// "completed" — without a reopen, an interrupted session resumes at the WRONG spot.
+
+import { reopenPhase } from '../scripts/sdlc-state.mjs'
+
+test('reopenPhase reopens a completed phase for rework: named agents pending, siblings untouched', () => {
+  const done = updateStatus(MIDWAY, { phase: 'develop', status: 'completed' })
+  const out = reopenPhase(done, { phase: 'develop', agents: ['code_author', 'test_author'] })
+  const md = parseMetadata(out)
+  assert.equal(md.phases.develop.status, 'in_progress')
+  const byName = Object.fromEntries(md.phases.develop.agents.map(a => [a.name, a.status]))
+  assert.equal(byName.code_author, 'pending')
+  assert.equal(byName.test_author, 'pending')
+  assert.equal(byName.architect_planner, 'completed') // NOT a bulk reset — the plan still stands
+  assert.equal(md.phases.prepare.status, 'completed') // neighbors untouched
+})
+
+test('reopenPhase lands resume on the rework, not on the phase that routed back', () => {
+  const done = updateStatus(MIDWAY, { phase: 'develop', status: 'completed' })
+  // before the reopen, resume points at Verify — develop reads completed
+  assert.equal(computeState({ hasMetadata: true, metadataContent: done, hasCode: true }).phase, 5)
+  const s = computeState({ hasMetadata: true, metadataContent: reopenPhase(done, { phase: 'develop', agents: ['code_author'] }), hasCode: true })
+  assert.equal(s.phase, 4)
+  assert.equal(s.agent, 'code_author')
+})
+
+test('reopenPhase without agents flips only the phase status (agent statuses all survive)', () => {
+  const done = updateStatus(MIDWAY, { phase: 'develop', status: 'completed' })
+  const md = parseMetadata(reopenPhase(done, { phase: 'develop' }))
+  assert.equal(md.phases.develop.status, 'in_progress')
+  assert.ok(md.phases.develop.agents.every(a => a.status === 'completed'))
+})
+
+test('reopenPhase keeps the persisted loop bounds — verify strikes carry the re-verify cycle', () => {
+  const routed = updateStatus(WITH_RUNTIME, { phase: 'develop', status: 'completed' })
+  const out = reopenPhase(routed, { phase: 'develop', agents: ['code_author'] })
+  const md = parseMetadata(out)
+  assert.deepEqual(md.runtime.gateAttempts, { develop: 2, verify: 1 }) // reopen never touches runtime
+  assert.equal(md.runtime.activePlan, 'PLAN-003')
+  assert.equal(md.runtime.gateLog.length, 2)
+  assert.equal(computeState({ hasMetadata: true, metadataContent: out, hasCode: true }).verifyCycle, 2)
+})
+
+test('reopenPhase clears only the reopened phase evidence (that completion no longer stands)', () => {
+  let y = updateStatus(MIDWAY, { phase: 'develop', status: 'completed' })
+  y = setPhaseEvidence(y, 'prepare', 'CLAUDE.md verified')
+  y = setPhaseEvidence(y, 'develop', 'code_reviewer PASS')
+  const out = reopenPhase(y, { phase: 'develop', agents: ['code_author'] })
+  assert.doesNotMatch(out, /^ {6}evidence: "code_reviewer PASS"$/m)
+  assert.match(out, /^ {6}evidence: "CLAUDE.md verified"$/m)
+  assert.equal(parseMetadata(out).valid, true)
+})
+
+test('reopenPhase rejects unknown phases and unknown agents (no silent no-op)', () => {
+  assert.equal(reopenPhase(MIDWAY, { phase: 'nope', agents: [] }), null)
+  assert.equal(reopenPhase(MIDWAY, { phase: 'release', agents: [] }), null) // not in this file
+  assert.equal(reopenPhase(MIDWAY, { phase: 'develop', agents: ['ghost'] }), null)
+})
+
+test('CLI: complete --phase --evidence attests the completion; --agent rejects it', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'sdlc-cli-'))
+  runCLI(dir, ['init', '--name', 'x', '--version', '0.1.0', '--mode', 'existing'])
+  const r = runCLI(dir, ['complete', '--phase', 'prepare', '--evidence', 'CLAUDE.md written; gate PASS logged'])
+  assert.equal(r.json.ok, true)
+  assert.equal(r.json.evidence, 'CLAUDE.md written; gate PASS logged')
+  const y = readFileSync(join(dir, 'docs/requirements/sdlc-metadata.yml'), 'utf8')
+  assert.match(y, /^ {6}evidence: "CLAUDE.md written; gate PASS logged"$/m)
+  assert.equal(parseMetadata(y).phases.prepare.status, 'completed')
+  const bad = runCLI(dir, ['complete', '--phase', 'prepare', '--agent', 'explorer', '--evidence', 'x'])
+  assert.equal(bad.json.ok, false)
+  assert.match(bad.json.error, /--evidence/)
+})
+
+test('CLI: reopen routes a Verify REWORK back into Develop deterministically', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'sdlc-cli-'))
+  runCLI(dir, ['init', '--name', 'x', '--version', '0.1.0', '--mode', 'existing'])
+  for (const p of ['prepare', 'define', 'design', 'develop']) runCLI(dir, ['complete', '--phase', p])
+  runCLI(dir, ['gate-log', '--phase', 'verify', '--gate', 'validation_reviewer', '--verdict', 'FAIL', '--note', 'REWORK REQUIRED'])
+  const r = runCLI(dir, ['reopen', '--phase', 'develop', '--agent', 'code_author', '--agent', 'test_author'])
+  assert.equal(r.json.ok, true)
+  assert.equal(r.json.reopened, 'develop')
+  assert.deepEqual(r.json.agents, ['code_author', 'test_author'])
+  assert.equal(r.json.phase, 4) // resume now lands on the rework, not on Verify
+  const d = runCLI(dir, ['detect'])
+  assert.equal(d.json.phase, 4)
+  assert.equal(d.json.agent, 'code_author')
+  assert.equal(d.json.verifyCycle, 2) // the re-verify cycle bound survives the route-back
+})
+
+test('CLI: reopen validates the phase and fails loudly on an unknown agent', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'sdlc-cli-'))
+  runCLI(dir, ['init', '--name', 'x', '--version', '0.1.0', '--mode', 'existing'])
+  assert.equal(runCLI(dir, ['reopen', '--phase', 'ship']).json.ok, false)
+  assert.equal(runCLI(dir, ['reopen']).json.ok, false)
+  const bad = runCLI(dir, ['reopen', '--phase', 'develop', '--agent', 'ghost'])
+  assert.equal(bad.json.ok, false)
+  assert.match(bad.json.error, /unknown agent/)
+})
+
 test('CLI: plan-active sets the pointer, clarifier-round counts, loop-reset clears the bound', () => {
   const dir = mkdtempSync(join(tmpdir(), 'sdlc-cli-'))
   runCLI(dir, ['init', '--name', 'x', '--version', '0.1.0', '--mode', 'existing'])

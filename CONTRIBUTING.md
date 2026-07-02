@@ -12,7 +12,7 @@ state, and `scripts/sdlc-guard.mjs`, the PreToolUse hook guard wired up by `hook
 Tests use the built-in `node:test` runner.
 
 ```bash
-node --test            # must stay green (117 tests: state logic + hook guard + plugin structure)
+node --test            # must stay green (131 tests: state logic + hook guard + plugin structure)
 claude --plugin-dir .  # load the plugin into a Claude Code session
 /reload-plugins        # after edits, inside the session
 ```

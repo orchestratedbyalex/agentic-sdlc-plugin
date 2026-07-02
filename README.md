@@ -49,7 +49,11 @@ Run `/sdlc` in any repository. The wizard:
 State is deterministic and resumable: every status change goes through `sdlc-state.mjs`, never
 an ad-hoc edit, so you can stop and resume any time — including mid-loop: gate strike counts,
 the Verify cycle, the active implementation plan, and a full gate-verdict log persist in the
-metadata, so an interruption never resets a review loop's bounds.
+metadata, so an interruption never resets a review loop's bounds. Route-backs are transitions
+too: when Verify demands rework (or Release uncovers a Verify miss), the earlier phase is
+deterministically **reopened** — only the responsible agents reset, and resume lands on the
+rework, not on the phase that sent it back. Completing a phase records an **evidence
+attestation** citing the gate verdict that proved it.
 
 ## Model routing
 
@@ -105,7 +109,7 @@ the plugin stays generic, your repo accumulates the lifecycle record.
 ## Test
 
 ```bash
-node --test          # 117 tests, all green (state logic + hook guard + plugin structure)
+node --test          # 131 tests, all green (state logic + hook guard + plugin structure)
 ```
 
 ## Contributing

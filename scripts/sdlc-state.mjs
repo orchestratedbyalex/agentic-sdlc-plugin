@@ -340,6 +340,32 @@ export function appendPlan(content, id) {
 }
 
 export const ASSESSMENTS = ['stable', 'maintain', 'evolve', 'urgent']
+
+// Drop a phase's `evidence:` attestation line (if any). Returns null when the phase
+// itself is missing from the file.
+function stripPhaseEvidence(lines, phase) {
+  const range = phaseRange(lines, phase)
+  if (!range) return null
+  return lines.filter((l, i) => !(i >= range[0] && i < range[1] && /^ {6}evidence:/.test(l)))
+}
+
+// Record WHAT proved a phase's completion — a gate VERDICT reference or an artifact path —
+// as a phase-level `evidence:` line right after the phase's status line (idempotent: a
+// re-record replaces). A bulk `complete --phase` with no proof is a claim; this is the
+// attestation. Returns null when the phase (or its status line) is missing, so a typo can
+// never silently attest.
+export function setPhaseEvidence(content, phase, evidence) {
+  const lines = stripPhaseEvidence(content.split('\n'), phase)
+  if (!lines) return null
+  const range = phaseRange(lines, phase)
+  for (let i = range[0]; i < range[1]; i++) {
+    if (/^ {6}status:/.test(lines[i])) {
+      lines.splice(i + 1, 0, `      evidence: ${yamlQuote(evidence)}`)
+      return lines.join('\n')
+    }
+  }
+  return null
+}
 export const VERDICTS = ['PASS', 'FAIL', 'WAIVED']
 
 // Serialize the runtime object and splice it back in as the one script-owned `  runtime:`
@@ -418,6 +444,31 @@ export function resetLoop(content, phase) {
   delete rt.gateAttempts[phase]
   if (phase === 'develop') rt.clarifierRounds = {}
   return writeRuntime(content, rt)
+}
+
+// The route-back transition (Verify→Develop, Release→Verify): reopen a phase for rework
+// WITHOUT bulk-resetting it — the phase returns to in_progress, only the named agents drop
+// to pending (completed siblings keep their status), and the persisted loop bounds
+// (runtime) are untouched: the verify strike count carries the re-verify cycle across the
+// rework. The phase's evidence attestation is cleared — the completion it attested no
+// longer stands (the gate-log FAIL recorded just before the route-back is the audit
+// trail). Returns null on an unknown/missing phase or agent (no silent no-op).
+export function reopenPhase(content, { phase, agents = [] }) {
+  if (!PHASES.includes(phase)) return null
+  const ph = parseMetadata(content).phases[phase]
+  if (!ph) return null
+  if (agents.some(a => !ph.agents.some(x => x.name === a))) return null
+  let out = content
+  for (const a of agents) out = updateStatus(out, { phase, agent: a, status: 'pending' })
+  const lines = stripPhaseEvidence(out.split('\n'), phase)
+  const range = phaseRange(lines, phase)
+  for (let i = range[0]; i < range[1]; i++) {
+    if (/^ {6}status:/.test(lines[i])) {
+      lines[i] = lines[i].replace(/status:\s*"?[^"]*"?\s*$/, 'status: "in_progress"')
+      return lines.join('\n')
+    }
+  }
+  return null
 }
 
 // Which phases a cycle assessment resets to "pending" for the next cycle.
@@ -563,14 +614,19 @@ function initCmd(argv) {
   process.stdout.write(JSON.stringify({ ok: true, path: metaPath, state }, null, 2) + '\n')
 }
 
-// `complete --phase P [--agent A] [--status completed]`
+// `complete --phase P [--agent A] [--status completed] [--evidence "<proof>"]`
 // Deterministically marks a phase (and all its agents) or one agent completed, then reports state.
+// `--evidence` attests a whole-phase completion (a gate VERDICT ref or artifact path).
 function completeCmd(argv) {
   const opts = { status: 'completed' }
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--phase') opts.phase = argv[++i]
     else if (argv[i] === '--agent') opts.agent = argv[++i]
     else if (argv[i] === '--status') opts.status = argv[++i]
+    else if (argv[i] === '--evidence') opts.evidence = argv[++i]
+  }
+  if (opts.evidence !== undefined && opts.agent) {
+    return cliFail('--evidence attests a whole-phase completion — drop --agent or drop the flag')
   }
   const cwd = process.cwd()
   const metaPath = join(cwd, 'docs/requirements/sdlc-metadata.yml')
@@ -598,11 +654,17 @@ function completeCmd(argv) {
       return
     }
   }
-  writeFileSync(metaPath, updateStatus(content, opts))
+  let next = updateStatus(content, opts)
+  if (opts.evidence !== undefined) {
+    next = setPhaseEvidence(next, opts.phase, opts.evidence)
+    if (next === null) return cliFail(`could not record evidence under phase '${opts.phase}' — no status line found`)
+  }
+  writeFileSync(metaPath, next)
   const state = computeState({ hasMetadata: true, metadataContent: readFileSync(metaPath, 'utf8'), hasCode: detectCode(cwd) })
   // Terse output — the wizard renders the board from the detector (Step 0), not from here.
   // Printing the full state on every (often chained) complete call floods the main context.
   const terse = { ok: true, updated: opts.agent ? `${opts.phase}/${opts.agent}` : opts.phase, mode: state.mode, phase: state.phase, agent: state.agent, setupComplete: state.setupComplete }
+  if (opts.evidence !== undefined) terse.evidence = opts.evidence
   process.stdout.write(JSON.stringify(terse, null, 2) + '\n')
 }
 
@@ -812,6 +874,33 @@ function clarifierRoundCmd(argv) {
   process.stdout.write(JSON.stringify({ ok: true, author: opts.author, rounds: r.rounds }, null, 2) + '\n')
 }
 
+// `reopen --phase P [--agent A]...`
+// The route-back transition: a Verify REWORK REQUIRED reopens Develop; a Release-found
+// Verify miss reopens Verify. Phase → in_progress, the named agents → pending, everything
+// else — completed siblings, the runtime loop bounds, the gate log — untouched, so resume
+// lands on the rework with its cycle counters intact.
+function reopenCmd(argv) {
+  const opts = { agents: [] }
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--phase') opts.phase = argv[++i]
+    else if (argv[i] === '--agent') opts.agents.push(argv[++i])
+  }
+  if (!opts.phase || !PHASES.includes(opts.phase)) {
+    return cliFail(`--phase must be one of: ${PHASES.join(', ')}`)
+  }
+  const meta = readMetaOrFail()
+  if (!meta) return
+  const ph = parseMetadata(meta.content).phases[opts.phase]
+  if (!ph) return cliFail(`phase '${opts.phase}' not present in metadata — nothing updated`)
+  const ghost = opts.agents.find(a => !ph.agents.some(x => x.name === a))
+  if (ghost) return cliFail(`unknown agent '${ghost}' in phase '${opts.phase}' — nothing updated`)
+  const out = reopenPhase(meta.content, opts)
+  if (out === null) return cliFail(`could not reopen phase '${opts.phase}' — no status line found`)
+  writeFileSync(meta.metaPath, out)
+  const state = computeState({ hasMetadata: true, metadataContent: out, hasCode: detectCode(process.cwd()) })
+  process.stdout.write(JSON.stringify({ ok: true, reopened: opts.phase, agents: opts.agents, phase: state.phase, agent: state.agent }, null, 2) + '\n')
+}
+
 // `loop-reset --phase P`
 // Deterministically zeroes one phase's loop bound — the escalation protocol's "guidance"
 // outcome. The gate log is history and survives.
@@ -829,7 +918,7 @@ function loopResetCmd(argv) {
   process.stdout.write(JSON.stringify({ ok: true, phase: opts.phase, strikes: 0 }, null, 2) + '\n')
 }
 
-const COMMANDS = ['detect', 'init', 'complete', 'config', 'brief', 'counts', 'plan-add', 'cycle', 'gate-log', 'plan-active', 'clarifier-round', 'loop-reset']
+const COMMANDS = ['detect', 'init', 'complete', 'config', 'brief', 'counts', 'plan-add', 'cycle', 'gate-log', 'plan-active', 'clarifier-round', 'loop-reset', 'reopen']
 
 function main() {
   const cmd = process.argv[2]
@@ -846,6 +935,7 @@ function main() {
   else if (cmd === 'plan-active') planActiveCmd(rest)
   else if (cmd === 'clarifier-round') clarifierRoundCmd(rest)
   else if (cmd === 'loop-reset') loopResetCmd(rest)
+  else if (cmd === 'reopen') reopenCmd(rest)
   else cliFail(`unknown command '${cmd}' — expected one of: ${COMMANDS.join(', ')}`)
 }
 

@@ -167,13 +167,19 @@ After each agent or group passes its gate, mark progress with the state script �
 
     node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" complete --phase <phase> --agent <agent>
 
-When a phase finishes (all its agents done, or it completes as a unit), mark the whole phase:
+When a phase finishes (all its agents done, or it completes as a unit), mark the whole
+phase — and **attest it**: pass `--evidence` citing the proof that backs the completion
+(the gate verdict you just recorded via `gate-log`, or the artifact path that shows the
+work landed). A phase completed without evidence is a claim:
 
-    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" complete --phase <phase>
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" complete --phase <phase> --evidence "<gate> VERDICT: PASS <date>"
 
 Each call rewrites the statuses deterministically and prints a terse `{ ok, phase, agent }`.
-Prefer ONE `complete --phase <phase>` at the END of a phase — it marks the phase AND all its
-agents; use `--agent` only to checkpoint mid-phase. Don't chain many per-agent calls at once.
+**Checkpoint as you go**: run `complete --agent` for each agent as its work lands (at
+minimum after every gate-passing group) — an interruption resumes at the last checkpoint,
+and the per-agent statuses are what let a later route-back reopen precisely. The closing
+`complete --phase <phase>` still marks the phase AND any remaining agents; the attestation
+lands under the phase and is cleared automatically if the phase is later reopened.
 Re-read the detector (Step 0) for the board / next decision.
 
 Lifecycle data goes through the same script — never hand-edit `sdlc-metadata.yml`:
@@ -199,3 +205,15 @@ So does the loop state (the `runtime` block is script-owned):
 `clarifier-round` counts a clarifier dispatch against the blocked author; `loop-reset` is
 the escalation guidance outcome. All of it lands in the metadata, so bounds survive
 interruption.
+
+Route-backs are state transitions too — never leave them in conversation memory. When a
+later gate routes work back to an earlier, already-completed phase (Verify's REWORK
+REQUIRED → Develop; a Release-discovered Verify miss → Verify), reopen that phase
+deterministically after recording the FAIL via `gate-log`:
+
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" reopen --phase <phase> --agent <responsible> [--agent <responsible>]
+
+The phase returns to `in_progress` and ONLY the named agents drop to `pending` — completed
+siblings keep their status, the loop counters and gate log survive (the verify strike count
+carries the re-verify cycle across the rework), and the phase's `evidence` attestation is
+cleared. A resumed session then lands on the rework, not on the phase that routed back.
