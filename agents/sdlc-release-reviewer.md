@@ -124,3 +124,6 @@ Report format:
   ...
   OVERALL: PASS | FAIL
   PUBLISH GATE: APPROVED | BLOCKED -- <reason>
+  VERDICT: PASS -- overall PASS and publish gate APPROVED
+    OR
+  VERDICT: FAIL -- <reason>

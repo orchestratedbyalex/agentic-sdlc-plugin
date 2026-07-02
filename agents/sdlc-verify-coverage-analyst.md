@@ -116,3 +116,11 @@ not evidence.
 
 ## Recommendations
 - <actionable recommendations>
+
+## Verdict
+PASS only if the suite executed and passed, every AC is covered, and there are no orphan
+FRs and no undelivered plan scenarios.
+
+VERDICT: PASS — no coverage gaps
+  OR
+VERDICT: FAIL — <count> gaps (uncovered ACs / orphan FRs / undelivered plan scenarios)

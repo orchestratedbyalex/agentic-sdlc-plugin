@@ -89,10 +89,14 @@ it: dispatch its subagents via the Task tool per the playbook's `groups:` frontm
 groups run top to bottom; in a `sequential` group dispatch one agent at a time in listed
 order; in a `parallel` group dispatch all agents concurrently in ONE message; a
 `conditional` group is dispatched only when the condition stated in the playbook body
-holds (otherwise skip it). Run the validation gate after each group. On a gate FAIL,
-follow the playbook's bolded **Gate FAIL** routing — re-dispatch the named author(s),
-re-run the gate — and when the playbook's loop bound trips, STOP and run the escalation
-protocol below.
+holds (otherwise skip it). Run the validation gate after each group. Every gate agent ends
+its report with one machine-parsable `VERDICT: PASS|FAIL` line (the phase's own verdict
+name — APPROVED, READY FOR RELEASE, PUBLISH GATE — stays alongside): key the pass/fail
+decision off that line, not the surrounding prose. If a gate report lacks a parseable
+`VERDICT:` line, re-dispatch that gate agent once with the defect named; a second miss is
+a gate FAIL. On a gate FAIL, follow the playbook's bolded **Gate FAIL** routing —
+re-dispatch the named author(s), re-run the gate — and when the playbook's loop bound
+trips, STOP and run the escalation protocol below.
 
 #### Escalation — `HUMAN_REVIEW_REQUIRED`
 Every playbook loop is bounded, and every bound ends the same way (a gate FAILing 3×, a
@@ -126,11 +130,14 @@ one tier; pass the tier's model alias as the Task tool's `model` parameter ("inh
 omit the parameter, i.e. the session model). **No profile ever downgrades the full tier** —
 gates and code-writing keep the strongest model.
 
+Agent names below are the file names minus the `sdlc-` prefix; every agent belongs to
+exactly one tier (a structure test pins the roster coverage).
+
 | Tier | Agents | quality | balanced (default) | economy |
 |------|--------|---------|--------------------|---------|
-| **full** — judgment & gates | every `*-reviewer` (requirement, design, code, independent, validation, release), architect-planner, architect-clarifier, code-author, test-author, implementer, feedback-loop | inherit | inherit | inherit |
-| **standard** — analysis & doc authoring | prepare-explorer, claude-md, the 3 define analysts, the 3 define authors, the 2 design explorers, the 3 design authors, reqs-sync, coverage-analyst, release-planner, release-author, issue-triager, incident-responder | inherit | sonnet | haiku |
-| **fast** — mechanical tool-running | static-dynamic-analyzer, regression-tester, dependency-monitor, telemetry-monitor | inherit | haiku | haiku |
+| **full** — judgment & gates | `define-requirement-reviewer` `design-reviewer` `develop-code-reviewer` `verify-independent-code-reviewer` `verify-validation-reviewer` `release-reviewer` `develop-architect-planner` `develop-architect-clarifier` `develop-code-author` `develop-test-author` `develop-implementer` `operate-feedback-loop` | inherit | inherit | inherit |
+| **standard** — analysis & doc authoring | `prepare-explorer` `prepare-claude-md` `define-source-analyst` `define-test-analyst` `define-nfr-analyst` `define-fr-author` `define-nfr-author` `define-us-author` `design-architecture-explorer` `design-decisions-explorer` `design-architecture-author` `design-component-spec-author` `design-adr-traceability-author` `develop-reqs-sync` `verify-coverage-analyst` `release-planner` `release-author` `operate-issue-triager` `operate-incident-responder` | inherit | sonnet | haiku |
+| **fast** — mechanical tool-running | `verify-static-dynamic-analyzer` `verify-regression-tester` `operate-dependency-monitor` `operate-telemetry-monitor` | inherit | haiku | haiku |
 
 If a dispatch fails because the alias is unavailable on the user's plan, re-dispatch that
 one agent with inherit. To change the profile (persisted deterministically — never hand-edit):

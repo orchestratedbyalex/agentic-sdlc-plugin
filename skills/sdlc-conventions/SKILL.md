@@ -59,6 +59,15 @@ passed/failed totals) copied as-is — never re-typed or paraphrased. Summary li
 not the full log. Counts without a verbatim block are claims, not evidence, and cannot
 PASS a gate condition.
 
+## Gate verdicts (the VERDICT: line)
+Every gate/review agent ends its report with exactly one machine-parsable line, uppercase,
+at the start of a line: `VERDICT: PASS` or `VERDICT: FAIL — <why>`. The phase's own verdict
+vocabulary (APPROVED / CHANGES REQUESTED, READY FOR RELEASE / REWORK REQUIRED, PUBLISH GATE
+APPROVED / BLOCKED) stays alongside, in parentheses or on its own lines — the orchestrator
+parses the VERDICT line; humans read the rest. Agents never issue a WAIVED verdict: a
+waiver exists only as a human outcome of the HUMAN_REVIEW_REQUIRED escalation, recorded by
+the orchestrator.
+
 ## Escalation (HUMAN_REVIEW_REQUIRED)
 An agent that cannot proceed without a human decision (an ambiguity no existing document
 resolves, a gate loop at its bound) ends its final message with a `HUMAN_REVIEW_REQUIRED`

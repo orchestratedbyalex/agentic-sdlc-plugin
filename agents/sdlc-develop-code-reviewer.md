@@ -159,6 +159,6 @@ only, never the full log. Counts without a verbatim block are claims, not eviden
   ```
 
 ### Verdict
-APPROVED — all checks pass, ready for Requirements Sync, then Verify
+VERDICT: PASS (APPROVED) — all checks pass, ready for Requirements Sync, then Verify
   OR
-CHANGES REQUESTED — <count> blockers, route to <agent>
+VERDICT: FAIL (CHANGES REQUESTED) — <count> blockers, route to <agent>

@@ -33,7 +33,7 @@ accumulates the evidence.
 ## Build / test / run
 
 ```bash
-node --test            # run all tests (currently 92, must stay green)
+node --test            # run all tests (currently 97, must stay green)
 claude --plugin-dir .  # load the plugin into a Claude Code session for live use
 /reload-plugins        # (inside the session, after edits)
 /agentic-sdlc:sdlc     # run the wizard
@@ -48,7 +48,7 @@ These were established deliberately (several via live runs + multi-specialist re
 them as constraints, not suggestions; the rationale is recorded in the git history.
 
 1. **Reviewer ≠ author.** Review agents have read-only tools (`Read Grep Glob Bash`); only
-   authors get `Write Edit`. Never give a reviewer write tools.
+   authors get `Write Edit`. Never give a reviewer write tools. Pinned by a structure test.
 2. **Deterministic state.** Every `sdlc-metadata.yml` mutation goes through
    `scripts/sdlc-state.mjs` (`init` / `complete` / `config` / `brief` / `counts` /
    `plan-add` / `cycle`) — never an LLM hand-edit of YAML. Agents that produce lifecycle
@@ -88,7 +88,9 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
   (role, phase, what to read first, "FINAL MESSAGE is your return value") + `--- TASK ---` +
   the working prompt.
 - After any change, run `node --test` — `test/plugin-structure.test.mjs` asserts all 7
-  playbooks exist and the **35-agent** roster count. Don't let that drift silently.
+  playbooks exist, the **35-agent** roster count, reviewer read-only tool grants, the
+  model-routing table's exact roster coverage, the gate agents' machine-parsable
+  `VERDICT: PASS|FAIL` line, and the sentinel templates. Don't let those drift silently.
 
 ## Status
 

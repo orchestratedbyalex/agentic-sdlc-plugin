@@ -103,7 +103,7 @@ the plugin stays generic, your repo accumulates the lifecycle record.
 ## Test
 
 ```bash
-node --test          # 92 tests, all green (state logic + hook guard + plugin structure)
+node --test          # 97 tests, all green (state logic + hook guard + plugin structure)
 ```
 
 ## Contributing

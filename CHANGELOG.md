@@ -30,6 +30,20 @@ All notable changes to this project are documented here. The format follows
   template, and is fully unit-tested against the hook's stdin/stdout JSON protocol. Note:
   hooks fire session-wide wherever the plugin is enabled — the ask-not-deny design keeps
   that acceptable.
+- **Machine-parsable gate verdicts**: every gate agent's report now ends with one
+  `VERDICT: PASS|FAIL` line, and the wizard keys the gate decision off that line instead
+  of interpreting prose (one re-dispatch if the line is missing; a second miss is a gate
+  FAIL). Each phase's own verdict vocabulary (APPROVED / CHANGES REQUESTED, READY FOR
+  RELEASE / REWORK REQUIRED, PUBLISH GATE APPROVED / BLOCKED) stays alongside for humans.
+  Agents never self-issue a WAIVED verdict — a waiver only enters as a human outcome of
+  the escalation protocol. The Verify coverage analyst, which previously reported gaps
+  with no verdict at all, gained explicit PASS criteria.
+- **Structure tests for the plugin's own contracts** (previously zero coverage of
+  tiers/routing and tool grants): reviewer/validator read-only tool grants (design
+  invariant 1), model-routing-table coverage of all 35 agents exactly once (the table's
+  Agents column now lists explicit agent names instead of prose shorthand), the
+  `VERDICT:` line in every gate agent, and the sentinel templates (`REQUIREMENT_COUNTS:`,
+  `CYCLE:`, `PLAN_PATH:`) pinned at their sources.
 - A defined **`HUMAN_REVIEW_REQUIRED` escalation protocol**: every playbook's gate loop is
   bounded (Prepare and Operate previously had no bound at all) and every bound ends in one
   block the wizard presents to the user — phase/gate, trigger, open blockers, artifacts —

@@ -48,4 +48,8 @@ Checks:
    or validation that exists, or carries an explicit accepted-risk rationale.
    A boundary visible in the code but missing from the table is a FAIL.
 
-Report as PASS/FAIL/WARNING. Be concise.
+Report as PASS/FAIL/WARNING. Be concise. End the report with the machine-parsable gate line:
+
+VERDICT: PASS — all 9 checks clean
+  OR
+VERDICT: FAIL — <count> failed checks: <which>

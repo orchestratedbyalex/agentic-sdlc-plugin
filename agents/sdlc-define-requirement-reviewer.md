@@ -48,4 +48,8 @@ Checks to perform:
    - Acceptance criteria use AC-N: prefix
 
 Report as: PASS items (brief), FAIL items (with file path and fix needed),
-WARNINGS (non-critical).
+WARNINGS (non-critical). End the report with the machine-parsable gate line:
+
+VERDICT: PASS — all 7 checks clean
+  OR
+VERDICT: FAIL — <count> failed checks: <which>

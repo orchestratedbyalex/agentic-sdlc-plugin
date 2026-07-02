@@ -133,6 +133,106 @@ test('hooks/hooks.json wires the sdlc-guard to Bash and the file-mutation tools'
   }
 })
 
+// Gate outcomes are an orchestrator↔agent contract (audit item 6): every gate agent ends
+// its report with one machine-parsable `VERDICT: PASS|FAIL` line (the phase's own verdict
+// vocabulary stays alongside), and the orchestrator keys the gate decision off that line.
+// WAIVED is never self-issued — it only enters via the HUMAN_REVIEW_REQUIRED escalation.
+const GATE_AGENTS = [
+  'sdlc-define-requirement-reviewer.md',
+  'sdlc-design-reviewer.md',
+  'sdlc-develop-code-reviewer.md',
+  'sdlc-verify-coverage-analyst.md',
+  'sdlc-verify-independent-code-reviewer.md',
+  'sdlc-verify-static-dynamic-analyzer.md',
+  'sdlc-verify-regression-tester.md',
+  'sdlc-verify-validation-reviewer.md',
+  'sdlc-release-reviewer.md',
+]
+
+test('every gate agent report template carries the machine-parsable VERDICT line', () => {
+  for (const f of GATE_AGENTS) {
+    const text = readFileSync(join(ROOT, 'agents', f), 'utf8')
+    assert.match(text, /^\s*VERDICT: PASS\b/m, `${f}: template lacks a VERDICT: PASS line`)
+    assert.match(text, /^\s*VERDICT: FAIL\b/m, `${f}: template lacks a VERDICT: FAIL line`)
+  }
+  // No agent ever self-issues a waiver — that is the human's escalation outcome.
+  const dir = join(ROOT, 'agents')
+  for (const f of readdirSync(dir).filter(f => f.endsWith('.md'))) {
+    assert.doesNotMatch(readFileSync(join(dir, f), 'utf8'), /VERDICT: WAIVED/,
+      `${f}: agents never self-issue VERDICT: WAIVED`)
+  }
+})
+
+test('the orchestrator and conventions skill key gates off the VERDICT line', () => {
+  const sdlc = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
+  assert.match(sdlc, /`VERDICT: PASS\|FAIL`/,
+    'sdlc.md Step 4 does not reference the VERDICT: PASS|FAIL gate line')
+  const skill = readFileSync(join(ROOT, 'skills', 'sdlc-conventions', 'SKILL.md'), 'utf8')
+  assert.match(skill, /^## Gate verdicts/m, 'conventions skill lacks a Gate verdicts section')
+  assert.match(skill, /VERDICT: PASS/, 'conventions skill does not state the VERDICT line format')
+  assert.match(skill, /WAIVED/, 'conventions skill does not state the WAIVED boundary')
+})
+
+// Invariant 1 (reviewer ≠ author) in the tool grants: gate reviewers/validators are
+// read-only. The naming rule catches future reviewers automatically; the explicit
+// GATE_AGENTS list covers the validators whose names don't say "reviewer".
+test('gate reviewers and validators hold no write tools (invariant 1)', () => {
+  const dir = join(ROOT, 'agents')
+  const namedReviewers = readdirSync(dir).filter(f => /reviewer/.test(f))
+  assert.ok(namedReviewers.length >= 6, 'reviewer naming rule matched fewer agents than expected')
+  for (const f of namedReviewers) {
+    assert.ok(GATE_AGENTS.includes(f), `${f} matches the reviewer naming rule but is not in GATE_AGENTS`)
+  }
+  for (const f of GATE_AGENTS) {
+    const fm = frontmatter(readFileSync(join(dir, f), 'utf8'))
+    const tools = fm.match(/tools:\s*(.+)/)[1].trim().split(/\s+/)
+    assert.ok(tools.includes('Read'), `${f}: reviewer lacks the Read tool`)
+    for (const t of ['Write', 'Edit', 'MultiEdit', 'NotebookEdit']) {
+      assert.ok(!tools.includes(t), `${f}: reviewer holds write tool ${t} — reviewers are read-only`)
+    }
+  }
+})
+
+// The sentinel lines are the deterministic-state protocol (invariant 2): agents report
+// lifecycle data in these exact templates and the orchestrator is the single writer.
+// Define has no agent counterpart — its playbook has the orchestrator count the files
+// and run the counts command itself.
+test('sentinel line templates are pinned at their sources', () => {
+  const pins = [
+    ['agents/sdlc-develop-reqs-sync.md',
+      /REQUIREMENT_COUNTS: functional=\S+ nonfunctional=\S+ user_stories=\S+/],
+    ['agents/sdlc-operate-feedback-loop.md', /CYCLE: assessment=\S+ next_cycle=\S+/],
+    ['agents/sdlc-develop-architect-planner.md', /PLAN_PATH: \S+/],
+    ['agents/sdlc-develop-architect-clarifier.md', /PLAN_PATH: \S+/],
+    ['phases/phase-2-define.md', /counts --functional/],
+  ]
+  for (const [p, re] of pins) {
+    assert.match(readFileSync(join(ROOT, p), 'utf8'), re, `${p}: sentinel template missing (${re})`)
+  }
+})
+
+// Model routing must assign every agent to exactly one tier (audit item 6): the table's
+// Agents column lists each agent's short name (filename minus the sdlc- prefix) in
+// backticks, so coverage is machine-checkable and can't drift when the roster changes.
+test('the model-routing table assigns all 35 agents to exactly one tier', () => {
+  const text = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
+  const assigned = []
+  for (const tier of ['full', 'standard', 'fast']) {
+    const row = text.split('\n').find(l => l.startsWith(`| **${tier}**`))
+    assert.ok(row, `no ${tier} tier row in the model-routing table`)
+    const agentsCell = row.split('|')[2] ?? ''
+    const names = [...agentsCell.matchAll(/`([a-z0-9-]+)`/g)].map(m => `sdlc-${m[1]}`)
+    assert.ok(names.length > 0, `${tier} tier row lists no backticked agent names`)
+    assigned.push(...names)
+  }
+  const dupes = assigned.filter((n, i) => assigned.indexOf(n) !== i)
+  assert.deepEqual(dupes, [], `agents assigned to more than one tier: ${dupes.join(', ')}`)
+  const roster = readdirSync(join(ROOT, 'agents'))
+    .filter(f => f.endsWith('.md')).map(f => f.replace(/\.md$/, ''))
+  assert.deepEqual(assigned.sort(), roster.sort(),
+    'routing table does not cover the agent roster exactly')
+})
+
 test('the HUMAN_REVIEW_REQUIRED escalation protocol is defined in the orchestrator', () => {
   const text = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
   assert.match(text, /^\s*HUMAN_REVIEW_REQUIRED\s*$/m, 'no HUMAN_REVIEW_REQUIRED block template')

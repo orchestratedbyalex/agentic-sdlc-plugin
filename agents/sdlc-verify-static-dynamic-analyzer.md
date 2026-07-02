@@ -98,6 +98,6 @@ not evidence.
   ```
 
 ### Verdict
-PASS — analysis clean
+VERDICT: PASS — analysis clean
   OR
-FAIL — <list blockers>
+VERDICT: FAIL — <list blockers>

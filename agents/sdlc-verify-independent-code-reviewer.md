@@ -83,6 +83,6 @@ STEP 3 — REPORT
 - [I-1] ...
 
 ### Verdict
-PASS — no blockers
+VERDICT: PASS — no blockers
   OR
-FAIL — <count> blockers, route to Phase 4
+VERDICT: FAIL — <count> blockers, route to Phase 4

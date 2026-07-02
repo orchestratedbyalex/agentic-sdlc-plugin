@@ -130,9 +130,9 @@ re-type or paraphrase them. Summary lines only, never the full log.
 | h | All plans have synced reqs | PASS | |
 
 ## Verdict
-READY FOR RELEASE — all gate conditions met.
+VERDICT: PASS (READY FOR RELEASE) — all gate conditions met.
   OR
-REWORK REQUIRED — <count> conditions failed:
+VERDICT: FAIL (REWORK REQUIRED) — <count> conditions failed:
   - [letter]: <description>
   - Route to: Phase 4 (specify agent: Code Author / Test Author /
     Architect Planner / Requirements Sync)
