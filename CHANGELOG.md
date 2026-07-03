@@ -10,6 +10,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-07-03
+
 ### Added
 - **Model profile surfaced at startup** — the `/sdlc` status board now shows the active model
   profile on every run, and first-time setup (`greenfield` / `existing`) offers a one-time pick
