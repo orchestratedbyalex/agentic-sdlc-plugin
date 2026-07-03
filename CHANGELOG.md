@@ -10,6 +10,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-07-03
+
 ### Added
 - **Complete deterministic write surface** for `sdlc-metadata.yml`: new state commands
   `brief`, `counts`, `plan-add`, and `cycle` (the last records the Operate assessment,
