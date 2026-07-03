@@ -1,0 +1,254 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1796" height="3343" viewBox="0 0 1796 3343">
+<rect width="100%" height="100%" fill="#f8fafc"/>
+<rect x="48.0" y="48.0" width="1030.0" height="1700.0" rx="6" fill="none" stroke="#c3ccd8" stroke-width="1.5" stroke-dasharray="2 4"/>
+<text x="48.0" y="40.0" font-size="13" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6">Overview — the lifecycle</text>
+<text x="218.0" y="95.6" font-size="30" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="start" opacity="1"><tspan x="218.0" dy="0">Agentic SDLC — how the plugin runs</tspan></text>
+<text x="218.0" y="123.8" font-size="15" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="218.0" dy="0">one command  ·  seven phases  ·  35 agents  ·  deterministic resumable state  ·  human-gated</tspan></text>
+<text x="218.0" y="145.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="218.0" dy="0">click a phase card → its detail frame · click a standard chip → the source</tspan></text>
+<rect x="323.0" y="162.0" width="160.0" height="50.0" rx="10" fill="#eef2f7" stroke="#14253c" stroke-width="2" opacity="1"/>
+<text x="403.0" y="196.2" font-size="22" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="middle" opacity="1"><tspan x="403.0" dy="0">/sdlc</tspan></text>
+<polygon points="403.0,242.0 528.0,294.0 403.0,346.0 278.0,294.0" fill="#eef2f7" stroke="#14253c" stroke-width="2" opacity="1"/>
+<text x="403.0" y="287.6" font-size="17" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="middle" opacity="1"><tspan x="403.0" dy="0">detect  state</tspan></text>
+<text x="403.0" y="309.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="middle" opacity="1"><tspan x="403.0" dy="0">greenfield · existing · resume</tspan></text>
+<path d="M403.0 212.0 L403.0 242.0" fill="none" stroke="#14253c" stroke-width="2" opacity="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="403.0,242.0 398.7,234.1 407.3,234.1" fill="#14253c" opacity="1"/>
+<rect x="238.0" y="390.0" width="330.0" height="80.0" rx="10" fill="#dbe7f5" stroke="#2f74c0" stroke-width="2" opacity="1"/>
+<text x="256.0" y="419.5" font-size="19" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="start" opacity="1"><tspan x="256.0" dy="0">1 · PREPARE</tspan></text>
+<rect x="417.0" y="402.0" width="139.0" height="23.0" rx="10" fill="#ffffffcc" stroke="#2f74c0" stroke-width="1" opacity="1"/>
+<text x="426.0" y="418.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#2f74c0" text-anchor="start" opacity="1"><tspan x="426.0" dy="0">ISO/IEC/IEEE 12207</tspan></text>
+<text x="256.0" y="448.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="256.0" dy="0">explorer  ▸  CLAUDE.md</tspan></text>
+<path d="M403.0 346.0 L403.0 390.0" fill="none" stroke="#14253c" stroke-width="2" opacity="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="403.0,390.0 398.7,382.1 407.3,382.1" fill="#14253c" opacity="1"/>
+<rect x="238.0" y="516.0" width="330.0" height="80.0" rx="10" fill="#d4ecf1" stroke="#1f8fab" stroke-width="2" opacity="1"/>
+<text x="256.0" y="545.5" font-size="19" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="start" opacity="1"><tspan x="256.0" dy="0">2 · DEFINE</tspan></text>
+<rect x="470.8" y="528.0" width="85.2" height="23.0" rx="10" fill="#ffffffcc" stroke="#1f8fab" stroke-width="1" opacity="1"/>
+<text x="479.8" y="544.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#1f8fab" text-anchor="start" opacity="1"><tspan x="479.8" dy="0">IEEE 12207</tspan></text>
+<text x="256.0" y="574.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="256.0" dy="0">analysts  ▸  authors  ▸  reviewer  ◇</tspan></text>
+<path d="M403.0 470.0 L403.0 516.0" fill="none" stroke="#14253c" stroke-width="2" opacity="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="403.0,516.0 398.7,508.1 407.3,508.1" fill="#14253c" opacity="1"/>
+<rect x="217.0" y="642.0" width="372.0" height="82.0" rx="10" fill="#fff3d6" stroke="#b07d12" stroke-width="1.5" opacity="1"/>
+<text x="235.0" y="666.9" font-size="14" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#8a5a00" text-anchor="start" opacity="1"><tspan x="235.0" dy="0">★  Sign off the requirements</tspan></text>
+<text x="235.0" y="688.7" font-size="10.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#7c6a38" text-anchor="start" opacity="1"><tspan x="235.0" dy="0">Approve the requirements before design starts;</tspan><tspan x="235.0" dy="13.1">they are the contract all later work is tested on.</tspan></text>
+<path d="M403.0 596.0 L403.0 642.0" fill="none" stroke="#b07d12" stroke-width="2" opacity="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="403.0,642.0 398.7,634.1 407.3,634.1" fill="#b07d12" opacity="1"/>
+<rect x="238.0" y="770.0" width="330.0" height="80.0" rx="10" fill="#d3ede9" stroke="#199183" stroke-width="2" opacity="1"/>
+<text x="256.0" y="799.5" font-size="19" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="start" opacity="1"><tspan x="256.0" dy="0">3 · DESIGN</tspan></text>
+<rect x="417.0" y="782.0" width="139.0" height="23.0" rx="10" fill="#ffffffcc" stroke="#199183" stroke-width="1" opacity="1"/>
+<text x="426.0" y="798.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#199183" text-anchor="start" opacity="1"><tspan x="426.0" dy="0">IEEE 1016 · MS SDL</tspan></text>
+<text x="256.0" y="828.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="256.0" dy="0">explorers  ▸  authors  ▸  reviewer  ◇</tspan></text>
+<path d="M403.0 724.0 L403.0 770.0" fill="none" stroke="#14253c" stroke-width="2" opacity="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="403.0,770.0 398.7,762.1 407.3,762.1" fill="#14253c" opacity="1"/>
+<rect x="217.0" y="896.0" width="372.0" height="82.0" rx="10" fill="#fff3d6" stroke="#b07d12" stroke-width="1.5" opacity="1"/>
+<text x="235.0" y="920.9" font-size="14" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#8a5a00" text-anchor="start" opacity="1"><tspan x="235.0" dy="0">★  Accept the ADR trade-offs</tspan></text>
+<text x="235.0" y="942.7" font-size="10.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#7c6a38" text-anchor="start" opacity="1"><tspan x="235.0" dy="0">Accept or revise the architecture decisions.</tspan><tspan x="235.0" dy="13.1">Trade-offs outlive the code, so you own them.</tspan></text>
+<path d="M403.0 850.0 L403.0 896.0" fill="none" stroke="#b07d12" stroke-width="2" opacity="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="403.0,896.0 398.7,888.1 407.3,888.1" fill="#b07d12" opacity="1"/>
+<rect x="238.0" y="1024.0" width="330.0" height="80.0" rx="10" fill="#d7efe2" stroke="#2f9a64" stroke-width="2" opacity="1"/>
+<text x="256.0" y="1053.5" font-size="19" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="start" opacity="1"><tspan x="256.0" dy="0">4 · DEVELOP</tspan></text>
+<rect x="450.6" y="1036.0" width="105.4" height="23.0" rx="10" fill="#ffffffcc" stroke="#2f9a64" stroke-width="1" opacity="1"/>
+<text x="459.6" y="1052.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#2f9a64" text-anchor="start" opacity="1"><tspan x="459.6" dy="0">Microsoft SDL</tspan></text>
+<text x="256.0" y="1082.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="256.0" dy="0">plan  ▸  code + tests  ▸  review  ◇</tspan></text>
+<path d="M403.0 978.0 L403.0 1024.0" fill="none" stroke="#14253c" stroke-width="2" opacity="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="403.0,1024.0 398.7,1016.1 407.3,1016.1" fill="#14253c" opacity="1"/>
+<rect x="238.0" y="1150.0" width="330.0" height="80.0" rx="10" fill="#e7efd7" stroke="#6f9a36" stroke-width="2" opacity="1"/>
+<text x="256.0" y="1179.5" font-size="19" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="start" opacity="1"><tspan x="256.0" dy="0">5 · VERIFY</tspan></text>
+<rect x="396.9" y="1162.0" width="159.1" height="23.0" rx="10" fill="#ffffffcc" stroke="#6f9a36" stroke-width="1" opacity="1"/>
+<text x="405.9" y="1178.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#6f9a36" text-anchor="start" opacity="1"><tspan x="405.9" dy="0">IEEE 1012 · ISO 25010</tspan></text>
+<text x="256.0" y="1208.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="256.0" dy="0">4 checks ∥  ▸  validation  ◇</tspan></text>
+<path d="M403.0 1104.0 L403.0 1150.0" fill="none" stroke="#14253c" stroke-width="2" opacity="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="403.0,1150.0 398.7,1142.1 407.3,1142.1" fill="#14253c" opacity="1"/>
+<rect x="238.0" y="1276.0" width="330.0" height="104.0" rx="10" fill="#f2e9cf" stroke="#b3851f" stroke-width="2" opacity="1"/>
+<text x="256.0" y="1305.5" font-size="19" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="start" opacity="1"><tspan x="256.0" dy="0">6 · RELEASE</tspan></text>
+<rect x="497.7" y="1288.0" width="58.3" height="23.0" rx="10" fill="#ffffffcc" stroke="#b3851f" stroke-width="1" opacity="1"/>
+<text x="506.7" y="1304.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#b3851f" text-anchor="start" opacity="1"><tspan x="506.7" dy="0">ITIL 4</tspan></text>
+<text x="256.0" y="1334.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="256.0" dy="0">planner  ▸  author  ▸  reviewer  ◇</tspan></text>
+<text x="256.0" y="1361.5" font-size="12.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#8a4b1a" text-anchor="start" opacity="1"><tspan x="256.0" dy="0">🔒  commit / tag / push  =  human-gated ask</tspan></text>
+<path d="M403.0 1230.0 L403.0 1276.0" fill="none" stroke="#14253c" stroke-width="2" opacity="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="403.0,1276.0 398.7,1268.1 407.3,1268.1" fill="#14253c" opacity="1"/>
+<rect x="238.0" y="1426.0" width="330.0" height="80.0" rx="10" fill="#f5e2d6" stroke="#bd5f34" stroke-width="2" opacity="1"/>
+<text x="256.0" y="1455.5" font-size="19" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="start" opacity="1"><tspan x="256.0" dy="0">7 · OPERATE</tspan></text>
+<rect x="370.0" y="1438.0" width="186.0" height="23.0" rx="10" fill="#ffffffcc" stroke="#bd5f34" stroke-width="1" opacity="1"/>
+<text x="379.0" y="1454.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#bd5f34" text-anchor="start" opacity="1"><tspan x="379.0" dy="0">ITIL 4 · ISO 27001 · DORA</tspan></text>
+<text x="256.0" y="1484.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="256.0" dy="0">triage · monitors  ▸  feedback loop</tspan></text>
+<path d="M403.0 1380.0 L403.0 1426.0" fill="none" stroke="#14253c" stroke-width="2" opacity="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="403.0,1426.0 398.7,1418.1 407.3,1418.1" fill="#14253c" opacity="1"/>
+<rect x="217.0" y="1552.0" width="372.0" height="82.0" rx="10" fill="#fff3d6" stroke="#b07d12" stroke-width="1.5" opacity="1"/>
+<text x="235.0" y="1576.9" font-size="14" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#8a5a00" text-anchor="start" opacity="1"><tspan x="235.0" dy="0">★  Cycle go / no-go</tspan></text>
+<text x="235.0" y="1598.7" font-size="10.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#7c6a38" text-anchor="start" opacity="1"><tspan x="235.0" dy="0">Decide if the next cycle runs, and its scope</tspan><tspan x="235.0" dy="13.1">(go / defer / override). It never self-starts.</tspan></text>
+<path d="M403.0 1506.0 L403.0 1552.0" fill="none" stroke="#b07d12" stroke-width="2" opacity="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="403.0,1552.0 398.7,1544.1 407.3,1544.1" fill="#b07d12" opacity="1"/>
+<path d="M403.0 1634.0 L403.0 1664.0" fill="none" stroke="#bd5f34" stroke-width="2" opacity="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="403.0,1664.0 398.7,1656.1 407.3,1656.1" fill="#bd5f34" opacity="1"/>
+<text x="403.0" y="1680.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#a24a22" text-anchor="middle" opacity="1"><tspan x="403.0" dy="0">↺  loop back to Define — next cycle</tspan></text>
+<ellipse cx="788.0" cy="397.0" rx="130.0" ry="13.0" fill="#eceff4" stroke="#495b73" stroke-width="1.5" opacity="1"/>
+<rect x="658.0" y="397.0" width="260.0" height="1115.0" rx="0" fill="#eceff4" stroke="#495b73" stroke-width="1.5" opacity="1"/>
+<ellipse cx="788.0" cy="1499.0" rx="130.0" ry="13.0" fill="#eceff4" stroke="#495b73" stroke-width="1.5" opacity="1"/>
+<text x="680.0" y="424.6" font-size="18" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#2b3a4f" text-anchor="start" opacity="1"><tspan x="680.0" dy="0">STATE</tspan></text>
+<text x="680.0" y="446.0" font-size="13" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#495b73" text-anchor="start" opacity="1"><tspan x="680.0" dy="0">sdlc-metadata.yml</tspan></text>
+<text x="680.0" y="477.5" font-size="12.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="680.0" dy="0">written ONLY by</tspan><tspan x="680.0" dy="15.6">sdlc-state.mjs</tspan><tspan x="680.0" dy="15.6"> </tspan><tspan x="680.0" dy="15.6">· phase + agent</tspan><tspan x="680.0" dy="15.6">  status</tspan><tspan x="680.0" dy="15.6">· runtime:</tspan><tspan x="680.0" dy="15.6">   gate strikes</tspan><tspan x="680.0" dy="15.6">   verify cycle</tspan><tspan x="680.0" dy="15.6">   active plan</tspan><tspan x="680.0" dy="15.6">   verdict log</tspan><tspan x="680.0" dy="15.6"> </tspan><tspan x="680.0" dy="15.6">→ resumable</tspan><tspan x="680.0" dy="15.6">   mid-loop</tspan></text>
+<path d="M568.0 416.0 L658.0 416.0" fill="none" stroke="#8792a3" stroke-width="1" opacity="0.65" stroke-dasharray="6 5" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="658.0,416.0 650.1,420.3 650.1,411.7" fill="#8792a3" opacity="0.65"/>
+<path d="M568.0 542.0 L658.0 542.0" fill="none" stroke="#8792a3" stroke-width="1" opacity="0.65" stroke-dasharray="6 5" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="658.0,542.0 650.1,546.3 650.1,537.7" fill="#8792a3" opacity="0.65"/>
+<path d="M568.0 796.0 L658.0 796.0" fill="none" stroke="#8792a3" stroke-width="1" opacity="0.65" stroke-dasharray="6 5" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="658.0,796.0 650.1,800.3 650.1,791.7" fill="#8792a3" opacity="0.65"/>
+<path d="M568.0 1050.0 L658.0 1050.0" fill="none" stroke="#8792a3" stroke-width="1" opacity="0.65" stroke-dasharray="6 5" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="658.0,1050.0 650.1,1054.3 650.1,1045.7" fill="#8792a3" opacity="0.65"/>
+<path d="M568.0 1176.0 L658.0 1176.0" fill="none" stroke="#8792a3" stroke-width="1" opacity="0.65" stroke-dasharray="6 5" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="658.0,1176.0 650.1,1180.3 650.1,1171.7" fill="#8792a3" opacity="0.65"/>
+<path d="M568.0 1302.0 L658.0 1302.0" fill="none" stroke="#8792a3" stroke-width="1" opacity="0.65" stroke-dasharray="6 5" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="658.0,1302.0 650.1,1306.3 650.1,1297.7" fill="#8792a3" opacity="0.65"/>
+<path d="M568.0 1452.0 L658.0 1452.0" fill="none" stroke="#8792a3" stroke-width="1" opacity="0.65" stroke-dasharray="6 5" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="658.0,1452.0 650.1,1456.3 650.1,1447.7" fill="#8792a3" opacity="0.65"/>
+<text x="788.0" y="1532.1" font-size="11" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="middle" opacity="1"><tspan x="788.0" dy="0">┄ every phase persists here ┄</tspan></text>
+<path d="M238.0 1174.0 L192.0 1174.0 L192.0 1082.0 L238.0 1082.0" fill="none" stroke="#c0562a" stroke-width="1.75" opacity="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="238.0,1082.0 230.1,1086.3 230.1,1077.7" fill="#c0562a" opacity="1"/>
+<text x="142.9" y="1130.1" font-size="11" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#b0491f" text-anchor="start" opacity="1"><tspan x="142.9" dy="0">FAIL</tspan><tspan x="142.9" dy="13.8">reopen</tspan><tspan x="142.9" dy="13.8">Develop</tspan><tspan x="142.9" dy="13.8">(≤3×)</tspan></text>
+<path d="M238.0 1300.0 L142.0 1300.0 L142.0 1208.0 L238.0 1208.0" fill="none" stroke="#c0562a" stroke-width="1.75" opacity="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="238.0,1208.0 230.1,1212.3 230.1,1203.7" fill="#c0562a" opacity="1"/>
+<text x="99.0" y="1256.1" font-size="11" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#b0491f" text-anchor="start" opacity="1"><tspan x="99.0" dy="0">FAIL</tspan><tspan x="99.0" dy="13.8">reopen</tspan><tspan x="99.0" dy="13.8">Verify</tspan></text>
+<path d="M403.0 1664.0 L88.0 1664.0 L88.0 540.0 L238.0 540.0" fill="none" stroke="#bd5f34" stroke-width="2" opacity="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="238.0,540.0 230.1,544.3 230.1,535.7" fill="#bd5f34" opacity="1"/>
+<rect x="658.0" y="150.0" width="260.0" height="152.0" rx="10" fill="#ffffff" stroke="#c3ccd8" stroke-width="1" opacity="1"/>
+<text x="674.0" y="173.0" font-size="12" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="674.0" dy="0">legend</tspan></text>
+<text x="674.0" y="195.5" font-size="12.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="674.0" dy="0">▭  phase (click → detail)</tspan><tspan x="674.0" dy="15.6">◇  validation gate</tspan><tspan x="674.0" dy="15.6">★  human checkpoint</tspan><tspan x="674.0" dy="15.6">┄  writes state</tspan><tspan x="674.0" dy="15.6">🔒 git = human-gated ask</tspan><tspan x="674.0" dy="15.6">↩  gate FAIL routes back</tspan><tspan x="674.0" dy="15.6">↺  loop to next cycle</tspan></text>
+<rect x="1148.0" y="54.0" width="600.0" height="312.0" rx="6" fill="none" stroke="#c3ccd8" stroke-width="1.5" stroke-dasharray="2 4"/>
+<text x="1148.0" y="46.0" font-size="13" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6">1 · PREPARE — detail</text>
+<text x="1174.0" y="96.2" font-size="22" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">1 · PREPARE</tspan></text>
+<text x="1174.0" y="120.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">Map the project; write a CLAUDE.md the agents can trust.</tspan></text>
+<rect x="1174.0" y="134.0" width="139.0" height="23.0" rx="10" fill="#ffffff" stroke="#2f74c0" stroke-width="1" opacity="1"/>
+<text x="1183.0" y="150.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#2f74c0" text-anchor="start" opacity="1"><tspan x="1183.0" dy="0">ISO/IEC/IEEE 12207</tspan></text>
+<text x="1174.0" y="178.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">AGENTS</tspan></text>
+<text x="1174.0" y="200.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">→:   explorer · claude-md</tspan></text>
+<text x="1174.0" y="226.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">PRODUCES</tspan></text>
+<text x="1174.0" y="248.0" font-size="13" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#2b7a4b" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">CLAUDE.md   ·   initial sdlc-metadata.yml</tspan></text>
+<text x="1174.0" y="274.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">STATE</tspan></text>
+<text x="1174.0" y="295.5" font-size="12.5" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">sdlc-state.mjs  init  (creates metadata · sets model profile)</tspan></text>
+<rect x="1640.8" y="318.0" width="87.2" height="26.0" rx="10" fill="#eef2f7" stroke="#6b7b90" stroke-width="1" opacity="1"/>
+<text x="1648.8" y="335.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#1e5fa8" text-anchor="start" opacity="1"><tspan x="1648.8" dy="0">← Overview</tspan></text>
+<rect x="1148.0" y="422.0" width="600.0" height="450.0" rx="6" fill="none" stroke="#c3ccd8" stroke-width="1.5" stroke-dasharray="2 4"/>
+<text x="1148.0" y="414.0" font-size="13" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6">2 · DEFINE — detail</text>
+<text x="1174.0" y="464.2" font-size="22" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">2 · DEFINE</tspan></text>
+<text x="1174.0" y="488.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">Turn the idea into numbered, testable requirements + user stories.</tspan></text>
+<rect x="1174.0" y="502.0" width="139.0" height="23.0" rx="10" fill="#ffffff" stroke="#1f8fab" stroke-width="1" opacity="1"/>
+<text x="1183.0" y="518.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#1f8fab" text-anchor="start" opacity="1"><tspan x="1183.0" dy="0">ISO/IEC/IEEE 12207</tspan></text>
+<text x="1174.0" y="546.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">AGENTS</tspan></text>
+<text x="1174.0" y="568.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">∥ analyze:   source · test · nfr</tspan></text>
+<text x="1174.0" y="590.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">∥ author:   FR · NFR · US</tspan></text>
+<text x="1174.0" y="612.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#7a5a12" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">◇ gate:   requirement-reviewer</tspan></text>
+<text x="1188.0" y="629.6" font-size="11.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="1188.0" dy="0">completeness · testability · traceability</tspan></text>
+<text x="1174.0" y="653.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">PRODUCES</tspan></text>
+<text x="1174.0" y="675.0" font-size="13" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#2b7a4b" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">FR-*  ·  NFR-*  ·  US-*   (numbered)</tspan></text>
+<text x="1174.0" y="701.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">STATE</tspan></text>
+<text x="1174.0" y="722.5" font-size="12.5" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">sdlc-state.mjs  brief  ·  counts  (REQUIREMENT_COUNTS)</tspan></text>
+<text x="1174.0" y="747.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">HUMAN</tspan></text>
+<text x="1174.0" y="769.0" font-size="13" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#8a5a00" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">★  sign off the requirements</tspan></text>
+<text x="1190.0" y="786.1" font-size="11" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="1190.0" dy="0">Approve the requirements before design starts;</tspan><tspan x="1190.0" dy="13.8">they are the contract all later work is tested on.</tspan></text>
+<rect x="1640.8" y="824.0" width="87.2" height="26.0" rx="10" fill="#eef2f7" stroke="#6b7b90" stroke-width="1" opacity="1"/>
+<text x="1648.8" y="841.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#1e5fa8" text-anchor="start" opacity="1"><tspan x="1648.8" dy="0">← Overview</tspan></text>
+<rect x="1148.0" y="928.0" width="600.0" height="450.0" rx="6" fill="none" stroke="#c3ccd8" stroke-width="1.5" stroke-dasharray="2 4"/>
+<text x="1148.0" y="920.0" font-size="13" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6">3 · DESIGN — detail</text>
+<text x="1174.0" y="970.2" font-size="22" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">3 · DESIGN</tspan></text>
+<text x="1174.0" y="994.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">Decide how to build it — architecture, specs, decisions, threats.</tspan></text>
+<rect x="1174.0" y="1008.0" width="78.5" height="23.0" rx="10" fill="#ffffff" stroke="#199183" stroke-width="1" opacity="1"/>
+<text x="1183.0" y="1024.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#199183" text-anchor="start" opacity="1"><tspan x="1183.0" dy="0">IEEE 1016</tspan></text>
+<rect x="1260.5" y="1008.0" width="105.4" height="23.0" rx="10" fill="#ffffff" stroke="#199183" stroke-width="1" opacity="1"/>
+<text x="1269.5" y="1024.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#199183" text-anchor="start" opacity="1"><tspan x="1269.5" dy="0">Microsoft SDL</tspan></text>
+<rect x="1373.8" y="1008.0" width="91.9" height="23.0" rx="10" fill="#ffffff" stroke="#199183" stroke-width="1" opacity="1"/>
+<text x="1382.8" y="1024.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#199183" text-anchor="start" opacity="1"><tspan x="1382.8" dy="0">Nygard ADRs</tspan></text>
+<text x="1174.0" y="1052.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">AGENTS</tspan></text>
+<text x="1174.0" y="1074.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">∥ explore:   architecture · decisions</tspan></text>
+<text x="1174.0" y="1096.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">∥ author:   architecture · component-spec · adr+traceability</tspan></text>
+<text x="1174.0" y="1118.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#7a5a12" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">◇ gate:   design-reviewer</tspan></text>
+<text x="1188.0" y="1135.6" font-size="11.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="1188.0" dy="0">traceability · ADR soundness · STRIDE-lite</tspan></text>
+<text x="1174.0" y="1159.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">PRODUCES</tspan></text>
+<text x="1174.0" y="1181.0" font-size="13" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#2b7a4b" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">architecture · component specs · ADRs (proposed) · threat model</tspan></text>
+<text x="1174.0" y="1207.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">STATE</tspan></text>
+<text x="1174.0" y="1228.5" font-size="12.5" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">sdlc-state.mjs  gate-log  ·  ADRs = proposed</tspan></text>
+<text x="1174.0" y="1253.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">HUMAN</tspan></text>
+<text x="1174.0" y="1275.0" font-size="13" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#8a5a00" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">★  accept the ADR trade-offs  (proposed → accepted)</tspan></text>
+<text x="1190.0" y="1292.1" font-size="11" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="1190.0" dy="0">Accept or revise the architecture decisions.</tspan><tspan x="1190.0" dy="13.8">Trade-offs outlive the code, so you own them.</tspan></text>
+<rect x="1640.8" y="1330.0" width="87.2" height="26.0" rx="10" fill="#eef2f7" stroke="#6b7b90" stroke-width="1" opacity="1"/>
+<text x="1648.8" y="1347.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#1e5fa8" text-anchor="start" opacity="1"><tspan x="1648.8" dy="0">← Overview</tspan></text>
+<rect x="1148.0" y="1434.0" width="600.0" height="393.0" rx="6" fill="none" stroke="#c3ccd8" stroke-width="1.5" stroke-dasharray="2 4"/>
+<text x="1148.0" y="1426.0" font-size="13" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6">4 · DEVELOP — detail</text>
+<text x="1174.0" y="1476.2" font-size="22" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">4 · DEVELOP</tspan></text>
+<text x="1174.0" y="1500.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">Plan, then implement + test — sized to the change tier — and review.</tspan></text>
+<rect x="1174.0" y="1514.0" width="105.4" height="23.0" rx="10" fill="#ffffff" stroke="#2f9a64" stroke-width="1" opacity="1"/>
+<text x="1183.0" y="1530.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#2f9a64" text-anchor="start" opacity="1"><tspan x="1183.0" dy="0">Microsoft SDL</tspan></text>
+<text x="1174.0" y="1558.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">AGENTS</tspan></text>
+<text x="1174.0" y="1580.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">→:   reqs-sync · clarifier · planner</tspan></text>
+<text x="1174.0" y="1602.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">∥ build:   code · test · implementer</tspan></text>
+<text x="1174.0" y="1624.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#7a5a12" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">◇ gate:   code-reviewer</tspan></text>
+<text x="1188.0" y="1641.6" font-size="11.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="1188.0" dy="0">diff-aware · reviewer≠author · tests · security</tspan></text>
+<text x="1174.0" y="1665.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">PRODUCES</tspan></text>
+<text x="1174.0" y="1687.0" font-size="13" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#2b7a4b" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">staged code + tests  ·  PLAN-*   (tier: trivial / standard / complex)</tspan></text>
+<text x="1174.0" y="1713.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">STATE</tspan></text>
+<text x="1174.0" y="1734.5" font-size="12.5" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">sdlc-state.mjs  plan-add · plan-active · clarifier-round · strikes</tspan></text>
+<text x="1174.0" y="1760.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#b0491f" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">↩  reopened by Verify on REWORK</tspan></text>
+<rect x="1640.8" y="1779.0" width="87.2" height="26.0" rx="10" fill="#eef2f7" stroke="#6b7b90" stroke-width="1" opacity="1"/>
+<text x="1648.8" y="1796.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#1e5fa8" text-anchor="start" opacity="1"><tspan x="1648.8" dy="0">← Overview</tspan></text>
+<rect x="1148.0" y="1883.0" width="600.0" height="393.0" rx="6" fill="none" stroke="#c3ccd8" stroke-width="1.5" stroke-dasharray="2 4"/>
+<text x="1148.0" y="1875.0" font-size="13" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6">5 · VERIFY — detail</text>
+<text x="1174.0" y="1925.2" font-size="22" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">5 · VERIFY</tspan></text>
+<text x="1174.0" y="1949.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">Prove it works — coverage, independent review, real build, regression.</tspan></text>
+<rect x="1174.0" y="1963.0" width="78.5" height="23.0" rx="10" fill="#ffffff" stroke="#6f9a36" stroke-width="1" opacity="1"/>
+<text x="1183.0" y="1979.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#6f9a36" text-anchor="start" opacity="1"><tspan x="1183.0" dy="0">IEEE 1012</tspan></text>
+<rect x="1260.5" y="1963.0" width="105.4" height="23.0" rx="10" fill="#ffffff" stroke="#6f9a36" stroke-width="1" opacity="1"/>
+<text x="1269.5" y="1979.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#6f9a36" text-anchor="start" opacity="1"><tspan x="1269.5" dy="0">ISO/IEC 25010</tspan></text>
+<text x="1174.0" y="2007.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">AGENTS</tspan></text>
+<text x="1174.0" y="2029.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">∥ verify:   coverage · independent-review · static/dynamic · regression</tspan></text>
+<text x="1174.0" y="2051.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">→ validate:   validation-reviewer</tspan></text>
+<text x="1174.0" y="2073.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#7a5a12" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">◇ gate:   validation-reviewer</tspan></text>
+<text x="1188.0" y="2090.6" font-size="11.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="1188.0" dy="0">re-runs suite (d2) · real build exits 0 (c2) · blockers fixed</tspan></text>
+<text x="1174.0" y="2114.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">PRODUCES</tspan></text>
+<text x="1174.0" y="2136.0" font-size="13" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#2b7a4b" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">verification reports (verbatim evidence)  ·  UAT</tspan></text>
+<text x="1174.0" y="2162.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">STATE</tspan></text>
+<text x="1174.0" y="2183.5" font-size="12.5" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">sdlc-state.mjs  gate-log  ·  verify cycle</tspan></text>
+<text x="1174.0" y="2209.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#b0491f" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">↩  FAIL → reopen Develop, bounded ≤3× → HUMAN_REVIEW_REQUIRED</tspan></text>
+<rect x="1640.8" y="2228.0" width="87.2" height="26.0" rx="10" fill="#eef2f7" stroke="#6b7b90" stroke-width="1" opacity="1"/>
+<text x="1648.8" y="2245.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#1e5fa8" text-anchor="start" opacity="1"><tspan x="1648.8" dy="0">← Overview</tspan></text>
+<rect x="1148.0" y="2332.0" width="600.0" height="450.0" rx="6" fill="none" stroke="#c3ccd8" stroke-width="1.5" stroke-dasharray="2 4"/>
+<text x="1148.0" y="2324.0" font-size="13" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6">6 · RELEASE — detail</text>
+<text x="1174.0" y="2374.2" font-size="22" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">6 · RELEASE</tspan></text>
+<text x="1174.0" y="2398.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">Changelog, version bump, staged commit + tag + rollback plan.</tspan></text>
+<rect x="1174.0" y="2412.0" width="58.3" height="23.0" rx="10" fill="#ffffff" stroke="#b3851f" stroke-width="1" opacity="1"/>
+<text x="1183.0" y="2428.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#b3851f" text-anchor="start" opacity="1"><tspan x="1183.0" dy="0">ITIL 4</tspan></text>
+<text x="1174.0" y="2456.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">AGENTS</tspan></text>
+<text x="1174.0" y="2478.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">→:   planner · author · reviewer</tspan></text>
+<text x="1174.0" y="2500.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#7a5a12" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">◇ gate:   release-reviewer</tspan></text>
+<text x="1188.0" y="2517.6" font-size="11.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="1188.0" dy="0">8-point  ·  incl. CHECK 8 rollback readiness</tspan></text>
+<text x="1174.0" y="2541.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">PRODUCES</tspan></text>
+<text x="1174.0" y="2563.0" font-size="13" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#2b7a4b" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">CHANGELOG · version bump · staged commit + tag · rollback plan</tspan></text>
+<text x="1174.0" y="2589.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">STATE</tspan></text>
+<text x="1174.0" y="2610.5" font-size="12.5" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">sdlc-state.mjs  gate-log</tspan></text>
+<text x="1174.0" y="2635.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">HUMAN</tspan></text>
+<text x="1174.0" y="2657.0" font-size="13" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#8a5a00" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">🔒  commit / tag / push  =  human-gated ask</tspan></text>
+<text x="1190.0" y="2674.1" font-size="11" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="1190.0" dy="0">Approve each publish when the guardrail asks.</tspan><tspan x="1190.0" dy="13.8">It is outward-facing and hard to undo — you are the gate.</tspan></text>
+<text x="1174.0" y="2715.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#b0491f" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">↩  FAIL → reopen Verify</tspan></text>
+<rect x="1640.8" y="2734.0" width="87.2" height="26.0" rx="10" fill="#eef2f7" stroke="#6b7b90" stroke-width="1" opacity="1"/>
+<text x="1648.8" y="2751.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#1e5fa8" text-anchor="start" opacity="1"><tspan x="1648.8" dy="0">← Overview</tspan></text>
+<rect x="1148.0" y="2838.0" width="600.0" height="457.0" rx="6" fill="none" stroke="#c3ccd8" stroke-width="1.5" stroke-dasharray="2 4"/>
+<text x="1148.0" y="2830.0" font-size="13" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6">7 · OPERATE — detail</text>
+<text x="1174.0" y="2880.2" font-size="22" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#14253c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">7 · OPERATE</tspan></text>
+<text x="1174.0" y="2904.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">Run &amp; learn — triage, monitor, compare health, feed the next cycle.</tspan></text>
+<rect x="1174.0" y="2918.0" width="58.3" height="23.0" rx="10" fill="#ffffff" stroke="#bd5f34" stroke-width="1" opacity="1"/>
+<text x="1183.0" y="2934.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#bd5f34" text-anchor="start" opacity="1"><tspan x="1183.0" dy="0">ITIL 4</tspan></text>
+<rect x="1240.3" y="2918.0" width="105.4" height="23.0" rx="10" fill="#ffffff" stroke="#bd5f34" stroke-width="1" opacity="1"/>
+<text x="1249.3" y="2934.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#bd5f34" text-anchor="start" opacity="1"><tspan x="1249.3" dy="0">ISO/IEC 27001</tspan></text>
+<rect x="1353.7" y="2918.0" width="44.9" height="23.0" rx="10" fill="#ffffff" stroke="#bd5f34" stroke-width="1" opacity="1"/>
+<text x="1362.7" y="2934.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#bd5f34" text-anchor="start" opacity="1"><tspan x="1362.7" dy="0">DORA</tspan></text>
+<text x="1174.0" y="2962.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">AGENTS</tspan></text>
+<text x="1174.0" y="2984.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">monitor:   triage · incident · dependency · telemetry</tspan></text>
+<text x="1174.0" y="3006.4" font-size="13.5" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">→ synthesize:   feedback-loop</tspan></text>
+<text x="1174.0" y="3032.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">PRODUCES</tspan></text>
+<text x="1174.0" y="3054.0" font-size="13" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#2b7a4b" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">incident / dep / telemetry reports · post-release health</tspan><tspan x="1174.0" dy="16.3">accreted CLAUDE.md lessons · next-cycle proposal (CYCLE)</tspan></text>
+<text x="1174.0" y="3102.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">STATE</tspan></text>
+<text x="1174.0" y="3123.5" font-size="12.5" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#33455c" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">sdlc-state.mjs  cycle</tspan></text>
+<text x="1174.0" y="3148.1" font-size="11" font-family="ui-monospace,Menlo,Consolas,monospace" fill="#8794a6" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">HUMAN</tspan></text>
+<text x="1174.0" y="3170.0" font-size="13" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#8a5a00" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">★  cycle  go / no-go   → loops to Define</tspan></text>
+<text x="1190.0" y="3187.1" font-size="11" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#5a6b82" text-anchor="start" opacity="1"><tspan x="1190.0" dy="0">Decide if the next cycle runs, and its scope</tspan><tspan x="1190.0" dy="13.8">(go / defer / override). It never self-starts.</tspan></text>
+<text x="1174.0" y="3228.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#b0491f" text-anchor="start" opacity="1"><tspan x="1174.0" dy="0">↺  next cycle → Define</tspan></text>
+<rect x="1640.8" y="3247.0" width="87.2" height="26.0" rx="10" fill="#eef2f7" stroke="#6b7b90" stroke-width="1" opacity="1"/>
+<text x="1648.8" y="3264.0" font-size="12" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive,sans-serif" fill="#1e5fa8" text-anchor="start" opacity="1"><tspan x="1648.8" dy="0">← Overview</tspan></text>
+</svg>
