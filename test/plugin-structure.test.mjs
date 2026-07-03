@@ -291,6 +291,57 @@ test('the three human checkpoints are wired at their altitudes (Define, Design, 
   assert.match(reviewer, /proposed/, 'the design gate would FAIL proposed (pre-sign-off) ADRs')
 })
 
+test('the eval harness is wired: opt-in runner, cases naming real agents and complete fixtures', async () => {
+  assert.ok(existsSync(join(ROOT, 'evals', 'run.mjs')), 'evals/run.mjs is missing')
+  // the runner is billed (it invokes real models) — it must be opt-in, never a side effect
+  assert.match(readFileSync(join(ROOT, 'evals', 'run.mjs'), 'utf8'), /SDLC_EVALS/, 'run.mjs has no SDLC_EVALS opt-in gate')
+  const { CASES } = await import('../evals/cases.mjs')
+  assert.ok(Array.isArray(CASES) && CASES.length >= 2, 'the case table is empty')
+  const ids = new Set()
+  for (const c of CASES) {
+    assert.ok(c.id && !ids.has(c.id), `case id missing or duplicated: ${c.id}`)
+    ids.add(c.id)
+    assert.ok(existsSync(join(ROOT, 'agents', `${c.agent}.md`)), `${c.id}: agent ${c.agent} does not exist`)
+    assert.ok(['PASS', 'FAIL'].includes(c.expect.verdict), `${c.id}: expected verdict must be PASS or FAIL`)
+    const fixture = join(ROOT, 'evals', 'fixtures', c.fixture)
+    // the analyzer's read set: project commands, package manifest, and SDLC metadata
+    for (const required of ['CLAUDE.md', 'package.json', join('docs', 'requirements', 'sdlc-metadata.yml')]) {
+      assert.ok(existsSync(join(fixture, required)), `${c.id}: fixture ${c.fixture} lacks ${required}`)
+    }
+  }
+})
+
+test('eval fixtures cannot leak into node --test discovery', () => {
+  // node --test executes **/*.test.js|mjs|cjs anywhere and EVERY .js|mjs|cjs under any
+  // directory named test/ — a fixture matching either would run (and fail) the plugin's
+  // own model-free suite, so fixture suites live in spec/*.check.mjs instead
+  const offenders = []
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name)
+      if (entry.isDirectory()) {
+        if (entry.name === 'test') offenders.push(`${path} (directory named test)`)
+        walk(path)
+      } else if (/\.(c|m)?js$/.test(entry.name)) {
+        if (/(^|[-_.])test\.(c|m)?js$/.test(entry.name) || /^test-/.test(entry.name)) offenders.push(path)
+      }
+    }
+  }
+  walk(join(ROOT, 'evals'))
+  assert.deepEqual(offenders, [], `these eval files would be executed by node --test: ${offenders.join(', ')}`)
+  // and the inverse: everything executable under test/ must BE a *.test.mjs suite
+  const strays = []
+  const walkTests = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name)
+      if (entry.isDirectory()) walkTests(path)
+      else if (/\.(c|m)?js$/.test(entry.name) && !/\.test\.mjs$/.test(entry.name)) strays.push(path)
+    }
+  }
+  walkTests(join(ROOT, 'test'))
+  assert.deepEqual(strays, [], `non-test executables under test/ would be run by node --test: ${strays.join(', ')}`)
+})
+
 test('the route-back recovery mechanics (reopen + evidence) are wired into the wizard and playbooks', () => {
   const sdlc = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
   // Step 5: per-agent checkpointing is encouraged, phase completion carries an attestation,

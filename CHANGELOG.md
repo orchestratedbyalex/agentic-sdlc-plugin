@@ -87,6 +87,24 @@ All notable changes to this project are documented here. The format follows
   and from the feedback loop's `CYCLE:` line straight into a new cycle. Sign-offs land in
   the phase's `--evidence` attestation; structure tests pin the protocol, the exactly-three
   rule, and the wiring at all three altitudes.
+- **An eval harness for the plugin's own agents** (`evals/` — previously the plugin had
+  zero evals of its 35 agents; a live run is a demo, not an eval): golden target-repo
+  fixtures with labelled outcomes are driven headless through the real plugin
+  (`claude -p --plugin-dir .` dispatching the named subagent inside a throwaway copy of
+  the fixture) and asserted mechanically on the gate report's machine-parsable
+  `VERDICT:` line plus the verbatim-evidence contract — never an LLM judging an LLM.
+  Slice 1 covers the Verify **static & dynamic analyzer** across three labels: a clean
+  project must PASS (with evidence quoting the build's own output), a
+  tests-green-but-build-exits-1 project must FAIL (the proxy trap behind design
+  invariant 3), and a no-build-step interpreted project must PASS while saying so
+  explicitly instead of inventing a build. The runner is **billed and strictly opt-in**
+  (`SDLC_EVALS=1 node evals/run.mjs`) and never part of `node --test`; structure tests
+  pin the opt-in gate, that every case names a real agent and a complete fixture, and
+  that nothing under `evals/` can leak into `node --test` discovery (which executes any
+  `*.test.mjs` anywhere and any `.mjs` under a `test/` directory — fixture suites are
+  therefore `spec/*.check.mjs`). The long-dead `test/fixtures/` tree was removed, and
+  the repo `.gitignore`'s `docs/` rule was scoped to the root (`/docs/`) so fixture
+  metadata can be committed.
 - A defined **`HUMAN_REVIEW_REQUIRED` escalation protocol**: every playbook's gate loop is
   bounded (Prepare and Operate previously had no bound at all) and every bound ends in one
   block the wizard presents to the user — phase/gate, trigger, open blockers, artifacts —

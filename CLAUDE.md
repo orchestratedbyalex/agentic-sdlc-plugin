@@ -28,19 +28,23 @@ accumulates the evidence.
 | `templates/` | Artifact templates (FR, NFR, US, PLAN, ADR, CS, metadata) |
 | `hooks/hooks.json` | PreToolUse wiring: Bash + file-mutation calls run the guard script |
 | `scripts/` | **The only real code** (zero-dep Node ESM): `sdlc-state.mjs` owns ALL metadata state; `sdlc-guard.mjs` enforces invariants 2 + 4 as a hook |
-| `test/` | `node:test` suites (state logic + hook guard + plugin structure) |
+| `test/` | `node:test` suites (state logic + hook guard + eval-harness lib + plugin structure) |
+| `evals/` | Agent evals: labelled golden fixtures + a **billed, opt-in** headless runner — never part of `node --test` (see `evals/README.md`) |
 
 ## Build / test / run
 
 ```bash
-node --test            # run all tests (currently 133, must stay green)
-claude --plugin-dir .  # load the plugin into a Claude Code session for live use
-/reload-plugins        # (inside the session, after edits)
-/agentic-sdlc:sdlc     # run the wizard
+node --test                      # run all tests (currently 158, must stay green; model-free)
+node evals/run.mjs --list        # list the agent evals (free)
+SDLC_EVALS=1 node evals/run.mjs  # run the agent evals headless — BILLED (real model calls)
+claude --plugin-dir .            # load the plugin into a Claude Code session for live use
+/reload-plugins                  # (inside the session, after edits)
+/agentic-sdlc:sdlc               # run the wizard
 ```
 
 There is no build/transpile step — agents and playbooks are markdown; the only executables are
-`scripts/sdlc-state.mjs` and `scripts/sdlc-guard.mjs` (plain ESM, no dependencies).
+`scripts/sdlc-state.mjs`, `scripts/sdlc-guard.mjs`, and the eval harness under `evals/` (all
+plain ESM, no dependencies).
 
 ## Design invariants — DO NOT regress these
 
@@ -113,10 +117,17 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
   `reopen --phase verify` in playbooks 5–6), and the human-checkpoint wiring
   (`HUMAN_CHECKPOINT` + the exactly-three rule + both outcome sets in the orchestrator; the
   checkpoint in playbooks 2/3/7; `proposed`-ADR handling in the ADR author and design
-  reviewer). Don't let those drift silently.
+  reviewer), and the eval-harness wiring (the `SDLC_EVALS` opt-in gate in the runner; every
+  case naming a real agent and a complete fixture; nothing under `evals/` that `node --test`
+  discovery would execute — fixture suites are `spec/*.check.mjs`, never `*.test.mjs` or a
+  `test/` dir). Don't let those drift silently.
+- If you change a **gate agent's prompt**, also run its eval cases (billed, opt-in:
+  `SDLC_EVALS=1 node evals/run.mjs --case <id>`) — the structure tests prove the wiring,
+  only the evals prove the agent still catches what it exists to catch.
 
 ## Status
 
-Feature-complete and **live-proven end-to-end** (all 7 phases run on a real external repo).
+Feature-complete and **live-proven end-to-end** (all 7 phases run on a real external repo),
+with the gate agents additionally **eval-tested headless on labelled fixtures** (`evals/`).
 See `README.md` for install + usage, `CONTRIBUTING.md` for the contributor workflow, and
 `CHANGELOG.md` for the release history.

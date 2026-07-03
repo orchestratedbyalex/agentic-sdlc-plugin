@@ -4,6 +4,9 @@ node_modules/
 .sdlc-prompt.tmp
 
 # Build/review provenance — kept locally, excluded from the public repo
-docs/
+/docs/
 REVIEW-BRIEF.md
 SESSION-HANDOFF.md
+
+# eval run artifacts (transcripts, reports, per-case metadata)
+evals/results/

@@ -1,0 +1,68 @@
+sdlc:
+  project: "eval-clean"
+  version: "0.1.0"
+  mode: "existing" # greenfield | existing
+  methodology: "agentic-sdlc"
+  model_profile: "balanced" # quality | balanced | economy
+  phases:
+    prepare:
+      status: "completed"
+      agents:
+        explorer: { status: "completed" }
+        claude_md: { status: "completed" }
+    define:
+      status: "completed"
+      agents:
+        source_analyst: { status: "completed" }
+        test_analyst: { status: "completed" }
+        nfr_analyst: { status: "completed" }
+        fr_author: { status: "completed" }
+        nfr_author: { status: "completed" }
+        us_author: { status: "completed" }
+        requirement_reviewer: { status: "completed" }
+    design:
+      status: "completed"
+      agents:
+        architecture_explorer: { status: "completed" }
+        decisions_explorer: { status: "completed" }
+        architecture_author: { status: "completed" }
+        component_spec_author: { status: "completed" }
+        adr_traceability_author: { status: "completed" }
+        design_reviewer: { status: "completed" }
+    develop:
+      status: "completed"
+      agents:
+        architect_planner: { status: "completed" }
+        code_author: { status: "completed" }
+        test_author: { status: "completed" }
+        implementer: { status: "completed" }
+        architect_clarifier: { status: "completed" }
+        code_reviewer: { status: "completed" }
+        reqs_sync: { status: "completed" }
+      plans: []
+    verify:
+      status: "pending"
+      agents:
+        coverage_analyst: { status: "pending" }
+        independent_code_reviewer: { status: "pending" }
+        static_dynamic_analyzer: { status: "pending" }
+        regression_tester: { status: "pending" }
+        validation_reviewer: { status: "pending" }
+    release:
+      status: "pending"
+      agents:
+        release_planner: { status: "pending" }
+        release_author: { status: "pending" }
+        release_reviewer: { status: "pending" }
+    operate:
+      status: "pending"
+      agents:
+        issue_triager: { status: "pending" }
+        dependency_monitor: { status: "pending" }
+        telemetry_monitor: { status: "pending" }
+        incident_responder: { status: "pending" }
+        feedback_loop: { status: "pending" }
+  requirement_counts:
+    functional: 0
+    nonfunctional: 0
+    user_stories: 0

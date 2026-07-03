@@ -7,12 +7,12 @@ itself lives in [CLAUDE.md](CLAUDE.md).
 ## Project shape
 
 There is no build step. Everything is markdown (commands, agents, playbooks, skills,
-templates) except two zero-dependency Node ESM files: `scripts/sdlc-state.mjs`, which owns all
-state, and `scripts/sdlc-guard.mjs`, the PreToolUse hook guard wired up by `hooks/hooks.json`.
-Tests use the built-in `node:test` runner.
+templates) except the zero-dependency Node ESM: `scripts/sdlc-state.mjs`, which owns all
+state, `scripts/sdlc-guard.mjs`, the PreToolUse hook guard wired up by `hooks/hooks.json`,
+and the agent eval harness under `evals/`. Tests use the built-in `node:test` runner.
 
 ```bash
-node --test            # must stay green (133 tests: state logic + hook guard + plugin structure)
+node --test            # must stay green (158 tests: state logic + hook guard + evals lib + plugin structure)
 claude --plugin-dir .  # load the plugin into a Claude Code session
 /reload-plugins        # after edits, inside the session
 ```
@@ -47,6 +47,22 @@ The authoritative list (with rationale) is in [CLAUDE.md](CLAUDE.md); in brief:
 - After any change, run `node --test` — `test/plugin-structure.test.mjs` asserts the playbook
   set and the **35-agent** roster count. Don't let those drift silently; update the tests
   deliberately if the roster changes.
+
+## Agent evals (billed, opt-in)
+
+`node --test` proves the plugin's *structure*; the evals in `evals/` prove its *agents* —
+labelled golden fixtures driven headless through the real plugin, asserted on each gate
+report's `VERDICT:` line. They invoke real models on **your** account, so they are strictly
+opt-in and never run under `node --test`:
+
+```bash
+node evals/run.mjs --list        # list cases (free)
+SDLC_EVALS=1 node evals/run.mjs  # run them (billed)
+```
+
+If your change touches a gate agent's prompt, run that agent's cases before opening a PR
+and say so in the PR description. See `evals/README.md` for the fixture rules (notably:
+nothing under `evals/` may match `node --test` discovery).
 
 ## Versioning & releases
 

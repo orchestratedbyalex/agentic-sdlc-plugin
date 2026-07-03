@@ -109,12 +109,19 @@ the plugin stays generic, your repo accumulates the lifecycle record.
 - Artifact templates (`templates/`) and two skills (`sdlc-conventions`, `sdlc-feature-intake`).
 - **Configurable model routing** (`quality` / `balanced` / `economy`) that never downgrades the
   judgment-bearing agents or the gates.
+- **Agent evals** (`evals/`) — the gate agents are themselves tested: labelled golden fixtures
+  (clean ⇒ PASS, tests-green-but-build-broken ⇒ FAIL, no-build-step ⇒ honest PASS) run headless
+  through the real plugin and asserted on the machine-parsable `VERDICT:` line. Billed and
+  opt-in (`SDLC_EVALS=1 node evals/run.mjs`), never part of `node --test`.
 
 ## Test
 
 ```bash
-node --test          # 133 tests, all green (state logic + hook guard + plugin structure)
+node --test          # 158 tests, all green (state logic + hook guard + evals lib + plugin structure)
 ```
+
+The model-free suite above always runs clean on CI and contributor machines. The billed agent
+evals are separate and explicit — see [evals/README.md](evals/README.md).
 
 ## Contributing
 
