@@ -12,7 +12,7 @@ state, `scripts/sdlc-guard.mjs`, the PreToolUse hook guard wired up by `hooks/ho
 and the agent eval harness under `evals/`. Tests use the built-in `node:test` runner.
 
 ```bash
-node --test            # must stay green (158 tests: state logic + hook guard + evals lib + plugin structure)
+node --test            # must stay green (159 tests: state logic + hook guard + evals lib + plugin structure)
 claude --plugin-dir .  # load the plugin into a Claude Code session
 /reload-plugins        # after edits, inside the session
 ```

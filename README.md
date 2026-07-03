@@ -83,8 +83,8 @@ Model routing never downgrades a gate.
 | **Design** | Architecture, component specs, ADRs, STRIDE-lite threat model | IEEE 1016, Microsoft SDL, Nygard ADRs |
 | **Develop** | Plan → implement + test (proportionate to change tier) → review | Microsoft SDL |
 | **Verify** | Coverage, independent review, real production build, regression | IEEE 1012, ISO/IEC 25010 |
-| **Release** | Changelog, version bump, staged commit + tag (human-gated) | ITIL 4 |
-| **Operate** | Triage, dependency/telemetry monitoring, feedback into the next cycle | ITIL 4, ISO/IEC 27001, DORA |
+| **Release** | Changelog, version bump, staged commit + tag + rollback plan (human-gated) | ITIL 4 |
+| **Operate** | Triage, dependency/telemetry monitoring, post-release health, feedback + accreted lessons into the next cycle | ITIL 4, ISO/IEC 27001, DORA |
 
 ## How it's built (the two-zone model)
 
@@ -119,7 +119,7 @@ the plugin stays generic, your repo accumulates the lifecycle record.
 ## Test
 
 ```bash
-node --test          # 158 tests, all green (state logic + hook guard + evals lib + plugin structure)
+node --test          # 159 tests, all green (state logic + hook guard + evals lib + plugin structure)
 ```
 
 The model-free suite above always runs clean on CI and contributor machines. The billed agent

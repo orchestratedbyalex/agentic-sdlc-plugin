@@ -128,6 +128,30 @@ All notable changes to this project are documented here. The format follows
   (`CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1`, pinned by a structure test): since CLI
   2.1.198 dispatches run in the background by default, which would deliver reports via
   a completion notification whose summary completeness is undocumented.
+- **Deeper Release/Operate mechanics** — four gaps closed in the two phases that
+  previously ended at "staged + suggested". The release plan now carries a
+  **human-executed rollback plan** (ITIL remediation planning): trigger conditions plus
+  concrete stage-aware commands for each stage the release can reach (staged /
+  committed / pushed / published), preferring deprecate-and-patch over unpublish or
+  history rewrites — and the release gate grew **CHECK 8 — ROLLBACK READINESS**
+  (rollback plan present, version-consistent with the staged manifest, addressed to the
+  human — agents never roll back, just as they never publish), so the human holds the
+  undo alongside the human-gated publish commands. The Operate telemetry monitor now
+  runs a **post-release health comparison** against the pre-release baseline (equal
+  windows around the latest release point) closing with one `Post-release health:
+  HEALTHY | DEGRADED | UNKNOWN` verdict — honestly UNKNOWN when there is no telemetry
+  or no release, never HEALTHY without data — and a DEGRADED verdict forces the cycle
+  assessment to at least MAINTAIN (URGENT on a security/P0 signal). The feedback loop
+  gained a **maintenance pathway** so dependency findings stop dying in the monitor's
+  report: SAFE updates batch concretely into the next MAINTAIN cycle's `scope=`,
+  RISKY majors / runtime EOL / modernization become proposed NFRs
+  (source: `dependency-monitor`), SECURITY stays on the incident path. And it now
+  **accretes failure lessons into the target repo's CLAUDE.md** under a
+  `## Lessons learned (SDLC Operate)` section — one provenance-stamped standing rule
+  per *actual* failure (incident lessons, the same gate FAILing 2+ times in
+  `runtime.gate_log`, a DEGRADED post-release verdict), deduplicated, never touching
+  anything outside its own section, and no edit at all in a failure-free cycle. A
+  structure test pins all four mechanics.
 - A defined **`HUMAN_REVIEW_REQUIRED` escalation protocol**: every playbook's gate loop is
   bounded (Prepare and Operate previously had no bound at all) and every bound ends in one
   block the wizard presents to the user — phase/gate, trigger, open blockers, artifacts —

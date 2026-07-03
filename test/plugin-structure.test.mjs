@@ -365,3 +365,33 @@ test('the route-back recovery mechanics (reopen + evidence) are wired into the w
   const release = readFileSync(join(ROOT, 'phases', 'phase-6-release.md'), 'utf8')
   assert.match(release, /reopen --phase verify/, 'phase 6 Verify-miss routing never reopens Verify')
 })
+
+test('Release/Operate depth: rollback plan, post-release health, maintenance pathway, rule accretion', () => {
+  // the release plan carries a human-executed rollback plan (ITIL remediation planning) —
+  // the human must hold the undo before running the human-gated commit/tag/push/publish
+  const planner = readFileSync(join(ROOT, 'agents', 'sdlc-release-planner.md'), 'utf8')
+  assert.match(planner, /ROLLBACK PLAN/i, 'the release planner drafts no rollback plan')
+  assert.match(planner, /human-executed/i, 'the rollback plan is not explicitly human-executed')
+  // ... and the release gate verifies it before approving publish
+  const relReviewer = readFileSync(join(ROOT, 'agents', 'sdlc-release-reviewer.md'), 'utf8')
+  assert.match(relReviewer, /CHECK 8 — ROLLBACK READINESS/, 'the release gate never validates rollback readiness')
+  assert.match(relReviewer, /8-point/, 'the release gate still calls itself 7-point')
+  const release = readFileSync(join(ROOT, 'phases', 'phase-6-release.md'), 'utf8')
+  assert.match(release, /rollback/i, 'phase 6 hands the human the publish commands without the undo')
+  // the telemetry monitor compares post-release health against the pre-release baseline,
+  // with an honest UNKNOWN (never HEALTHY without data) when telemetry is absent
+  const telemetry = readFileSync(join(ROOT, 'agents', 'sdlc-operate-telemetry-monitor.md'), 'utf8')
+  assert.match(telemetry, /POST-RELEASE HEALTH/i, 'the telemetry monitor never compares post-release health')
+  assert.match(telemetry, /HEALTHY \| DEGRADED \| UNKNOWN/, 'the post-release verdict vocabulary (incl. honest UNKNOWN) is missing')
+  // ... and the feedback loop routes findings into the next cycle instead of letting them
+  // die in reports: DEGRADED forces at least MAINTAIN, maintenance work gets a pathway,
+  // failure lessons accrete as standing rules in the target's CLAUDE.md
+  const loop = readFileSync(join(ROOT, 'agents', 'sdlc-operate-feedback-loop.md'), 'utf8')
+  assert.match(loop, /DEGRADED/, 'the cycle assessment ignores a degraded release')
+  assert.match(loop, /MAINTENANCE PATHWAY/i, 'maintenance findings still die in the dependency report')
+  assert.match(loop, /Lessons learned \(SDLC Operate\)/, 'no rule-accretion contract for the target CLAUDE.md')
+  assert.match(loop, /gate_log/, 'rule accretion never mines repeated gate FAILs')
+  const operate = readFileSync(join(ROOT, 'phases', 'phase-7-operate.md'), 'utf8')
+  assert.match(operate, /accret/i, 'phase 7 never names the rule-accretion output')
+  assert.match(operate, /post-release/i, 'phase 7 never names the post-release comparison')
+})

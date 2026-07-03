@@ -66,6 +66,12 @@ STEP 6 — Produce dependency health report:
   3. MODERATE (evaluate next develop phase)
   4. RISKY (next major version)
 
+  These classifications feed the Feedback Loop's maintenance pathway — SAFE
+  batches into the next MAINTAIN cycle's scope, RISKY/EOL/modernization
+  findings become proposed requirements, SECURITY rides the incident path —
+  so classify precisely; a recommendation that only lives in this report is
+  a finding that dies.
+
   ### Security/Incident Flags
   Advisories routed to Incident Responder (Agent 4).
   | Severity | Package | CVE | Fix |

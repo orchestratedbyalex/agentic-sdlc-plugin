@@ -15,14 +15,21 @@ post_phase: "if the CYCLE: line proposes a next cycle, present the HUMAN_CHECKPO
 Operate and Develop are normally the same DevOps team (Software Production System model).
 
 1. **Routine ops (parallel):** issue-triager (GitHub issues via `gh`), dependency-monitor
-   (outdated + security advisories), telemetry-monitor (DORA metrics / NFR compliance — skip
-   gracefully if no telemetry is configured). Dispatch the three concurrently; collect reports.
+   (outdated + security advisories), telemetry-monitor (DORA metrics / NFR compliance + the
+   **post-release health comparison** against the pre-release baseline, closing with a
+   HEALTHY | DEGRADED | UNKNOWN verdict — skip gracefully with an honest UNKNOWN if no
+   telemetry is configured). Dispatch the three concurrently; collect reports.
 2. **Incident response (conditional):** if routine ops surfaced security/P0 flags, critical
    advisories, or SLO breaches, dispatch incident-responder — one
    `docs/operate/incident-<date>-<slug>.md` per incident (classification, root cause,
    containment + permanent fix). If nothing was flagged, skip this group.
 3. **Feedback loop (sequential):** feedback-loop consumes all reports, creates new FR/NFR/US
-   (status `proposed`) for gaps, updates the traceability matrix, writes
+   (status `proposed`) for gaps AND for the maintenance pathway's RISKY/EOL/modernization
+   findings (SAFE dependency updates need no docs — they enter the next MAINTAIN cycle's
+   `scope=` concretely), **accretes failure lessons** — incidents, the same gate FAILing 2+
+   times in `runtime.gate_log`, a DEGRADED post-release verdict — as provenance-stamped
+   standing rules into the target CLAUDE.md's `## Lessons learned (SDLC Operate)` section
+   (deduped; no failures → no edit), updates the traceability matrix, writes
    `docs/operate/operate-report-<date>.md`, and reports its cycle assessment
    (STABLE | MAINTAIN | EVOLVE | URGENT) in a `CYCLE:` line — it never edits
    `sdlc-metadata.yml`.
@@ -34,7 +41,8 @@ Operate and Develop are normally the same DevOps team (Software Production Syste
 **On completion:** if the `CYCLE:` line proposes a next cycle (`next_cycle=true`), present
 the **cycle go/no-go** (`HUMAN_CHECKPOINT`, see the wizard) BEFORE recording anything — the
 feedback loop proposes, the human disposes; a new cycle never starts on the agent's say-so
-alone. Then record the cycle deterministically — never hand-edit the YAML:
+alone. The go/no-go Summary should name the concrete scope and any rules accreted to
+CLAUDE.md (the operate report carries both). Then record the cycle deterministically — never hand-edit the YAML:
 `node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" cycle --assessment <a> --next-cycle <t|f> [--scope "..."] [--reason "..."]`
 — with the assessment as reported on **go** or **defer**, or the human's own on
 **override** (`--reason "user override: ..."`). The command completes operate (status +

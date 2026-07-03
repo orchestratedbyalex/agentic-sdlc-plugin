@@ -34,7 +34,7 @@ accumulates the evidence.
 ## Build / test / run
 
 ```bash
-node --test                      # run all tests (currently 158, must stay green; model-free)
+node --test                      # run all tests (currently 159, must stay green; model-free)
 node evals/run.mjs --list        # list the agent evals (free)
 SDLC_EVALS=1 node evals/run.mjs  # run the agent evals headless — BILLED (real model calls)
 claude --plugin-dir .            # load the plugin into a Claude Code session for live use
@@ -117,7 +117,11 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
   `reopen --phase verify` in playbooks 5–6), and the human-checkpoint wiring
   (`HUMAN_CHECKPOINT` + the exactly-three rule + both outcome sets in the orchestrator; the
   checkpoint in playbooks 2/3/7; `proposed`-ADR handling in the ADR author and design
-  reviewer), and the eval-harness wiring (the `SDLC_EVALS` opt-in gate in the runner; every
+  reviewer), the Release/Operate depth wiring (the planner's human-executed rollback plan +
+  the release gate's `CHECK 8 — ROLLBACK READINESS`; the telemetry monitor's
+  `HEALTHY | DEGRADED | UNKNOWN` post-release verdict; the feedback loop's maintenance
+  pathway + CLAUDE.md rule accretion under `## Lessons learned (SDLC Operate)`), and the
+  eval-harness wiring (the `SDLC_EVALS` opt-in gate in the runner; every
   case naming a real agent and a complete fixture — including any `docs/…` path the case's
   dispatch prompt references; nothing under `evals/` that `node --test`
   discovery would execute — fixture suites are `spec/*.check.mjs`, never `*.test.mjs` or a
