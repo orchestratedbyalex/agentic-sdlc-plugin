@@ -385,7 +385,7 @@
       <div class="vcard animate" style="--i:3">
         <div class="vcard__icon"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.3 2.6L3 8"/><path d="M3 3v5h5M12 7v5l3 3"/></svg></div>
         <h3>Stop and resume anytime</h3>
-        <p>Every step is saved. Close your laptop mid-phase and the wizard picks up at the exact agent where you left off — even on another machine.</p>
+        <p>Every step is saved — down to the active plan and how far a review loop has got. Close your laptop mid-phase and the wizard picks up at the exact agent where you left off, even on another machine.</p>
       </div>
     </div>
   </section>
@@ -465,18 +465,18 @@
       </div>
       <div class="phase animate" style="--i:4; --accent: var(--p5)">
         <div class="phase__head"><div class="phase__num">5</div><div><div class="phase__name">Verify</div><div class="phase__std">IEEE 1012 · ISO 25010</div></div></div>
-        <p>Proves it really works: checks test coverage, runs the <em>actual</em> production build, runs the full test suite, and an independent reviewer signs off.</p>
+        <p>Proves it really works: checks test coverage, runs the <em>actual</em> production build, and re-runs the whole test suite itself rather than trusting reported numbers, then an independent reviewer signs off.</p>
         <div class="phase__get"><b>You get</b>a building, tested, verified change.</div>
       </div>
       <div class="phase animate" style="--i:5; --accent: var(--p6)">
         <div class="phase__head"><div class="phase__num">6</div><div><div class="phase__name">Release</div><div class="phase__std">ITIL 4</div></div></div>
-        <p>Updates the changelog, bumps the version, and stages the commit and tag — then hands it to you to approve. It never ships on its own.</p>
-        <div class="phase__get"><b>You get</b>a ready-to-ship release; you press go.</div>
+        <p>Updates the changelog, bumps the version, stages the commit and tag, and drafts a step-by-step rollback plan, then hands it all to you to approve. It never ships on its own.</p>
+        <div class="phase__get"><b>You get</b>a ready-to-ship release with its undo; you press go.</div>
       </div>
       <div class="phase animate" style="--i:6; --accent: var(--p7)">
         <div class="phase__head"><div class="phase__num">7</div><div><div class="phase__name">Operate</div><div class="phase__std">ITIL 4 · ISO 27001 · DORA</div></div></div>
-        <p>After shipping: triages issues, watches your dependencies, and feeds what it learns back into the next cycle.</p>
-        <div class="phase__get"><b>You get</b>a feedback loop into your next round.</div>
+        <p>After shipping: triages issues, watches your dependencies, compares the release's health against the baseline, and writes standing lessons back into your project to feed the next cycle.</p>
+        <div class="phase__get"><b>You get</b>a feedback loop that makes the next round smarter.</div>
       </div>
     </div>
   </section>
@@ -486,11 +486,12 @@
     <div class="section-label">Under the hood</div>
     <h2>How each phase keeps quality high</h2>
     <p class="section-intro">The same simple loop runs inside every phase. It's why long runs don't drift and why
-      a mistake gets caught instead of shipped.</p>
+      a mistake gets caught instead of shipped. The gates themselves are tested against labelled examples, so a
+      broken build or a hardcoded secret reliably fails.</p>
     <div class="loop">
       <div class="loop__step animate" style="--i:0"><div class="loop__n">01 — DO</div><h4>Specialists do the work</h4><p>Focused agents each handle one job — a requirements writer, an architect, a security checker, a test author.</p></div>
-      <div class="loop__step animate" style="--i:1"><div class="loop__n">02 — CHECK</div><h4>An independent reviewer gates it</h4><p>A separate, read-only reviewer inspects the output. It can't edit the work — only judge it. Real builds are actually run.</p></div>
-      <div class="loop__step animate" style="--i:2"><div class="loop__n">03 — ROUTE</div><h4>Pass moves on, fail goes back</h4><p>Clean? Continue to the next phase. Problems? Sent back to be fixed and re-checked — automatically.</p></div>
+      <div class="loop__step animate" style="--i:1"><div class="loop__n">02 — CHECK</div><h4>An independent reviewer gates it</h4><p>A separate, read-only reviewer inspects the output; it can't edit the work, only judge it. The gate runs the real build and re-runs the tests, quoting the tool's own output: zero tests collected counts as a fail, never a pass.</p></div>
+      <div class="loop__step animate" style="--i:2"><div class="loop__n">03 — ROUTE</div><h4>Pass moves on, fail goes back</h4><p>Clean? Continue to the next phase. Problems? The right earlier phase reopens, only the responsible agents re-run, and the fix is re-checked automatically.</p></div>
     </div>
   </section>
 
@@ -563,7 +564,7 @@
       <div class="zone zone--plugin animate" style="--i:0">
         <div class="zone__tag">The plugin · "how"</div>
         <h3>Carries the process</h3>
-        <p>The wizard, the 35 specialist agents, the phase playbooks, the quality gates. Installed once, used on any project. Nothing about your code lives here.</p>
+        <p>The wizard, the 35 specialist agents, the phase playbooks, the quality gates, and the guardrails that keep git in your hands. Installed once, used on any project. Nothing about your code lives here.</p>
       </div>
       <div class="zone__arrow">→</div>
       <div class="zone zone--repo animate" style="--i:1">
@@ -580,15 +581,41 @@
     </div>
   </section>
 
-  <!-- ============ SAFETY ============ -->
-  <div class="callout">
-    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-    <div>
-      <h3>You stay in control</h3>
-      <p>The agents <strong>stage</strong> commits and <strong>suggest</strong> tags — they never commit, push, or
-        publish for you. Anything that leaves your machine is your call. Git stays in your hands, always.</p>
+  <!-- ============ CONTROL ============ -->
+  <section>
+    <div class="section-label">Your call, always</div>
+    <h2>It runs on autopilot, then stops for you at three points</h2>
+    <p class="section-intro">Inside a phase the agents work unattended. But the lifecycle deliberately pauses for a
+      human decision at exactly three altitudes, and it can never ship on its own.</p>
+    <div class="card-grid">
+      <div class="vcard animate" style="--i:0">
+        <div class="vcard__icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <h3>Sign off the requirements</h3>
+        <p>At the end of <strong>Define</strong>, you approve what's being built before any design begins. Nothing proceeds on assumptions.</p>
+      </div>
+      <div class="vcard animate" style="--i:1">
+        <div class="vcard__icon"><svg viewBox="0 0 24 24"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg></div>
+        <h3>Decide the trade-offs</h3>
+        <p>At the end of <strong>Design</strong>, the architecture decisions are yours to accept. Each new one stays <em>proposed</em> until you approve it.</p>
+      </div>
+      <div class="vcard animate" style="--i:2">
+        <div class="vcard__icon"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+        <h3>Give the go for the next round</h3>
+        <p>In <strong>Operate</strong>, a fresh cycle of work starts only on your explicit go. You can defer or override, but it never restarts itself.</p>
+      </div>
     </div>
-  </div>
+
+    <div class="callout">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <div>
+        <h3>And nothing ships without you</h3>
+        <p>The agents <strong>stage</strong> commits and <strong>suggest</strong> tags; they never commit, push, or
+          publish. That isn't left to good behavior: a built-in guardrail turns every commit, tag, push, and publish
+          into a permission prompt you have to approve, and blocks any behind-the-scenes edit to the progress file.
+          <strong>Git stays in your hands, always.</strong></p>
+      </div>
+    </div>
+  </section>
 
   <div class="tags">
     <span class="tag">ISO/IEC/IEEE 12207</span>
@@ -604,7 +631,7 @@
 
   <footer>
     <span>Agentic SDLC — Claude Code plugin</span>
-    <span>standards-anchored · agent-driven · resumable</span>
+    <span>standards-anchored · agent-driven · human-gated · resumable</span>
   </footer>
 
 </div>
