@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Interactive walkthrough of the Agentic SDLC Claude Code plugin — the seven phases, their agents, gates, state, and human checkpoints.">
+<title>Agentic SDLC — How the plugin runs</title>
+</head>
+<body>
+<style>
+  :root{
+    --bg:#e9eef5; --grid:rgba(30,95,168,.06); --surface:#fff; --surface-2:#f4f7fb;
+    --border:rgba(22,38,61,.13); --border-bright:rgba(22,38,61,.22);
+    --ink:#14253c; --dim:#55677e; --faint:#8794a6;
+    --blue:#1e5fa8; --blue-dim:rgba(30,95,168,.10);
+    --gate:#9a7616; --gate-dim:rgba(176,125,18,.13);
+    --green:#2b7a4b; --route:#c0562a;
+    --p1:#2f74c0;--p2:#1f8fab;--p3:#199183;--p4:#2f9a64;--p5:#6f9a36;--p6:#b3851f;--p7:#bd5f34;
+    --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    --body:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#0b131e; --grid:rgba(120,170,230,.06); --surface:#121e2d; --surface-2:#15212f;
+    --border:rgba(255,255,255,.10); --border-bright:rgba(255,255,255,.18);
+    --ink:#e4ecf5; --dim:#94a6bc; --faint:#6f8098; --blue:#5b9bd5; --blue-dim:rgba(91,155,213,.14);
+    --gate:#d4a73a; --gate-dim:rgba(212,167,58,.15); --green:#5fae7e; --route:#e08a5a;
+    --p1:#5b9bd5;--p2:#3fb0c9;--p3:#34b6a4;--p4:#50b985;--p5:#94c054;--p6:#d4a73a;--p7:#e08a5a;
+  }}
+  *{box-sizing:border-box;margin:0;padding:0}
+  .page{min-height:100vh;background-color:var(--bg);
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:26px 26px;color:var(--ink);font-family:var(--body);line-height:1.6;
+    padding:40px 24px 64px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1140px;margin:0 auto}
+  .eyebrow{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--blue);display:flex;align-items:center;gap:9px;margin-bottom:12px}
+  .eyebrow::before{content:"";width:26px;height:2px;background:var(--blue);opacity:.6}
+  h1{font-size:clamp(27px,4vw,38px);font-weight:700;letter-spacing:-.7px;line-height:1.08;margin-bottom:12px;text-wrap:balance}
+  .lead{font-size:16px;color:var(--dim);max-width:70ch;margin-bottom:8px}
+  .lead b{color:var(--ink);font-weight:600}
+  .hint{font-family:var(--mono);font-size:12px;color:var(--faint);margin-bottom:30px}
+
+  .app{display:grid;grid-template-columns:300px 1fr;gap:26px;align-items:start}
+  @media (max-width:820px){.app{grid-template-columns:1fr;gap:18px}}
+
+  /* ---- flow nav ---- */
+  .flow{display:flex;flex-direction:column;gap:8px;position:sticky;top:20px}
+  @media (max-width:820px){.flow{position:static}}
+  .flow__cap{font-family:var(--mono);font-size:12px;color:var(--dim);text-align:center;
+    background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 12px}
+  .flow__cap b{color:var(--ink)}
+  .conn{width:2px;height:12px;background:var(--border-bright);margin:1px auto;opacity:.7}
+  .step{display:flex;align-items:center;gap:11px;width:100%;text-align:left;cursor:pointer;
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:10px;padding:11px 13px;color:var(--ink);font-family:var(--body);
+    transition:transform .12s ease,box-shadow .12s ease,background .12s ease}
+  .step:hover{transform:translateX(2px);box-shadow:0 4px 14px rgba(20,37,60,.09)}
+  .step[aria-current="true"]{background:color-mix(in srgb,var(--accent) 12%,var(--surface));
+    box-shadow:0 4px 16px rgba(20,37,60,.12);border-color:var(--accent)}
+  .step:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .step__n{flex:0 0 26px;height:26px;border-radius:7px;font-family:var(--mono);font-size:13px;font-weight:600;
+    display:flex;align-items:center;justify-content:center;
+    background:color-mix(in srgb,var(--accent) 15%,var(--surface));color:var(--ink);
+    border:1px solid color-mix(in srgb,var(--accent) 42%,transparent)}
+  .step__txt{display:flex;flex-direction:column;min-width:0}
+  .step__nm{font-size:14.5px;font-weight:600;letter-spacing:-.2px}
+  .step__ag{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:2px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chk{display:flex;align-items:center;gap:7px;justify-content:center;font-size:12px;color:var(--gate);
+    background:var(--gate-dim);border:1px dashed color-mix(in srgb,var(--gate) 45%,transparent);
+    border-radius:8px;padding:6px 10px;margin:1px 22px}
+  .loop{font-family:var(--mono);font-size:11.5px;color:var(--p7);text-align:center;padding:7px}
+
+  /* ---- detail panel ---- */
+  .panel{background:var(--surface);border:1px solid var(--border);
+    border-radius:14px;padding:26px 28px;box-shadow:0 2px 18px rgba(20,37,60,.06);min-height:420px}
+  .panel__head{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .panel__badge{flex:0 0 42px;height:42px;border-radius:11px;font-family:var(--mono);font-weight:700;font-size:18px;
+    display:flex;align-items:center;justify-content:center;color:var(--ink);
+    background:color-mix(in srgb,var(--accent) 15%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 42%,transparent)}
+  .panel__tag{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)}
+  .panel h2{font-size:26px;font-weight:700;letter-spacing:-.5px;margin:2px 0 0;color:var(--accent)}
+  .panel__purpose{font-size:15.5px;color:var(--dim);margin-bottom:16px;max-width:64ch}
+  .stds{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+  .std{font-family:var(--mono);font-size:12px;text-decoration:none;color:var(--blue);
+    background:var(--blue-dim);border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);
+    border-radius:20px;padding:4px 11px;display:inline-flex;align-items:center;gap:5px;transition:background .12s}
+  .std:hover{background:color-mix(in srgb,var(--blue) 18%,transparent)}
+  .std:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .std::after{content:"↗";font-size:10px;opacity:.7}
+  .sec{margin-top:18px}
+  .sec__l{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:1.3px;text-transform:uppercase;color:var(--faint);margin-bottom:7px}
+  .grp{display:flex;gap:10px;margin-bottom:5px;font-size:14px}
+  .grp__m{font-family:var(--mono);font-size:11.5px;color:var(--dim);flex:0 0 88px;padding-top:2px}
+  .grp__a{color:var(--ink)}
+  .gate{background:var(--gate-dim);border:1px solid color-mix(in srgb,var(--gate) 32%,transparent);border-radius:9px;padding:10px 13px;font-size:14px}
+  .gate b{color:var(--gate)}
+  .gate .crit{display:block;font-size:12.5px;color:var(--dim);margin-top:2px}
+  .kv{font-size:14px}.kv.prod{color:var(--green);font-weight:500}
+  .kv.state{font-family:var(--mono);font-size:12.5px;color:var(--ink)}
+  .kv.state span{color:var(--faint)}
+  .human{border:1px solid color-mix(in srgb,var(--gate) 40%,transparent);background:var(--gate-dim);
+    border-radius:10px;padding:13px 15px;margin-top:18px}
+  .human__a{font-size:14.5px;font-weight:600;color:var(--gate);display:flex;align-items:center;gap:8px}
+  .human__w{font-size:13.5px;color:var(--dim);margin-top:5px}
+  .route{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--route);margin-top:14px}
+  .none{color:var(--faint);font-style:italic;font-size:13.5px}
+
+  footer{margin-top:34px;padding-top:20px;border-top:1px solid var(--border);
+    font-family:var(--mono);font-size:12px;color:var(--dim);display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}
+  footer a{color:var(--blue)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="page"><div class="wrap">
+  <p class="eyebrow">Agentic SDLC · interactive</p>
+  <h1>How the plugin runs</h1>
+  <p class="lead">One command — <b>/sdlc</b> — drives seven phases with 35 agents, deterministic resumable state,
+    and a human in the loop at exactly the right moments.</p>
+  <p class="hint">Pick a phase to see its agents, gate, outputs, the state it writes, and where you step in. ↑/↓ to move.</p>
+
+  <div class="app">
+    <nav class="flow" id="flow" aria-label="Lifecycle phases"></nav>
+    <main class="panel" id="panel" aria-live="polite"></main>
+  </div>
+
+  <footer>
+    <span>Agentic SDLC — standards-anchored · agent-driven · human-gated</span>
+    <span>editable source: <a href="https://github.com/orchestratedbyalex/agentic-sdlc-plugin/blob/main/diagrams/agentic-sdlc-flow.excalidraw" target="_blank" rel="noopener">agentic-sdlc-flow.excalidraw</a></span>
+  </footer>
+</div></div>
+
+<script>
+const U={iso12207:"https://www.iso.org/standard/63712.html",ieee1016:"https://standards.ieee.org/ieee/1016/4502/",
+ieee1012:"https://standards.ieee.org/ieee/1012/5609/",iso25010:"https://www.iso.org/standard/78176.html",
+iso27001:"https://www.iso.org/isoiec-27001-information-security.html",sdl:"https://www.microsoft.com/en-us/securityengineering/sdl",
+adr:"https://adr.github.io/",itil:"https://www.axelos.com/certifications/itil-service-management",dora:"https://dora.dev/"};
+const P=[
+{n:1,key:"prepare",name:"Prepare",ag:"explorer · claude-md",accent:"var(--p1)",
+ purpose:"Map the project and write a CLAUDE.md the agents can trust.",
+ groups:[["→","explorer · claude-md"]],gate:null,
+ produces:"CLAUDE.md · initial sdlc-metadata.yml",state:"init",statenote:"creates metadata · sets the model profile",
+ human:null,route:null,stds:[["ISO/IEC/IEEE 12207",U.iso12207]]},
+{n:2,key:"define",name:"Define",ag:"analysts → authors → review",accent:"var(--p2)",
+ purpose:"Turn the idea into numbered, testable requirements and user stories.",
+ groups:[["∥ analyze","source · test · nfr"],["∥ author","FR · NFR · US"]],
+ gate:["requirement-reviewer","completeness · testability · traceability"],
+ produces:"FR-* · NFR-* · US-*  (numbered)",state:"brief · counts",statenote:"REQUIREMENT_COUNTS sentinel → orchestrator writes",
+ human:{a:"Sign off the requirements",w:"Approve the requirements before design starts; they are the contract all later work is built and tested against."},
+ route:null,stds:[["ISO/IEC/IEEE 12207",U.iso12207]]},
+{n:3,key:"design",name:"Design",ag:"explorers → authors → review",accent:"var(--p3)",
+ purpose:"Decide how to build it — architecture, component specs, decisions, threats.",
+ groups:[["∥ explore","architecture · decisions"],["∥ author","architecture · component-spec · adr+traceability"]],
+ gate:["design-reviewer","traceability · ADR soundness · STRIDE-lite threat model"],
+ produces:"architecture · component specs · ADRs (proposed) · threat model",state:"gate-log · ADRs = proposed",statenote:"new decisions enter as proposed",
+ human:{a:"Accept the ADR trade-offs  (proposed → accepted)",w:"Accept or revise the architecture decisions. Trade-offs outlive the code, so you own them — not the agent."},
+ route:null,stds:[["IEEE 1016",U.ieee1016],["Microsoft SDL",U.sdl],["Nygard ADRs",U.adr]]},
+{n:4,key:"develop",name:"Develop",ag:"plan → build → review",accent:"var(--p4)",
+ purpose:"Plan, then implement and test — sized to the change tier — and review.",
+ groups:[["→ plan","reqs-sync · clarifier · planner"],["∥ build","code · test · implementer"]],
+ gate:["code-reviewer","diff-aware · reviewer ≠ author · tests present · security"],
+ produces:"staged code + tests · PLAN-*   (tier: trivial / standard / complex)",state:"plan-add · plan-active · clarifier-round · strikes",statenote:"the active plan + strike counts persist",
+ human:null,route:"Reopened by Verify on REWORK",stds:[["Microsoft SDL",U.sdl]]},
+{n:5,key:"verify",name:"Verify",ag:"4 checks ∥ → validation",accent:"var(--p5)",
+ purpose:"Prove it works — coverage, independent review, the real production build, regression.",
+ groups:[["∥ verify","coverage · independent-review · static/dynamic · regression"],["→ validate","validation-reviewer"]],
+ gate:["validation-reviewer","re-runs the suite (d2) · real build exits 0 (c2) · every blocker fixed"],
+ produces:"verification reports (verbatim evidence) · UAT",state:"gate-log · verify cycle",statenote:"the bounded re-verify cycle persists",
+ human:null,route:"Gate FAIL → reopen Develop, bounded ≤ 3× → then HUMAN_REVIEW_REQUIRED",stds:[["IEEE 1012",U.ieee1012],["ISO/IEC 25010",U.iso25010]]},
+{n:6,key:"release",name:"Release",ag:"planner → author → review",accent:"var(--p6)",
+ purpose:"Changelog, version bump, staged commit + tag, and a human-executed rollback plan.",
+ groups:[["→","planner · author · reviewer"]],
+ gate:["release-reviewer","8-point gate · incl. CHECK 8 — rollback readiness"],
+ produces:"CHANGELOG · version bump · staged commit + tag · rollback plan",state:"gate-log",statenote:"",
+ human:{a:"🔒 commit / tag / push  =  human-gated ask",w:"Approve each publish when the guardrail asks. It is outward-facing and hard to undo — you are the gate."},
+ route:"Gate FAIL → reopen Verify",stds:[["ITIL 4",U.itil]]},
+{n:7,key:"operate",name:"Operate",ag:"triage · monitors → feedback",accent:"var(--p7)",
+ purpose:"Run and learn — triage, monitor, compare post-release health, feed the next cycle.",
+ groups:[["monitor","triage · incident · dependency · telemetry"],["→ synthesize","feedback-loop"]],
+ gate:null,
+ produces:"incident / dep / telemetry reports · post-release health · accreted CLAUDE.md lessons · next-cycle proposal (CYCLE)",
+ state:"cycle",statenote:"a new cycle records only after your go",
+ human:{a:"Cycle go / no-go   → loops to Define",w:"Decide whether the next cycle runs and its scope (go / defer / override). A new round changes the product — it never self-starts."},
+ route:"Loops back to Define — the next cycle",stds:[["ITIL 4",U.itil],["ISO/IEC 27001",U.iso27001],["DORA",U.dora]]},
+];
+const CHK={2:"★ sign off requirements",3:"★ accept ADR trade-offs",7:"★ cycle go / no-go"};
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+// build the flow nav
+const flow=document.getElementById("flow");
+flow.innerHTML='<div class="flow__cap"><b>/sdlc</b> → detect state</div>';
+P.forEach((p,i)=>{
+  flow.insertAdjacentHTML("beforeend",'<div class="conn"></div>');
+  const b=document.createElement("button");
+  b.className="step";b.style.setProperty("--accent",p.accent);b.dataset.key=p.key;
+  b.setAttribute("aria-current","false");
+  b.innerHTML=`<span class="step__n">${p.n}</span><span class="step__txt"><span class="step__nm">${p.name}</span><span class="step__ag">${esc(p.ag)}</span></span>`;
+  b.addEventListener("click",()=>select(p.key,true));
+  flow.appendChild(b);
+  if(CHK[p.n]) flow.insertAdjacentHTML("beforeend",`<div class="chk">${CHK[p.n]}</div>`);
+});
+flow.insertAdjacentHTML("beforeend",'<div class="conn"></div><div class="loop">↺ loop to the next cycle</div>');
+
+const panel=document.getElementById("panel");
+function render(p){
+  const std=p.stds.map(([l,u])=>`<a class="std" href="${u}" target="_blank" rel="noopener noreferrer">${esc(l)}</a>`).join("");
+  const grps=p.groups.map(([m,a])=>`<div class="grp"><span class="grp__m">${esc(m)}</span><span class="grp__a">${esc(a)}</span></div>`).join("");
+  const gate=p.gate?`<div class="sec"><div class="sec__l">Gate</div><div class="gate"><b>◇ ${esc(p.gate[0])}</b><span class="crit">${esc(p.gate[1])}</span></div></div>`
+    :`<div class="sec"><div class="sec__l">Gate</div><div class="none">no validation gate — setup / synthesis phase</div></div>`;
+  const human=p.human?`<div class="human"><div class="human__a">${p.human.a.startsWith("🔒")?"":"★ "}${esc(p.human.a)}</div><div class="human__w">${esc(p.human.w)}</div></div>`:"";
+  const route=p.route?`<div class="route">↩ ${esc(p.route)}</div>`:"";
+  const note=p.statenote?` <span>— ${esc(p.statenote)}</span>`:"";
+  panel.style.setProperty("--accent",p.accent);
+  panel.innerHTML=`<div class="panel__head"><span class="panel__badge">${p.n}</span>
+      <div><div class="panel__tag">Phase ${p.n} of 7</div><h2>${esc(p.name)}</h2></div></div>
+    <p class="panel__purpose">${esc(p.purpose)}</p>
+    <div class="stds">${std}</div>
+    <div class="sec"><div class="sec__l">Agents</div>${grps}</div>
+    ${gate}
+    <div class="sec"><div class="sec__l">Produces</div><div class="kv prod">${esc(p.produces)}</div></div>
+    <div class="sec"><div class="sec__l">State written</div><div class="kv state">sdlc-state.mjs ${esc(p.state)}${note}</div></div>
+    ${human}${route}`;
+}
+function select(key,focusPanel){
+  const p=P.find(x=>x.key===key)||P[0];
+  document.querySelectorAll(".step").forEach(s=>s.setAttribute("aria-current",String(s.dataset.key===p.key)));
+  render(p);
+  if(history.replaceState) history.replaceState(null,"","#"+p.key);
+  if(focusPanel && matchMedia("(max-width:820px)").matches) panel.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"start"});
+}
+// keyboard: up/down through phases
+document.addEventListener("keydown",e=>{
+  if(e.key!=="ArrowDown"&&e.key!=="ArrowUp")return;
+  const cur=P.findIndex(p=>document.querySelector(`.step[data-key="${p.key}"]`).getAttribute("aria-current")==="true");
+  const nx=Math.max(0,Math.min(P.length-1,cur+(e.key==="ArrowDown"?1:-1)));
+  if(nx!==cur){e.preventDefault();select(P[nx].key);document.querySelector(`.step[data-key="${P[nx].key}"]`).focus();}
+});
+const start=(location.hash||"").replace("#","");
+select(P.some(p=>p.key===start)?start:"prepare",false);
+</script>
+
+</body>
+</html>
