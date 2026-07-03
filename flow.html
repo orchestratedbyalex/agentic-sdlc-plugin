@@ -131,7 +131,7 @@
 </div></div>
 
 <script>
-const U={iso12207:"https://www.iso.org/standard/63712.html",ieee1016:"https://standards.ieee.org/ieee/1016/4502/",
+const U={iso12207:"https://standards.ieee.org/ieee/12207/11416/",ieee1016:"https://standards.ieee.org/ieee/1016/4502/",
 ieee1012:"https://standards.ieee.org/ieee/1012/5609/",iso25010:"https://www.iso.org/standard/78176.html",
 iso27001:"https://www.iso.org/isoiec-27001-information-security.html",sdl:"https://www.microsoft.com/en-us/securityengineering/sdl",
 adr:"https://adr.github.io/",itil:"https://www.axelos.com/certifications/itil-service-management",dora:"https://dora.dev/"};
@@ -140,14 +140,14 @@ const P=[
  purpose:"Map the project and write a CLAUDE.md the agents can trust.",
  groups:[["→","explorer · claude-md"]],gate:null,
  produces:"CLAUDE.md · initial sdlc-metadata.yml",state:"init",statenote:"creates metadata · sets the model profile",
- human:null,route:null,stds:[["ISO/IEC/IEEE 12207",U.iso12207]]},
+ human:null,route:null,stds:[["ISO/IEC/IEEE 12207:2026",U.iso12207]]},
 {n:2,key:"define",name:"Define",ag:"analysts → authors → review",accent:"var(--p2)",
  purpose:"Turn the idea into numbered, testable requirements and user stories.",
  groups:[["∥ analyze","source · test · nfr"],["∥ author","FR · NFR · US"]],
  gate:["requirement-reviewer","completeness · testability · traceability"],
  produces:"FR-* · NFR-* · US-*  (numbered)",state:"brief · counts",statenote:"REQUIREMENT_COUNTS sentinel → orchestrator writes",
  human:{a:"Sign off the requirements",w:"Approve the requirements before design starts; they are the contract all later work is built and tested against."},
- route:null,stds:[["ISO/IEC/IEEE 12207",U.iso12207]]},
+ route:null,stds:[["ISO/IEC/IEEE 12207:2026",U.iso12207]]},
 {n:3,key:"design",name:"Design",ag:"explorers → authors → review",accent:"var(--p3)",
  purpose:"Decide how to build it — architecture, component specs, decisions, threats.",
  groups:[["∥ explore","architecture · decisions"],["∥ author","architecture · component-spec · adr+traceability"]],
