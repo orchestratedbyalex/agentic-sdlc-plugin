@@ -1,0 +1,9 @@
+{
+  "name": "eval-zero-tests",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test 'spec/*.check.mjs'",
+    "start": "node src/cli.mjs Ada"
+  }
+}

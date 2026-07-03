@@ -110,9 +110,11 @@ the plugin stays generic, your repo accumulates the lifecycle record.
 - **Configurable model routing** (`quality` / `balanced` / `economy`) that never downgrades the
   judgment-bearing agents or the gates.
 - **Agent evals** (`evals/`) — the gate agents are themselves tested: labelled golden fixtures
-  (clean ⇒ PASS, tests-green-but-build-broken ⇒ FAIL, no-build-step ⇒ honest PASS) run headless
-  through the real plugin and asserted on the machine-parsable `VERDICT:` line. Billed and
-  opt-in (`SDLC_EVALS=1 node evals/run.mjs`), never part of `node --test`.
+  (clean ⇒ PASS, tests-green-but-build-broken ⇒ FAIL, no-build-step ⇒ honest PASS, a hardcoded
+  API key arriving as the uncommitted diff ⇒ security-blocker FAIL, a test command that exits 0
+  collecting zero tests ⇒ FAIL) run headless through the real plugin and asserted on the
+  machine-parsable `VERDICT:` line. Billed and opt-in (`SDLC_EVALS=1 node evals/run.mjs`),
+  never part of `node --test`.
 
 ## Test
 

@@ -105,6 +105,29 @@ All notable changes to this project are documented here. The format follows
   therefore `spec/*.check.mjs`). The long-dead `test/fixtures/` tree was removed, and
   the repo `.gitignore`'s `docs/` rule was scoped to the root (`/docs/`) so fixture
   metadata can be committed.
+- **Eval matrix slice 2 — two more gate agents, two more failure modes** (`evals/`):
+  the Develop **code reviewer** must FAIL a change that arrives as the uncommitted
+  working-tree diff (via the fixture's `_eval-uncommitted/` overlay) and hardcodes the
+  API key its plan's Security Considerations declare comes from an env var — the
+  security blocker at every tier — while still running the suite/build and quoting
+  Execution Evidence; and the Verify **regression tester** must FAIL a test command
+  that exits 0 having collected **zero** tests (glob rot: specs renamed so
+  `spec/*.check.mjs` matches nothing — probed: `node --test` with a non-matching glob
+  exits 0 with `# tests 0`), the vacuous-green trap behind invariant 3. Review cases
+  carry a per-case `prompt:` mirroring the orchestrator's dispatch insertions
+  (`PLAN PATH` + `TIER`), their fixtures ship a real plan and mid-Develop metadata
+  (authors completed, reviewer `in_progress`, plan registered via
+  `plan-add`/`plan-active`), and a structure test now verifies any `docs/…` path a
+  case prompt names exists in its fixture — plan renames fail at test-time, not
+  bill-time. The first small-model run of the zero-tests case caught a real contract
+  defect — the regression tester (a `fast`-tier agent, routed to small models in the
+  balanced/economy profiles) diagnosed the zero-collection correctly but restyled its
+  verdict as a bold `**FAIL**` heading instead of the machine-parsable `VERDICT:` line
+  the orchestrator keys off — so its report template now pins the literal-line
+  contract. The runner also forces synchronous dispatch
+  (`CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1`, pinned by a structure test): since CLI
+  2.1.198 dispatches run in the background by default, which would deliver reports via
+  a completion notification whose summary completeness is undocumented.
 - A defined **`HUMAN_REVIEW_REQUIRED` escalation protocol**: every playbook's gate loop is
   bounded (Prepare and Operate previously had no bound at all) and every bound ends in one
   block the wizard presents to the user — phase/gate, trigger, open blockers, artifacts —

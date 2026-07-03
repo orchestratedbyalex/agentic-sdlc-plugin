@@ -293,8 +293,14 @@ test('the three human checkpoints are wired at their altitudes (Define, Design, 
 
 test('the eval harness is wired: opt-in runner, cases naming real agents and complete fixtures', async () => {
   assert.ok(existsSync(join(ROOT, 'evals', 'run.mjs')), 'evals/run.mjs is missing')
+  const runner = readFileSync(join(ROOT, 'evals', 'run.mjs'), 'utf8')
   // the runner is billed (it invokes real models) — it must be opt-in, never a side effect
-  assert.match(readFileSync(join(ROOT, 'evals', 'run.mjs'), 'utf8'), /SDLC_EVALS/, 'run.mjs has no SDLC_EVALS opt-in gate')
+  assert.match(runner, /SDLC_EVALS/, 'run.mjs has no SDLC_EVALS opt-in gate')
+  // dispatch must stay synchronous: since CLI 2.1.198 subagents run in the background by
+  // default, and a background dispatch surfaces the report only through a notification
+  // whose summary completeness is undocumented — the documented env switch keeps the
+  // full final message in the Agent tool_result, the harness's primary extraction path
+  assert.match(runner, /CLAUDE_CODE_DISABLE_BACKGROUND_TASKS/, 'run.mjs does not force synchronous dispatch')
   const { CASES } = await import('../evals/cases.mjs')
   assert.ok(Array.isArray(CASES) && CASES.length >= 2, 'the case table is empty')
   const ids = new Set()
@@ -304,9 +310,15 @@ test('the eval harness is wired: opt-in runner, cases naming real agents and com
     assert.ok(existsSync(join(ROOT, 'agents', `${c.agent}.md`)), `${c.id}: agent ${c.agent} does not exist`)
     assert.ok(['PASS', 'FAIL'].includes(c.expect.verdict), `${c.id}: expected verdict must be PASS or FAIL`)
     const fixture = join(ROOT, 'evals', 'fixtures', c.fixture)
-    // the analyzer's read set: project commands, package manifest, and SDLC metadata
+    // every gate agent's read set: project commands, package manifest, and SDLC metadata
     for (const required of ['CLAUDE.md', 'package.json', join('docs', 'requirements', 'sdlc-metadata.yml')]) {
       assert.ok(existsSync(join(fixture, required)), `${c.id}: fixture ${c.fixture} lacks ${required}`)
+    }
+    // a per-case prompt that names an evidence-zone path (e.g. the PLAN the orchestrator
+    // would insert) must point at a file the fixture actually ships — otherwise the drift
+    // only surfaces at bill-time, as a confused agent instead of a failing test
+    for (const ref of String(c.prompt ?? '').match(/docs\/[\w./-]*[\w-]/g) ?? []) {
+      assert.ok(existsSync(join(fixture, ref)), `${c.id}: prompt references ${ref}, missing from fixture ${c.fixture}`)
     }
   }
 })

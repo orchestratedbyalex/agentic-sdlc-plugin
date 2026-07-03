@@ -75,3 +75,8 @@ comparison in STEP 2 depends on them being exact.
 VERDICT: PASS — both runs green, no flakes
   OR
 VERDICT: FAIL — <why: failing tests / flakes / 0 suites collected / build failure>
+
+The last line of your final message MUST begin with the literal string `VERDICT:` —
+the orchestrator parses that exact token to decide the gate. Never restyle it (not a
+heading, not bare bold like `**FAIL**`, not prose): write `VERDICT: PASS — <reason>`
+or `VERDICT: FAIL — <reason>` verbatim.

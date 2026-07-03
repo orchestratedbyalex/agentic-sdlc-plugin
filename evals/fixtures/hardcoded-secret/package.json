@@ -1,0 +1,9 @@
+{
+  "name": "eval-hardcoded-secret",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test 'spec/*.check.mjs'",
+    "build": "node scripts/build.mjs"
+  }
+}

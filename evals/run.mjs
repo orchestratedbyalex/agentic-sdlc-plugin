@@ -82,6 +82,12 @@ for (const caseDef of selected) {
     stdio: ['ignore', 'pipe', 'pipe'],
     timeout: opts.timeoutSec * 1000,
     maxBuffer: 128 * 1024 * 1024,
+    // since CLI 2.1.198 the Agent dispatch runs in the background by default, and the
+    // subagent's report then only reaches the stream via a task_notification whose
+    // summary completeness is undocumented — force synchronous dispatch so the full
+    // final message lands in the Agent tool_result (the primary extraction path; the
+    // notification fallback in lib.mjs stays as defense-in-depth for older CLIs)
+    env: { ...process.env, CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: '1' },
   })
 
   const transcript = run.stdout ?? ''

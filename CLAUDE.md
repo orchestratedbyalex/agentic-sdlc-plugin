@@ -118,7 +118,8 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
   (`HUMAN_CHECKPOINT` + the exactly-three rule + both outcome sets in the orchestrator; the
   checkpoint in playbooks 2/3/7; `proposed`-ADR handling in the ADR author and design
   reviewer), and the eval-harness wiring (the `SDLC_EVALS` opt-in gate in the runner; every
-  case naming a real agent and a complete fixture; nothing under `evals/` that `node --test`
+  case naming a real agent and a complete fixture — including any `docs/…` path the case's
+  dispatch prompt references; nothing under `evals/` that `node --test`
   discovery would execute — fixture suites are `spec/*.check.mjs`, never `*.test.mjs` or a
   `test/` dir). Don't let those drift silently.
 - If you change a **gate agent's prompt**, also run its eval cases (billed, opt-in:
