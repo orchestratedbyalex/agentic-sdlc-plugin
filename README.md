@@ -119,7 +119,7 @@ the plugin stays generic, your repo accumulates the lifecycle record.
 ## Test
 
 ```bash
-node --test          # 159 tests, all green (state logic + hook guard + evals lib + plugin structure)
+node --test          # 160 tests, all green (state logic + hook guard + evals lib + plugin structure)
 ```
 
 The model-free suite above always runs clean on CI and contributor machines. The billed agent

@@ -10,6 +10,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **Model profile surfaced at startup** — the `/sdlc` status board now shows the active model
+  profile on every run, and first-time setup (`greenfield` / `existing`) offers a one-time pick
+  (`quality` / `balanced` / `economy`), persisted deterministically via `config --model-profile`.
+  Gates and code authors always stay full-tier regardless of profile (invariant 9); `resume` runs
+  are never prompted.
+
 ## [0.3.0] — 2026-07-03
 
 ### Added

@@ -34,7 +34,7 @@ accumulates the evidence.
 ## Build / test / run
 
 ```bash
-node --test                      # run all tests (currently 159, must stay green; model-free)
+node --test                      # run all tests (currently 160, must stay green; model-free)
 node evals/run.mjs --list        # list the agent evals (free)
 SDLC_EVALS=1 node evals/run.mjs  # run the agent evals headless — BILLED (real model calls)
 claude --plugin-dir .            # load the plugin into a Claude Code session for live use

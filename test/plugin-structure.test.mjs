@@ -233,6 +233,23 @@ test('the model-routing table assigns all 35 agents to exactly one tier', () => 
     'routing table does not cover the agent roster exactly')
 })
 
+test('the model profile is surfaced at start and offered once at first setup', () => {
+  const sdlc = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
+  // Discoverability: the Step 1 status board renders the active profile (from Step 0's detect),
+  // every run including resume. "Model profile:" is the rendered board label (absent before this).
+  assert.match(sdlc, /Model profile:/, 'the status board never surfaces the active model profile')
+  assert.match(sdlc, /modelProfile/, 'the board line does not render from Step 0\'s detected modelProfile')
+  // One-time pick: lives in setup, scoped so it never fires on resume.
+  assert.match(sdlc, /Set the model profile/, 'first-time setup never offers the model-profile pick')
+  assert.match(sdlc, /first-time setup only/i, 'the profile pick is not scoped to first-time setup')
+  assert.match(sdlc, /\(recommended\)/, 'the pick does not mark balanced as the recommended default')
+  // Persisted via the deterministic writer (never a hand-edit); all three profiles offered.
+  assert.match(sdlc, /config --model-profile/, 'the pick never persists via the state script')
+  for (const p of ['quality', 'balanced', 'economy']) {
+    assert.match(sdlc, new RegExp(`\\b${p}\\b`), `the profile pick omits the "${p}" option`)
+  }
+})
+
 test('the HUMAN_REVIEW_REQUIRED escalation protocol is defined in the orchestrator', () => {
   const text = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
   assert.match(text, /^\s*HUMAN_REVIEW_REQUIRED\s*$/m, 'no HUMAN_REVIEW_REQUIRED block template')

@@ -33,6 +33,13 @@ User argument (may be empty): `$ARGUMENTS`
 Render the seven phases with the board statuses: `✓` completed, `→` the first
 non-completed phase (next), `·` pending. Show `project` and `version` if present.
 
+Also surface the active model profile from Step 0's `modelProfile` as one line, so the
+cost lever is discoverable — it tunes only the non-gate agents:
+
+    ⚙ Model profile: <modelProfile> — tunes non-gate agents only (gates & code authors stay full-tier). Ask me to switch to `quality` or `economy`.
+
+Render `<modelProfile>` as the detected value; on resume this shows whatever was chosen.
+
 ### Step 2 — Route on `mode`
 
 - **`greenfield`** (empty folder): Tell the user you'll help build from scratch. Collect
@@ -80,6 +87,21 @@ non-completed phase (next), `·` pending. Show `project` and `version` if presen
   **test_author** agent." Then offer choices based on `setupComplete`:
   - If `setupComplete` is true: `1) Develop a feature  2) Continue to <next phase>  3) Pick a phase`.
   - If `setupComplete` is false: offer to run the next setup phase (`phase` from the JSON).
+
+### Step 2b — Set the model profile (first-time setup only)
+Only when you just ran `init` this turn (the `greenfield` or `existing` branch above) —
+never on `resume`, where the profile already persists. Before starting Phase 1, offer the
+one-time pick. The gates, reviewers and code authors always run on the session model no
+matter what is chosen (they never downgrade — invariant 9):
+
+  - **balanced** (recommended) — analysis/doc agents on Sonnet, mechanical agents on Haiku
+  - **quality** — every agent on the session model
+  - **economy** — analysis + mechanical agents on Haiku (cheapest)
+
+`init` already wrote `balanced`. Only if the user picks differently, persist it
+deterministically — never hand-edit the YAML (the guard hook denies it):
+
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" config --model-profile <quality|economy>
 
 ### Step 3 — Setup gating
 Develop, Verify, Release, and Operate are BLOCKED until Prepare, Define, and Design are
