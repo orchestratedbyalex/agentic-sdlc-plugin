@@ -171,6 +171,14 @@ All notable changes to this project are documented here. The format follows
   independently re-runs the test suite once and cross-checks the totals against the
   Regression Tester's runs (new gate condition d2); a report whose counts lack an evidence
   block cannot PASS its gate condition.
+- **Standards citations pinned to the current edition**: the Prepare/Define anchor and the Test
+  Author's testing rationale now cite **ISO/IEC/IEEE 12207:2026** (it cancels and replaces the
+  2017 edition — a technical revision expanding agile/iteration concepts and clarifying
+  operations/maintenance and risk/configuration management), updated across the README table,
+  `CLAUDE.md`, `AUTHORS.md`, the `diagrams/` flow (Excalidraw + regenerated SVG), and the GitHub
+  Pages site (`index.html` + `flow.html`); the standard chips link the accessible IEEE SA record.
+  Invariant 7 / `CONTRIBUTING.md` now require bumping an edition everywhere it appears when a
+  standard is revised, so a citation can't silently go stale again.
 
 ### Fixed
 - The wizard's dispatch loop (Step 4) referenced playbook markers that existed in no
