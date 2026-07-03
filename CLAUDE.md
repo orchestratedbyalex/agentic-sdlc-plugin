@@ -85,8 +85,10 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
 6. **Proportionate ceremony.** Feature-intake classifies a change trivial/standard/complex
    (with hard floors: security / public-interface / dependency can't be trivial); depth scales,
    but reviewer≠author, tests, diff-awareness, traceability, and security checks hold at every tier.
-7. **Standards-anchored.** Each phase cites its source standard (ISO/IEC/IEEE 12207, IEEE
-   1012/1016, Microsoft SDL, ITIL 4, ISO 25010/27001, Nygard ADRs). Keep the citations honest.
+7. **Standards-anchored.** Each phase cites its source standard (ISO/IEC/IEEE 12207:2026, IEEE
+   1012/1016, Microsoft SDL, ITIL 4, ISO 25010/27001, Nygard ADRs). Keep the citations honest —
+   pin the current edition, and when a standard is revised, update the name + link everywhere it
+   appears (see CONTRIBUTING.md).
 8. **Subagents return only their final message.** They run in isolated contexts; their final
    message IS the return value to the orchestrator. Keep orchestrator output terse.
 9. **Model profiles never downgrade the gates.** Model routing (`quality`/`balanced`/`economy`,

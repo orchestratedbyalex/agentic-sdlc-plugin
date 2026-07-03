@@ -78,8 +78,8 @@ Model routing never downgrades a gate.
 
 | Phase | Purpose | Anchored in |
 |-------|---------|-------------|
-| **Prepare** | Map the project; produce a CLAUDE.md the agents can rely on | ISO/IEC/IEEE 12207 |
-| **Define** | Functional / non-functional requirements + user stories, gated | IEEE 12207 |
+| **Prepare** | Map the project; produce a CLAUDE.md the agents can rely on | ISO/IEC/IEEE 12207:2026 |
+| **Define** | Functional / non-functional requirements + user stories, gated | IEEE 12207:2026 |
 | **Design** | Architecture, component specs, ADRs, STRIDE-lite threat model | IEEE 1016, Microsoft SDL, Nygard ADRs |
 | **Develop** | Plan → implement + test (proportionate to change tier) → review | Microsoft SDL |
 | **Verify** | Coverage, independent review, real production build, regression | IEEE 1012, ISO/IEC 25010 |

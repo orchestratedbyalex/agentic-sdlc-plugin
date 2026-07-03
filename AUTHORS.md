@@ -10,7 +10,7 @@ This framework — its agent playbooks, CLI orchestrator, and standards alignmen
 
 The agent playbooks were authored with AI assistance (Claude Code) under direct human orchestration. Standards anchors are public references:
 
-- **ISO/IEC/IEEE 12207** — Software life cycle processes
+- **ISO/IEC/IEEE 12207:2026** — Software life cycle processes
 - **IEEE 1012** — System, Software, and Hardware Verification and Validation
 - **IEEE 1016** — Software Design Descriptions
 - **ISO/IEC 25010** — Software product quality model

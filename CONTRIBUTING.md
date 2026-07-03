@@ -34,7 +34,10 @@ The authoritative list (with rationale) is in [CLAUDE.md](CLAUDE.md); in brief:
    something agents fix in the target repo.
 6. **Proportionate ceremony.** Feature-intake tiers changes trivial/standard/complex (with hard
    security/interface/dependency floors); depth scales, the load-bearing checks never drop.
-7. **Standards-anchored.** Each phase cites its source standard. Keep citations honest.
+7. **Standards-anchored.** Each phase cites its source standard. Keep citations honest — pin the
+   current edition, and when a standard ships a new one, update its name + link everywhere it
+   appears: the README table, `CLAUDE.md`, `AUTHORS.md`, the affected agents, `diagrams/`
+   (regenerate the `.svg`), and the GitHub Pages site (`index.html` + `flow.html`).
 8. **Subagents return only their final message.** Keep orchestrator output terse.
 9. **Model profiles never downgrade the gates.** Routing may run mechanical/analysis agents on
    smaller models, but full-tier agents always inherit the session model.

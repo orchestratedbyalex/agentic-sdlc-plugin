@@ -16,7 +16,7 @@ acceptance criterion identified in the plan.
 
 PLAN PATH: <orchestrator inserts the file path output by Agent 1>
 
-(Per Microsoft SDL and ISO/IEC/IEEE 12207, unit tests are authored in
+(Per Microsoft SDL and ISO/IEC/IEEE 12207:2026, unit tests are authored in
 Develop, not Verify. Integration tests, system tests, and validation belong
 to Phase 5.)
 
