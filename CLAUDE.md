@@ -22,6 +22,7 @@ accumulates the evidence.
 |------|------|
 | `.claude-plugin/` | Plugin manifest + marketplace entry |
 | `commands/sdlc.md` | The `/sdlc` wizard (orchestrator entry point) |
+| `references/` | Lazily-loaded protocol detail (setup, escalation, checkpoints, model routing) — the orchestrator reads each ONLY at its trigger, to keep the always-loaded context small |
 | `agents/` | The 35 subagents (one `.md` each), grouped by phase: `sdlc-<phase>-<role>.md` |
 | `phases/` | 7 machine-readable phase playbooks (groups, modes, gates, post_phase) |
 | `skills/` | `sdlc-conventions` (read hygiene, shared rules) + `sdlc-feature-intake` (change tiering) |
@@ -34,7 +35,7 @@ accumulates the evidence.
 ## Build / test / run
 
 ```bash
-node --test                      # run all tests (currently 160, must stay green; model-free)
+node --test                      # run all tests (currently 161, must stay green; model-free)
 node evals/run.mjs --list        # list the agent evals (free)
 SDLC_EVALS=1 node evals/run.mjs  # run the agent evals headless — BILLED (real model calls)
 claude --plugin-dir .            # load the plugin into a Claude Code session for live use
@@ -92,7 +93,7 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
 8. **Subagents return only their final message.** They run in isolated contexts; their final
    message IS the return value to the orchestrator. Keep orchestrator output terse.
 9. **Model profiles never downgrade the gates.** Model routing (`quality`/`balanced`/`economy`,
-   see `commands/sdlc.md`) may run mechanical/analysis agents on smaller models, but full-tier
+   see `references/model-routing.md`) may run mechanical/analysis agents on smaller models, but full-tier
    agents (every reviewer/validator, the planner, the clarifier, the code/test/implementer
    authors, the feedback-loop) always inherit the session model — in every profile.
 10. **The lifecycle pauses for humans at exactly three altitudes.** `HUMAN_CHECKPOINT`
@@ -117,7 +118,8 @@ them as constraints, not suggestions; the rationale is recorded in the git histo
   `clarifier-round` / `verifyCycle` in playbooks 4–5), the route-back recovery wiring
   (`reopen` + `--evidence` in the orchestrator; `reopen --phase develop` /
   `reopen --phase verify` in playbooks 5–6), and the human-checkpoint wiring
-  (`HUMAN_CHECKPOINT` + the exactly-three rule + both outcome sets in the orchestrator; the
+  (`HUMAN_CHECKPOINT` + the exactly-three rule in the orchestrator, both outcome sets in
+  `references/checkpoints.md`; the
   checkpoint in playbooks 2/3/7; `proposed`-ADR handling in the ADR author and design
   reviewer), the Release/Operate depth wiring (the planner's human-executed rollback plan +
   the release gate's `CHECK 8 — ROLLBACK READINESS`; the telemetry monitor's

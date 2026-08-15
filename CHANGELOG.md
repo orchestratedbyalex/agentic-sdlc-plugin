@@ -10,6 +10,23 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.1] — 2026-08-15
+
+### Changed
+- **Context-budget refactor of the orchestrator** (`commands/sdlc.md`, ~18.6 KB → ~10.3 KB
+  always-loaded): the four protocol blocks that only matter at specific triggers now live in
+  `references/` and are read lazily at their trigger, never up front — `setup.md`
+  (greenfield/existing init + skeleton scaffold + one-time model-profile pick; loaded once
+  per project), `escalation.md` (the `HUMAN_REVIEW_REQUIRED` block + guidance/waive/abort;
+  loaded only when a loop bound trips), `checkpoints.md` (the `HUMAN_CHECKPOINT` block +
+  outcomes; loaded at the three sign-offs), and `model-routing.md` (the tier table; loaded
+  before the first dispatch of a run). The orchestrator keeps the trigger conditions and
+  sentinels inline, so nothing fires without its protocol; a new structure test pins each
+  pointer to an existing reference file. Content moved verbatim — no behavioral change.
+- The guard's metadata-deny message now lists the state script's full subcommand roster
+  (it had drifted: `gate-log`, `plan-active`, `clarifier-round`, `loop-reset`, `reopen`
+  were missing).
+
 ## [0.4.0] — 2026-07-03
 
 ### Added

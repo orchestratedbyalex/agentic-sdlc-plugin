@@ -27,6 +27,10 @@ clarifier rounds, the active plan, the gate-verdict log) and `verifyCycle` is th
 cycle the next run enters — on resume, continue from those bounds; never assume they are
 zero because the conversation is fresh.
 
+Deeper protocol detail lives in `${CLAUDE_PLUGIN_ROOT}/references/` — read a reference
+ONLY at the trigger named below, not up front; that lazy loading is the plugin's context
+budget.
+
 User argument (may be empty): `$ARGUMENTS`
 
 ### Step 1 — Print the status board
@@ -42,42 +46,11 @@ Render `<modelProfile>` as the detected value; on resume this shows whatever was
 
 ### Step 2 — Route on `mode`
 
-- **`greenfield`** (empty folder): Tell the user you'll help build from scratch. Collect
-  a short brief by asking, one at a time: (1) what the project does, (2) language/stack,
-  (3) key features, (4) target users. Then create the metadata file **deterministically**
-  with the state script — do NOT hand-write or hand-expand it:
-
-      node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" init --name "<project>" --version "0.1.0" --mode greenfield
-
-  **Verify** the output has `"ok": true` and `state.valid: true` before continuing (retry if
-  the write didn't land — e.g. it needed approval). Then record the brief **deterministically**
-  with the state script — do NOT hand-edit the YAML:
-
-      node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" brief --purpose "<...>" --stack "<...>" --users "<...>" --key-features "<...>"
-
-  **Then SCAFFOLD a minimal skeleton from the brief — BEFORE Phase 1.** The Prepare agents
-  *analyze existing code*, so an empty repo gives the read-only explorer nothing to work
-  with and the phase stalls. Create just enough real structure, matched to the stated stack:
-    - a manifest — `package.json` (Node/TS), `pyproject.toml` (Python), `Cargo.toml`
-      (Rust), `go.mod` (Go), etc.;
-    - the language/build config (e.g. `tsconfig.json` for TypeScript);
-    - `src/` and `test/` directories, each with one minimal stub (e.g. `src/index.ts`
-      with a placeholder export, and a placeholder test in `test/`);
-    - a short `README.md` derived from the brief (purpose, stack, planned features).
-  Keep it minimal — a seed, not the product. Then proceed to Phase 1, where the explorer
-  analyzes this skeleton and the CLAUDE.md author documents it.
-
-- **`existing`** (code, no metadata): Tell the user you'll set up the SDLC on their
-  codebase. Ask for the project name (default: the folder name) and a version (default
-  `0.1.0`). Then create the metadata file **deterministically** with the state script —
-  do NOT hand-write it:
-
-      node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" init --name "<project>" --version "<version>" --mode existing
-
-  The command writes `docs/requirements/sdlc-metadata.yml` and prints `{ ok, state }`.
-  **Verify before proceeding:** confirm `"ok": true` and `state.mode: "resume"` with
-  `"valid": true`. If `ok` is false or the write needs approval, surface it and retry — do
-  NOT continue to Phase 1 until the file is confirmed written. Then proceed to Phase 1.
+- **`greenfield`** (empty folder) or **`existing`** (code, no metadata): read
+  `${CLAUDE_PLUGIN_ROOT}/references/setup.md` NOW and follow the matching branch exactly.
+  It covers the brief and `init` (deterministic, via the state script — verify the write
+  landed before proceeding), the greenfield skeleton scaffold, and the one-time
+  model-profile pick. Then proceed to Phase 1.
 
 - **`resume`** with `valid: false`: The metadata file could not be parsed. Show the user
   the problem and offer to repair it (re-create from the template, preserving any phase
@@ -87,21 +60,6 @@ Render `<modelProfile>` as the detected value; on resume this shows whatever was
   **test_author** agent." Then offer choices based on `setupComplete`:
   - If `setupComplete` is true: `1) Develop a feature  2) Continue to <next phase>  3) Pick a phase`.
   - If `setupComplete` is false: offer to run the next setup phase (`phase` from the JSON).
-
-### Step 2b — Set the model profile (first-time setup only)
-Only when you just ran `init` this turn (the `greenfield` or `existing` branch above) —
-never on `resume`, where the profile already persists. Before starting Phase 1, offer the
-one-time pick. The gates, reviewers and code authors always run on the session model no
-matter what is chosen (they never downgrade — invariant 9):
-
-  - **balanced** (recommended) — analysis/doc agents on Sonnet, mechanical agents on Haiku
-  - **quality** — every agent on the session model
-  - **economy** — analysis + mechanical agents on Haiku (cheapest)
-
-`init` already wrote `balanced`. Only if the user picks differently, persist it
-deterministically — never hand-edit the YAML (the guard hook denies it):
-
-    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" config --model-profile <quality|economy>
 
 ### Step 3 — Setup gating
 Develop, Verify, Release, and Operate are BLOCKED until Prepare, Define, and Design are
@@ -114,12 +72,19 @@ it: dispatch its subagents via the Task tool per the playbook's `groups:` frontm
 groups run top to bottom; in a `sequential` group dispatch one agent at a time in listed
 order; in a `parallel` group dispatch all agents concurrently in ONE message; a
 `conditional` group is dispatched only when the condition stated in the playbook body
-holds (otherwise skip it). Run the validation gate after each group. Every gate agent ends
-its report with one machine-parsable `VERDICT: PASS|FAIL` line (the phase's own verdict
-name — APPROVED, READY FOR RELEASE, PUBLISH GATE — stays alongside): key the pass/fail
-decision off that line, not the surrounding prose. If a gate report lacks a parseable
-`VERDICT:` line, re-dispatch that gate agent once with the defect named; a second miss is
-a gate FAIL. Record every gate verdict deterministically the moment you parse it:
+holds (otherwise skip it). Run the validation gate after each group.
+
+**Model routing:** before the FIRST dispatch of the run, read
+`${CLAUDE_PLUGIN_ROOT}/references/model-routing.md` and apply its tier table (agent →
+tier, tier × `modelProfile` → the Task tool's `model` parameter) on every dispatch. No
+profile ever downgrades the full tier — gates and code authors stay on the session model.
+
+**Gate parsing:** every gate agent ends its report with one machine-parsable
+`VERDICT: PASS|FAIL` line (the phase's own verdict name — APPROVED, READY FOR RELEASE,
+PUBLISH GATE — stays alongside): key the pass/fail decision off that line, not the
+surrounding prose. If a gate report lacks a parseable `VERDICT:` line, re-dispatch that
+gate agent once with the defect named; a second miss is a gate FAIL. Record every gate
+verdict deterministically the moment you parse it:
 
     node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" gate-log --phase <phase> --gate <gate-agent> --verdict PASS|FAIL|WAIVED [--note "<one line>"]
 
@@ -127,105 +92,22 @@ The script owns the strike counter — FAIL increments it, PASS/WAIVED resets it
 prints `strikes`: trip the playbook's 3-strike bound off that number, never off
 conversation memory (it survives interruption; Step 0's `runtime` restores it on resume).
 On a gate FAIL, follow the playbook's bolded **Gate FAIL** routing — re-dispatch the named
-author(s), re-run the gate — and when the playbook's loop bound trips, STOP and run the
-escalation protocol below.
+author(s), re-run the gate — and when the playbook's loop bound trips, STOP and escalate:
 
-#### Escalation — `HUMAN_REVIEW_REQUIRED`
-Every playbook loop is bounded, and every bound ends the same way (a gate FAILing 3×, a
-previously-cleared issue reappearing, an author still blocked after 3 clarifier rounds,
-Verify still REWORK REQUIRED after cycle 3): STOP dispatching and present this block. Do
-not keep looping, and do not mark the phase or the gate agent completed — state stays
-where it is, so a later `/sdlc` run resumes at the same spot.
+- **Escalation — `HUMAN_REVIEW_REQUIRED`:** every playbook loop is bounded (a gate
+  FAILing 3×, a previously-cleared issue reappearing, an author still blocked after 3
+  clarifier rounds, Verify still REWORK REQUIRED after cycle 3). The moment a bound
+  trips: STOP dispatching, leave state where it is, read
+  `${CLAUDE_PLUGIN_ROOT}/references/escalation.md`, present its block, and act on the
+  user's choice (guidance / waive / abort) exactly as it specifies.
 
-    HUMAN_REVIEW_REQUIRED
-    Phase / gate:  <phase> — <the agent whose loop hit its bound>
-    Trigger:       <which bound tripped, with the count>
-    Open blockers: <each unresolved blocker, quoted from the last gate report>
-    Artifacts:     <paths of the report/plan/docs the human needs to decide>
-    Options:       1) guidance — give me the decision and I resume the loop
-                   2) waive — accept these blockers; the gate records WAIVED, not PASS
-                   3) abort — stop here; /sdlc resumes from saved state later
-
-Then act on the user's choice:
-1. **guidance** — re-dispatch the relevant author with the user's decision embedded in
-   the prompt. The loop bound resets (the human changed the inputs) — clear the persisted
-   counter with `loop-reset --phase <phase>` — but the previously-cleared-issue rule
-   still applies.
-2. **waive** — proceed with the playbook's completion steps, reporting the gate as
-   **WAIVED by the user** (with their one-line reason) in the phase summary. Record it:
-   `gate-log --phase <phase> --gate <gate-agent> --verdict WAIVED --note "<the user's
-   reason>"` — the ONLY path by which WAIVED enters the log. A waived gate is never
-   reported as PASS.
-3. **abort** — stop the run and report where it stopped. Nothing further is marked
-   complete, so `/sdlc` resumes from the metadata.
-
-#### Sign-off checkpoints — `HUMAN_CHECKPOINT`
-A checkpoint is NOT an escalation: escalation fires when a failure bound trips; a
-checkpoint is a planned human sign-off on work whose gate has already PASSed, before the
-lifecycle commits to what follows. **Exactly three checkpoints exist** — do not add more
-(proportionate ceremony) and do not skip one because the gate looked clean:
-
-1. **Define sign-off** — before completing Define: the human approves the requirements
-   direction (totals + the key FRs/NFRs/stories).
-2. **Design sign-off** — before completing Design: the human approves the architecture
-   AND decides the ADR trade-offs (each `proposed` ADR's decision, its alternative, and
-   the cost being accepted). Approval is what turns `proposed` ADRs into `accepted`.
-3. **Operate cycle go/no-go** — before recording `cycle`, whenever the feedback loop's
-   `CYCLE:` line proposes a next cycle. The feedback loop proposes; the human disposes —
-   a new cycle NEVER starts on an agent's say-so alone. (A STABLE assessment proposes no
-   cycle: record it directly, no checkpoint.)
-
-Present the block and wait:
-
-    HUMAN_CHECKPOINT
-    Phase:     <define — requirements sign-off | design — design & ADR sign-off | operate — cycle go/no-go>
-    Summary:   <the direction being signed off: requirement totals + key items /
-                architecture choice + each proposed ADR's decision, alternative, accepted cost /
-                the CYCLE assessment + scope + reason>
-    Artifacts: <paths the human should read to decide>
-    Options:   <the outcomes below for this checkpoint's kind>
-
-For the two **sign-offs** (Define, Design):
-1. **approve** — complete the phase, attesting both proofs:
-   `complete --phase <phase> --evidence "<gate> VERDICT: PASS <date>; user sign-off <date>"`.
-   For Design, first flip each approved ADR from `proposed` to `accepted` (frontmatter
-   `status:`, the `## Status` section, and its `adrs/README.md` row — a mechanical edit
-   the orchestrator makes directly).
-2. **adjust** — route the human's direction to the responsible author(s), re-run the
-   gate, and present the checkpoint again. This is not a gate FAIL — record the re-run's
-   verdict via `gate-log` as usual (a PASS resets strikes anyway).
-3. **abort** — stop; the phase stays incomplete. On resume, a phase whose latest gate
-   verdict in `gate_log` is PASS but whose status is not `completed` is waiting at its
-   checkpoint — re-present it, do not re-run the phase.
-
-For the **go/no-go** (Operate):
-1. **go** — record the cycle exactly as assessed (`cycle --assessment <a> --next-cycle
-   true ...`) and begin the new cycle now.
-2. **defer** — record the cycle as assessed but do NOT dispatch the next cycle; report
-   that `/sdlc` will resume at the first pending phase when the user is ready.
-3. **override** — the human replaces the assessment: record `cycle` with THEIR
-   assessment and `--reason "user override: <their reason>"` (overriding to `stable`
-   means no new cycle at all).
-
-#### Model routing (apply on every dispatch)
-`modelProfile` from Step 0 selects how much model to spend per agent. Each agent belongs to
-one tier; pass the tier's model alias as the Task tool's `model` parameter ("inherit" =
-omit the parameter, i.e. the session model). **No profile ever downgrades the full tier** —
-gates and code-writing keep the strongest model.
-
-Agent names below are the file names minus the `sdlc-` prefix; every agent belongs to
-exactly one tier (a structure test pins the roster coverage).
-
-| Tier | Agents | quality | balanced (default) | economy |
-|------|--------|---------|--------------------|---------|
-| **full** — judgment & gates | `define-requirement-reviewer` `design-reviewer` `develop-code-reviewer` `verify-independent-code-reviewer` `verify-validation-reviewer` `release-reviewer` `develop-architect-planner` `develop-architect-clarifier` `develop-code-author` `develop-test-author` `develop-implementer` `operate-feedback-loop` | inherit | inherit | inherit |
-| **standard** — analysis & doc authoring | `prepare-explorer` `prepare-claude-md` `define-source-analyst` `define-test-analyst` `define-nfr-analyst` `define-fr-author` `define-nfr-author` `define-us-author` `design-architecture-explorer` `design-decisions-explorer` `design-architecture-author` `design-component-spec-author` `design-adr-traceability-author` `develop-reqs-sync` `verify-coverage-analyst` `release-planner` `release-author` `operate-issue-triager` `operate-incident-responder` | inherit | sonnet | haiku |
-| **fast** — mechanical tool-running | `verify-static-dynamic-analyzer` `verify-regression-tester` `operate-dependency-monitor` `operate-telemetry-monitor` | inherit | haiku | haiku |
-
-If a dispatch fails because the alias is unavailable on the user's plan, re-dispatch that
-one agent with inherit. To change the profile (persisted deterministically — never hand-edit):
-
-    node "${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-state.mjs" config --model-profile <quality|balanced|economy>
+- **Sign-off checkpoints — `HUMAN_CHECKPOINT`:** a checkpoint is NOT an escalation — it
+  is a planned human sign-off on gate-PASSed work. Exactly three exist (Define
+  requirements sign-off; Design & ADR sign-off; Operate cycle go/no-go) — never add one
+  and never skip one because the gate looked clean. When a playbook reaches a checkpoint,
+  read `${CLAUDE_PLUGIN_ROOT}/references/checkpoints.md`, present its block, and act on
+  the outcome (approve / adjust / abort, or go / defer / override) exactly as it
+  specifies.
 
 If the phase playbook file does not exist yet, tell the user that phase is not available
 in this build (the phase playbooks and subagents are delivered in a later plan) and stop
