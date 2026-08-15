@@ -36,7 +36,7 @@ function askReason(matched) {
 function denyReason(what) {
   return `${what} blocked (Agentic SDLC invariant 2): sdlc-metadata.yml has exactly one ` +
     `writer. Use the state script instead: node ${STATE_SCRIPT} ` +
-    '<init|complete|config|brief|counts|plan-add|cycle>.'
+    '<init|complete|config|brief|counts|plan-add|cycle|gate-log|plan-active|clarifier-round|loop-reset|reopen>.'
 }
 
 // Split into simple-command segments across chains, pipes, and substitutions,

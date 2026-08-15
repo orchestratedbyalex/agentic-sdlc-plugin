@@ -215,7 +215,7 @@ test('sentinel line templates are pinned at their sources', () => {
 // Agents column lists each agent's short name (filename minus the sdlc- prefix) in
 // backticks, so coverage is machine-checkable and can't drift when the roster changes.
 test('the model-routing table assigns all 35 agents to exactly one tier', () => {
-  const text = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
+  const text = readFileSync(join(ROOT, 'references', 'model-routing.md'), 'utf8')
   const assigned = []
   for (const tier of ['full', 'standard', 'fast']) {
     const row = text.split('\n').find(l => l.startsWith(`| **${tier}**`))
@@ -239,19 +239,20 @@ test('the model profile is surfaced at start and offered once at first setup', (
   // every run including resume. "Model profile:" is the rendered board label (absent before this).
   assert.match(sdlc, /Model profile:/, 'the status board never surfaces the active model profile')
   assert.match(sdlc, /modelProfile/, 'the board line does not render from Step 0\'s detected modelProfile')
-  // One-time pick: lives in setup, scoped so it never fires on resume.
-  assert.match(sdlc, /Set the model profile/, 'first-time setup never offers the model-profile pick')
-  assert.match(sdlc, /first-time setup only/i, 'the profile pick is not scoped to first-time setup')
-  assert.match(sdlc, /\(recommended\)/, 'the pick does not mark balanced as the recommended default')
+  // One-time pick: lives in the lazily-loaded setup reference, scoped so it never fires on resume.
+  const setup = readFileSync(join(ROOT, 'references', 'setup.md'), 'utf8')
+  assert.match(setup, /Set the model profile/, 'first-time setup never offers the model-profile pick')
+  assert.match(setup, /first-time setup only/i, 'the profile pick is not scoped to first-time setup')
+  assert.match(setup, /\(recommended\)/, 'the pick does not mark balanced as the recommended default')
   // Persisted via the deterministic writer (never a hand-edit); all three profiles offered.
-  assert.match(sdlc, /config --model-profile/, 'the pick never persists via the state script')
+  assert.match(setup, /config --model-profile/, 'the pick never persists via the state script')
   for (const p of ['quality', 'balanced', 'economy']) {
-    assert.match(sdlc, new RegExp(`\\b${p}\\b`), `the profile pick omits the "${p}" option`)
+    assert.match(setup, new RegExp(`\\b${p}\\b`), `the profile pick omits the "${p}" option`)
   }
 })
 
-test('the HUMAN_REVIEW_REQUIRED escalation protocol is defined in the orchestrator', () => {
-  const text = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
+test('the HUMAN_REVIEW_REQUIRED escalation protocol is defined and wired from the orchestrator', () => {
+  const text = readFileSync(join(ROOT, 'references', 'escalation.md'), 'utf8')
   assert.match(text, /^\s*HUMAN_REVIEW_REQUIRED\s*$/m, 'no HUMAN_REVIEW_REQUIRED block template')
   for (const field of ['Trigger:', 'Open blockers:', 'Artifacts:']) {
     assert.match(text, new RegExp(field), `escalation block lacks the "${field}" field`)
@@ -259,6 +260,10 @@ test('the HUMAN_REVIEW_REQUIRED escalation protocol is defined in the orchestrat
   for (const option of ['guidance', 'waive', 'abort']) {
     assert.match(text, new RegExp(`\\*\\*${option}\\*\\*`), `escalation protocol lacks the "${option}" outcome`)
   }
+  // the always-loaded orchestrator must name the trigger and point at the reference
+  const sdlc = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
+  assert.match(sdlc, /HUMAN_REVIEW_REQUIRED/, 'the orchestrator never names the escalation sentinel')
+  assert.match(sdlc, /references\/escalation\.md/, 'the orchestrator never points at the escalation reference')
 })
 
 test('the persisted loop state (runtime) is wired into the orchestrator and playbooks', () => {
@@ -276,19 +281,35 @@ test('the persisted loop state (runtime) is wired into the orchestrator and play
   assert.match(verify, /verifyCycle/, 'phase 5 still tracks the cycle count in conversation only')
 })
 
-test('the HUMAN_CHECKPOINT sign-off protocol is defined in the orchestrator', () => {
+test('the HUMAN_CHECKPOINT sign-off protocol is defined and wired from the orchestrator', () => {
   const sdlc = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
-  assert.match(sdlc, /HUMAN_CHECKPOINT/, 'the orchestrator never defines the checkpoint block')
+  assert.match(sdlc, /HUMAN_CHECKPOINT/, 'the orchestrator never names the checkpoint sentinel')
   // a checkpoint is a planned sign-off on gate-passed work, not a tripped failure bound —
   // both protocols must coexist, distinctly
   assert.match(sdlc, /HUMAN_REVIEW_REQUIRED/, 'the escalation protocol must stay alongside checkpoints')
   // proportionate ceremony: exactly three altitudes, pinned so checkpoint creep is a deliberate act
   assert.match(sdlc, /[Ee]xactly three/, 'the proportionality rule (exactly three checkpoints) is gone')
+  assert.match(sdlc, /references\/checkpoints\.md/, 'the orchestrator never points at the checkpoints reference')
+  const ckpt = readFileSync(join(ROOT, 'references', 'checkpoints.md'), 'utf8')
+  assert.match(ckpt, /HUMAN_CHECKPOINT/, 'the reference never defines the checkpoint block')
+  assert.match(ckpt, /[Ee]xactly three/, 'the reference drops the exactly-three proportionality rule')
   for (const outcome of ['approve', 'adjust', 'abort']) {
-    assert.match(sdlc, new RegExp(`\\*\\*${outcome}\\*\\*`), `sign-off checkpoints lack the "${outcome}" outcome`)
+    assert.match(ckpt, new RegExp(`\\*\\*${outcome}\\*\\*`), `sign-off checkpoints lack the "${outcome}" outcome`)
   }
   for (const outcome of ['go', 'defer', 'override']) {
-    assert.match(sdlc, new RegExp(`\\*\\*${outcome}\\*\\*`), `the cycle go/no-go lacks the "${outcome}" outcome`)
+    assert.match(ckpt, new RegExp(`\\*\\*${outcome}\\*\\*`), `the cycle go/no-go lacks the "${outcome}" outcome`)
+  }
+})
+
+// Context budget: the orchestrator loads on every /sdlc run, so protocol detail lives in
+// references/ and is read only at its trigger. The pointers must stay wired (a reference
+// nobody points at is dead weight; a pointer at a missing file is a silent stall).
+test('every lazily-loaded reference exists and is pointed at from the orchestrator', () => {
+  const sdlc = readFileSync(join(ROOT, 'commands', 'sdlc.md'), 'utf8')
+  for (const ref of ['setup.md', 'escalation.md', 'checkpoints.md', 'model-routing.md']) {
+    assert.ok(existsSync(join(ROOT, 'references', ref)), `missing references/${ref}`)
+    assert.match(sdlc, new RegExp(`\\$\\{CLAUDE_PLUGIN_ROOT\\}/references/${ref.replace('.', '\\.')}`),
+      `sdlc.md never points at references/${ref} via \${CLAUDE_PLUGIN_ROOT}`)
   }
 })
 
